@@ -4,99 +4,63 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>ALL IN Archery</title>
+    
+    <link rel="apple-touch-icon" href="logo.png">
+    
     <style>
         :root { --bg: #000; --text: #fff; --accent: #FFD700; --card: #151515; --gray: #888; }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
-        body { background: var(--bg); color: var(--text); font-family: -apple-system, system-ui, sans-serif; margin: 0; padding: 0; height: 100vh; overflow: hidden; display: flex; justify-content: center; }
-        
-        .app-container { width: 100%; max-width: 500px; height: 100%; display: flex; flex-direction: column; position: relative; }
-
+        body { background: var(--bg); color: var(--text); font-family: -apple-system, sans-serif; margin: 0; height: 100vh; overflow: hidden; display: flex; justify-content: center; }
+        .app-container { width: 100%; max-width: 500px; height: 100%; display: flex; flex-direction: column; }
         .screen { display: none; flex-direction: column; height: 100%; padding: 40px 20px 20px; animation: fadeIn 0.3s; }
         .active-screen { display: flex; }
-
         .logo-text { font-size: 40px; font-weight: 900; letter-spacing: 8px; text-align: center; margin-bottom: 40px; }
-        
         .menu-btn { background: #fff; color: #000; padding: 22px; margin-bottom: 12px; border-radius: 15px; font-size: 18px; font-weight: 800; border: none; text-align: left; }
-        .menu-btn:active { background: var(--accent); transform: scale(0.98); }
-
-        header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 20px; border-bottom: 1px solid #222; }
-        .target-indicator { background: var(--accent); color: #000; padding: 4px 12px; border-radius: 20px; font-weight: 900; font-size: 14px; }
-
-        #score-list { flex-grow: 1; overflow-y: auto; padding: 20px 0; display: flex; flex-direction: column-reverse; gap: 10px; }
-        .end-card { background: var(--card); padding: 18px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #222; }
-        .end-val { font-size: 24px; font-weight: 800; }
-        .end-meta { font-size: 11px; color: var(--gray); text-transform: uppercase; margin-bottom: 4px; }
-
-        .controls { background: var(--bg); padding-top: 15px; padding-bottom: env(safe-area-inset-bottom, 20px); }
-        .crawl-box { background: var(--card); padding: 12px 18px; border-radius: 12px; margin-bottom: 15px; border: 1px solid #333; }
-        input[type=range] { width: 100%; accent-color: #fff; height: 35px; }
-
-        .btn-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-        .score-btn { height: 75px; border-radius: 12px; border: none; font-size: 24px; font-weight: 900; }
-        .b-11 { background: var(--accent); color: #000; }
-        .b-10 { background: #ff3b30; color: #fff; }
-        .b-8 { background: #007aff; color: #fff; }
-        .b-5 { background: #2c2c2e; color: #fff; border: 1px solid #444; }
-        .b-m { background: #fff; color: #000; }
-        .b-del { background: #3a3a3c; color: #fff; }
-
-        input { background: #1c1c1e; border: 1px solid #3a3a3c; color: #fff; padding: 18px; border-radius: 12px; margin-bottom: 15px; font-size: 16px; width: 100%; }
-
+        header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 15px; border-bottom: 1px solid #222; }
+        #score-list { flex-grow: 1; overflow-y: auto; padding: 15px 0; display: flex; flex-direction: column-reverse; gap: 8px; }
+        .end-card { background: var(--card); padding: 15px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #222; }
+        .end-val { font-size: 22px; font-weight: 800; }
+        .end-meta { font-size: 10px; color: var(--gray); text-transform: uppercase; }
+        .controls { background: var(--bg); padding-top: 10px; padding-bottom: env(safe-area-inset-bottom, 20px); }
+        .crawl-box { background: var(--card); padding: 10px 15px; border-radius: 12px; margin-bottom: 10px; border: 1px solid #333; }
+        input[type=range] { width: 100%; accent-color: #fff; }
+        .btn-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+        .score-btn { height: 60px; border-radius: 10px; border: none; font-size: 20px; font-weight: 900; }
+        .c-gold { background: #FFD700; color: #000; } .c-red { background: #ff3b30; color: #fff; }
+        .c-blue { background: #007aff; color: #fff; } .c-black { background: #2c2c2e; color: #fff; border: 1px solid #444; }
+        .c-white { background: #fff; color: #000; } .c-del { background: #3a3a3c; color: #fff; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     </style>
 </head>
 <body>
-
 <div class="app-container">
     <div id="home" class="screen active-screen">
         <div class="logo-text">ALL IN</div>
         <button class="menu-btn" onclick="startApp('3D', 2)">3D Practice</button>
         <button class="menu-btn" onclick="startApp('FIELD', 3)">Field Practice</button>
-        <button class="menu-btn" onclick="startApp('TARGET', 6)">Target Outdoor</button>
+        <button class="menu-btn" onclick="startApp('TARGET OUT', 6)">Target Outdoor</button>
         <button class="menu-btn" onclick="startApp('TARGET IN', 3)">Target Indoor</button>
-        <button onclick="showScreen('vault')" style="margin-top:auto; background:none; border:1px solid #333; color:#666; padding:15px; border-radius:12px; font-weight:bold">⚙ GEAR VAULT: <span id="v-name">NOT SET</span></button>
     </div>
 
     <div id="scoring" class="screen">
         <header>
-            <button onclick="exit()" style="background:none; border:none; color:var(--gray); font-size:24px">✕</button>
+            <button onclick="if(confirm('Exit?')) showScreen('home')" style="background:none; border:none; color:var(--gray); font-size:24px">✕</button>
             <div id="mode-title" style="font-weight:900; letter-spacing:2px">3D</div>
-            <div id="target-count" class="target-indicator">T1</div>
+            <div id="target-count" style="background:var(--accent); color:#000; padding:2px 10px; border-radius:10px; font-weight:bold">T1</div>
         </header>
         <div id="score-list"></div>
         <div class="controls">
-            <div class="crawl-box" id="crawl-ui">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px">
-                    <span style="font-size:10px; font-weight:bold; color:var(--gray); letter-spacing:1px">CRAWL</span>
-                    <span style="color:var(--accent); font-weight:900; font-size:16px"><span id="crawl-val">0</span>mm</span>
-                </div>
-                <input type="range" id="crawl-slider" min="0" max="40" value="0" oninput="updateCrawl(this.value)">
+            <div id="crawl-ui" class="crawl-box">
+                <div style="display:flex; justify-content:space-between; font-size:10px; font-weight:bold; color:var(--gray)">CRAWL <span style="color:var(--accent); font-size:14px"><span id="crawl-val">0</span>mm</span></div>
+                <input type="range" id="crawl-slider" min="0" max="40" value="0" oninput="document.getElementById('crawl-val').innerText=this.value">
             </div>
-            <div class="btn-grid">
-                <button class="score-btn b-11" onclick="hit(11)">11</button>
-                <button class="score-btn b-10" onclick="hit(10)">10</button>
-                <button class="score-btn b-m" onclick="hit(0)">M</button>
-                <button class="score-btn b-8" onclick="hit(8)">8</button>
-                <button class="score-btn b-5" onclick="hit(5)">5</button>
-                <button class="score-btn b-del" onclick="del()">⌫</button>
-            </div>
+            <div id="button-area" class="btn-grid"></div>
         </div>
-    </div>
-
-    <div id="vault" class="screen">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:30px">
-            <h1 style="margin:0">Vault</h1>
-            <button onclick="saveVault()" style="background:var(--accent); border:none; padding:8px 20px; border-radius:20px; font-weight:bold">SAVE</button>
-        </div>
-        <input id="in-name" placeholder="Bow Name">
-        <input id="in-weight" placeholder="Draw Weight">
-        <input id="in-arrow" placeholder="Arrow Setup">
-        <button onclick="showScreen('home')" style="margin-top:auto; background:none; border:none; color:var(--gray)">Back to Home</button>
     </div>
 </div>
 
 <script>
-    let state = { current: [], history: [], target: 1, crawl: 0, limit: 2, mode: '' };
+    let state = { current: [], history: [], target: 1, limit: 2, mode: '' };
 
     function showScreen(id) {
         document.querySelectorAll('.screen').forEach(s => s.classList.remove('active-screen'));
@@ -104,23 +68,47 @@
     }
 
     function startApp(mode, limit) {
-        state = { current: [], history: [], target: 1, crawl: 0, limit, mode };
+        state = { current: [], history: [], target: 1, limit, mode };
         document.getElementById('mode-title').innerText = mode;
         document.getElementById('crawl-ui').style.display = (mode.includes('TARGET')) ? 'none' : 'block';
-        updateTargetLabel(); render(); showScreen('scoring');
+        setupButtons(mode);
+        render();
+        showScreen('scoring');
     }
 
-    function updateCrawl(v) { state.crawl = v; document.getElementById('crawl-val').innerText = v; }
-    function updateTargetLabel() { document.getElementById('target-count').innerText = `T${state.target}`; }
-    function exit() { if(confirm("Discard session?")) showScreen('home'); }
+    function setupButtons(mode) {
+        const area = document.getElementById('button-area');
+        area.innerHTML = '';
+        let scores = mode.includes('TARGET') ? [10,9,8,7,6,5,4,3,2,1,0] : [11,10,8,5,0];
+        scores.forEach(s => {
+            const btn = document.createElement('button');
+            btn.className = `score-btn ${getColor(s)}`;
+            btn.innerText = s === 0 ? 'M' : s;
+            btn.onclick = () => hit(s);
+            area.appendChild(btn);
+        });
+        const delBtn = document.createElement('button');
+        delBtn.className = 'score-btn c-del'; delBtn.innerText = '⌫';
+        delBtn.onclick = () => del();
+        area.appendChild(delBtn);
+    }
+
+    function getColor(s) {
+        if (s >= 9) return 'c-gold';
+        if (s >= 7) return 'c-red';
+        if (s >= 5) return 'c-blue';
+        if (s >= 3) return 'c-black';
+        return 'c-white';
+    }
 
     function hit(val) {
         state.current.push(val);
         if(state.current.length === state.limit) {
-            state.history.push({ t: state.target++, scores: [...state.current], crawl: state.crawl, total: state.current.reduce((a,b)=>a+b,0) });
+            state.history.push({ t: state.target++, scores: [...state.current], crawl: document.getElementById('crawl-slider').value, total: state.current.reduce((a,b)=>a+b,0) });
             state.current = [];
         }
-        updateTargetLabel(); render();
+        document.getElementById('target-count').innerText = `T${state.target}`;
+        render();
     }
 
     function del() {
@@ -128,14 +116,8 @@
         else if(state.history.length > 0) {
             const last = state.history.pop(); state.current = last.scores; state.current.pop(); state.target--;
         }
-        updateTargetLabel(); render();
-    }
-
-    function saveVault() {
-        const n = document.getElementById('in-name').value;
-        document.getElementById('v-name').innerText = n || "SET";
-        localStorage.setItem('archeryGear', n);
-        showScreen('home');
+        document.getElementById('target-count').innerText = `T${state.target}`;
+        render();
     }
 
     function render() {
@@ -150,15 +132,10 @@
         [...state.history].reverse().forEach(e => {
             const div = document.createElement('div');
             div.className = 'end-card';
-            div.innerHTML = `<div><div class="end-meta">T${e.t} ${state.mode.includes('TARGET') ? '' : '• '+e.crawl+'mm'}</div><div class="end-val">${e.scores.map(s=>s===0?'M':s).join(' · ')}</div></div><div style="color:var(--accent); font-weight:900; font-size:18px">${e.total}</div>`;
+            div.innerHTML = `<div><div class="end-meta">T${e.t} ${state.mode.includes('TARGET') ? '' : '• '+e.crawl+'mm'}</div><div class="end-val">${e.scores.map(s=>s===0?'M':s).join(' · ')}</div></div><div style="color:var(--accent); font-weight:900">${e.total}</div>`;
             list.appendChild(div);
         });
     }
-
-    window.onload = () => {
-        const n = localStorage.getItem('archeryGear');
-        if(n) { document.getElementById('v-name').innerText = n; document.getElementById('in-name').value = n; }
-    };
 </script>
 </body>
 </html>
