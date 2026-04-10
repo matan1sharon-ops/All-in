@@ -3,6 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="ALL IN">
+    <meta name="theme-color" content="#000000">
+    <link rel="apple-touch-icon" href="data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23151515'/%3E%3Ccircle cx='50' cy='50' r='35' fill='%23FFD700'/%3E%3Ccircle cx='50' cy='50' r='20' fill='%23151515'/%3E%3Ccircle cx='50' cy='50' r='8' fill='%23FFD700'/%3E%3C/svg%3E">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23151515'/%3E%3Ccircle cx='50' cy='50' r='35' fill='%23FFD700'/%3E%3Ccircle cx='50' cy='50' r='20' fill='%23151515'/%3E%3Ccircle cx='50' cy='50' r='8' fill='%23FFD700'/%3E%3C/svg%3E">
+
     <title>ALL IN Archery</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
@@ -12,7 +20,11 @@
         .app-container { width: 100%; max-width: 500px; height: 100%; display: flex; flex-direction: column; position: relative; }
         .screen { display: none; flex-direction: column; height: 100%; padding: 40px 20px 20px; position: absolute; top: 0; left: 0; width: 100%; }
         .active-screen { display: flex; z-index: 10; }
-        .logo-text { font-size: 40px; font-weight: 900; letter-spacing: 8px; text-align: center; margin-bottom: 20px; }
+        
+        /* Logo Styles */
+        .logo-container { display: flex; flex-direction: column; align-items: center; margin-bottom: 30px; }
+        .logo-svg { width: 80px; height: 80px; margin-bottom: 10px; }
+        .logo-text { font-size: 32px; font-weight: 900; letter-spacing: 6px; text-align: center; }
         
         .menu-list { display: flex; flex-direction: column; gap: 10px; flex-grow: 1; overflow-y: auto; }
         .menu-btn { background: #fff; color: #000; padding: 18px; border-radius: 15px; font-size: 16px; font-weight: 800; border: none; text-align: left; cursor: pointer; }
@@ -35,13 +47,26 @@
         .score-btn { height: 60px; border-radius: 10px; border: 1px solid #333; font-size: 22px; font-weight: 900; cursor: pointer; }
         
         .chart-container { width: 100%; height: 200px; margin-top: 15px; margin-bottom: 15px; background: var(--card); padding: 10px; border-radius: 12px; border: 1px solid #222; }
+        
+        /* Input Styles */
+        .input-group { margin-bottom: 15px; }
+        .input-label { color: var(--gray); font-size: 12px; font-weight: bold; margin-bottom: 5px; display: block; text-transform: uppercase; }
+        .vault-input { background: #1c1c1e; border: 1px solid #3a3a3c; color: #fff; padding: 16px; border-radius: 12px; width: 100%; font-size: 16px; }
     </style>
 </head>
 <body>
 <div class="app-container">
     
     <div id="home" class="screen active-screen">
-        <div class="logo-text">ALL IN</div>
+        <div class="logo-container">
+            <svg class="logo-svg" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                <rect width="100" height="100" rx="20" fill="#151515"/>
+                <circle cx="50" cy="50" r="35" fill="#FFD700"/>
+                <circle cx="50" cy="50" r="20" fill="#151515"/>
+                <circle cx="50" cy="50" r="8" fill="#FFD700"/>
+            </svg>
+            <div class="logo-text">ALL IN</div>
+        </div>
         <div class="menu-list">
             <button class="menu-btn" onclick="startApp('3D', 2, 24)">3D Practice (24)</button>
             <button class="menu-btn" onclick="startApp('FIELD', 3, 24)">Field Practice (24)</button>
@@ -69,10 +94,25 @@
         <header>
             <button onclick="showScreen('home')" style="background:none; border:none; color:var(--gray); font-size:18px">← Back</button>
             <div style="font-weight:900">VAULT</div>
-            <button onclick="saveVault()" style="background:none; border:none; color:var(--accent); font-size:12px; font-weight:bold;">SAVE</button>
+            <button onclick="saveVault()" style="background:none; border:none; color:var(--accent); font-size:14px; font-weight:bold;">SAVE</button>
         </header>
-        <div style="padding-top: 20px;">
-            <input id="in-name" style="background:#1c1c1e; border:1px solid #3a3a3c; color:#fff; padding:18px; border-radius:12px; width:100%; font-size: 16px;" placeholder="Bow Name">
+        <div style="padding-top: 20px; overflow-y: auto; flex-grow: 1;">
+            <div class="input-group">
+                <label class="input-label">Archer Name</label>
+                <input id="in-name" class="vault-input" placeholder="Your Name">
+            </div>
+            <div class="input-group">
+                <label class="input-label">Bow Make</label>
+                <input id="in-bow" class="vault-input" placeholder="e.g., Gillo, Hoyt, WNS">
+            </div>
+            <div class="input-group">
+                <label class="input-label">Arrow Make</label>
+                <input id="in-arrow-make" class="vault-input" placeholder="e.g., Easton, Skylon">
+            </div>
+            <div class="input-group">
+                <label class="input-label">Arrow Spine</label>
+                <input id="in-spine" type="number" class="vault-input" placeholder="e.g., 500">
+            </div>
         </div>
     </div>
 
@@ -282,13 +322,23 @@
     }
     
     function saveVault() { 
-        localStorage.setItem('allin_gear_name', document.getElementById('in-name').value); 
+        localStorage.setItem('allin_user_name', document.getElementById('in-name').value); 
+        localStorage.setItem('allin_bow_make', document.getElementById('in-bow').value); 
+        localStorage.setItem('allin_arrow_make', document.getElementById('in-arrow-make').value); 
+        localStorage.setItem('allin_arrow_spine', document.getElementById('in-spine').value); 
         showScreen('home'); 
     }
 
     window.onload = () => {
-        const n = localStorage.getItem('allin_gear_name');
-        if(n) document.getElementById('in-name').value = n;
+        const uName = localStorage.getItem('allin_user_name');
+        const bMake = localStorage.getItem('allin_bow_make');
+        const aMake = localStorage.getItem('allin_arrow_make');
+        const aSpine = localStorage.getItem('allin_arrow_spine');
+        
+        if(uName) document.getElementById('in-name').value = uName;
+        if(bMake) document.getElementById('in-bow').value = bMake;
+        if(aMake) document.getElementById('in-arrow-make').value = aMake;
+        if(aSpine) document.getElementById('in-spine').value = aSpine;
     };
 </script>
 </body>
