@@ -24,28 +24,41 @@
         .controls { background: var(--bg); padding-top: 10px; padding-bottom: env(safe-area-inset-bottom, 20px); border-top: 1px solid #222; }
         .crawl-box { background: var(--card); padding: 10px 15px; border-radius: 12px; margin-bottom: 15px; border: 1px solid #333; display: flex; justify-content: space-between; align-items: center; }
         .crawl-btn { background: #333; color: #fff; border: none; padding: 10px 20px; border-radius: 8px; font-size: 20px; font-weight: bold; }
-        .next-btn { background: var(--accent); color: #000; width: 100%; padding: 18px; border-radius: 12px; font-size: 20px; font-weight: 900; border: none; margin-bottom: 15px; }
-        .next-btn:disabled { background: #222; color: #555; }
+        .next-btn { background: var(--accent); color: #000; width: 100%; padding: 18px; border-radius: 12px; font-size: 20px; font-weight: 900; border: none; margin-bottom: 15px; transition: background 0.2s; }
+        .next-btn:disabled { background: #222 !important; color: #555 !important; }
         .btn-grid { display: grid; gap: 8px; }
-        .score-btn { height: 60px; border-radius: 10px; border: 1px solid #333; font-size: 24px; font-weight: 900; }
+        .score-btn { height: 60px; border-radius: 10px; border: 1px solid #333; font-size: 24px; font-weight: 900; transition: opacity 0.2s; }
+        .score-btn:disabled { opacity: 0.3; }
     </style>
 </head>
 <body>
 <div class="app-container">
     <div id="home" class="screen active-screen">
         <div class="logo-text">ALL IN</div>
-        <div class="menu-list" style="display:flex; flex-direction:column; flex-grow:1;">
+        <div class="menu-list" style="display:flex; flex-direction:column; flex-grow:1; overflow-y:auto;">
             <button class="menu-btn" onclick="startApp('3D', 2, 24)">3D Practice (24)</button>
             <button class="menu-btn" onclick="startApp('FIELD', 3, 24)">Field Practice (24)</button>
             <button class="menu-btn" onclick="startApp('TARGET IN', 3, 20)">Target Indoor (20)</button>
             <button class="menu-btn" onclick="startApp('TARGET OUT', 6, 12)">Target Outdoor (12)</button>
+            <button class="menu-btn" onclick="startApp('BAREBOW 50M', 6, 12)" style="border: 2px solid var(--accent)">Barebow 50m (12)</button>
         </div>
         <button class="vault-btn" onclick="loadJournal(); showScreen('journal')">📖 SESSION JOURNAL</button>
+        <button class="vault-btn" onclick="showScreen('vault')">⚙ GEAR VAULT</button>
     </div>
 
     <div id="journal" class="screen">
-        <header><button onclick="showScreen('home')" style="background:none; border:none; color:var(--gray); font-size:18px">← Back</button><div style="font-weight:900">JOURNAL</div><button onclick="if(confirm('Clear?')) { localStorage.removeItem('archery_history'); loadJournal(); }" style="background:none; border:none; color:red; font-size:12px">CLEAR</button></header>
+        <header><button onclick="showScreen('home')" style="background:none; border:none; color:var(--gray); font-size:18px">← Back</button><div style="font-weight:900">JOURNAL</div><button onclick="if(confirm('Clear all?')) { localStorage.removeItem('archery_history'); loadJournal(); }" style="background:none; border:none; color:red; font-size:12px">CLEAR</button></header>
         <div id="journal-list" style="flex-grow:1; overflow-y:auto; padding-top:20px;"></div>
+    </div>
+
+    <div id="vault" class="screen">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:30px">
+            <h1 style="margin:0">Vault</h1>
+            <button onclick="saveVault()" style="background:var(--accent); border:none; padding:10px 20px; border-radius:20px; font-weight:bold; color:#000;">SAVE</button>
+        </div>
+        <label style="color:var(--gray); font-size:12px; font-weight:bold; margin-bottom:8px; display:block;">BOW NAME</label>
+        <input id="in-name" style="background:#1c1c1e; border:1px solid #3a3a3c; color:#fff; padding:18px; border-radius:12px; margin-bottom:15px; width:100%; font-size:16px;" placeholder="e.g. My Barebow">
+        <button onclick="showScreen('home')" style="margin-top:auto; background:none; border:none; color:var(--gray); padding:20px">← Back to Home</button>
     </div>
 
     <div id="scoring" class="screen">
@@ -80,7 +93,7 @@
     function startApp(mode, arrowLimit, endLimit) {
         state = { current: [], history: [], arrowLimit, endLimit, mode, editingIdx: -1 };
         document.getElementById('mode-title').innerText = mode;
-        document.getElementById('crawl-ui').style.display = (mode.includes('TARGET')) ? 'none' : 'flex';
+        document.getElementById('crawl-ui').style.display = (mode.includes('TARGET') || mode.includes('BAREBOW')) ? 'none' : 'flex';
         document.getElementById('crawl-val').innerText = '0';
         setupButtons(mode);
         updateUI();
@@ -89,7 +102,7 @@
 
     function setupButtons(mode) {
         const area = document.getElementById('button-area'); area.innerHTML = '';
-        let scores = mode === 'FIELD' ? [6,5,4,3,2,1,0] : (mode.includes('TARGET') ? [10,9,8,7,6,5,4,3,2,1,0] : [11,10,8,5,0]);
+        let scores = mode === 'FIELD' ? [6,5,4,3,2,1,0] : (mode.includes('TARGET') || mode.includes('BAREBOW') ? [10,9,8,7,6,5,4,3,2,1,0] : [11,10,8,5,0]);
         area.style.gridTemplateColumns = scores.length > 6 ? 'repeat(4, 1fr)' : 'repeat(3, 1fr)';
         
         scores.forEach(s => {
@@ -99,7 +112,7 @@
             btn.onclick = () => { 
                 if(state.current.length < state.arrowLimit) { 
                     state.current.push(s); 
-                    updateUI(); // Updates instantly
+                    updateUI(); 
                 } 
             };
             area.appendChild(btn);
@@ -107,13 +120,14 @@
         
         const delBtn = document.createElement('button'); 
         delBtn.className = 'score-btn'; 
+        delBtn.id = 'del-btn'; // Special ID so it never gets disabled
         delBtn.style.backgroundColor = '#333'; 
         delBtn.style.color = '#fff';
         delBtn.innerText = '⌫'; 
         delBtn.onclick = () => { 
             if(state.current.length > 0) {
-                state.current.pop(); // Removes the last arrow
-                updateUI(); // Updates instantly
+                state.current.pop(); 
+                updateUI(); 
             }
         };
         area.appendChild(delBtn);
@@ -122,13 +136,13 @@
     function getBgColor(mode, s) {
         if(s === 0) return '#34c759';
         if(mode === 'FIELD') return s >= 5 ? '#FFD700' : '#2c2c2e';
-        if(mode.includes('TARGET')) return s >= 9 ? '#FFD700' : (s >= 7 ? '#ff3b30' : (s >= 5 ? '#007aff' : (s >= 3 ? '#2c2c2e' : '#fff')));
+        if(mode.includes('TARGET') || mode.includes('BAREBOW')) return s >= 9 ? '#FFD700' : (s >= 7 ? '#ff3b30' : (s >= 5 ? '#007aff' : (s >= 3 ? '#2c2c2e' : '#fff')));
         return s >= 10 ? '#FFD700' : (s === 8 ? '#007aff' : '#2c2c2e');
     }
 
     function getTextColor(mode, s) {
         if(s === 0) return '#fff';
-        if(mode.includes('TARGET') && (s >= 9 || s <= 2)) return '#000';
+        if((mode.includes('TARGET') || mode.includes('BAREBOW')) && (s >= 9 || s <= 2)) return '#000';
         if(mode === 'FIELD' && s >= 5) return '#000';
         return (mode === '3D' && s >= 10) ? '#000' : '#fff';
     }
@@ -145,13 +159,17 @@
             state.history.push(entry); 
         }
         
-        state.current = []; // Clears input for the NEXT target
-        updateUI(); // Triggers the fresh empty card
+        state.current = []; 
+        updateUI(); 
     }
 
     function startEditing(idx) {
+        // Prevent editing history if the current target is half-filled to avoid wiping data
+        if (state.current.length > 0 && state.editingIdx === -1) {
+            alert("Please finish or clear your current target before editing history.");
+            return;
+        }
         state.editingIdx = idx;
-        // IMPORTANT: We KEEP the scores loaded so you can see them and backspace them!
         state.current = [...state.history[idx].scores]; 
         document.getElementById('crawl-val').innerText = state.history[idx].crawl;
         updateUI();
@@ -169,11 +187,18 @@
         
         let grandTotal = state.history.reduce((a,b)=>a+b.total,0);
         document.getElementById('total-score').innerText = grandTotal;
-        const mainBtn = document.getElementById('main-action-btn');
-
-        const isFull = state.current.length === state.arrowLimit;
         
-        // 1. Setup the Next / Save button
+        const mainBtn = document.getElementById('main-action-btn');
+        const isFull = state.current.length === state.arrowLimit;
+
+        // VISUAL FIX: Disable all score buttons (except backspace) when the limit is reached
+        document.querySelectorAll('.score-btn').forEach(btn => {
+            if (btn.id !== 'del-btn') {
+                btn.disabled = isFull;
+            }
+        });
+        
+        // Button Logic
         if(state.editingIdx > -1) {
             mainBtn.innerText = "SAVE EDIT";
             mainBtn.style.background = isFull ? "var(--edit)" : "#222";
@@ -197,7 +222,7 @@
             mainBtn.disabled = !isFull;
         }
 
-        // 2. ALWAYS draw the Active Input card at the top (unless finished)
+        // Active Card Rendering
         if (state.history.length < state.endLimit || state.editingIdx > -1) {
             const activeDiv = document.createElement('div');
             const isEditing = state.editingIdx > -1;
@@ -216,15 +241,15 @@
             list.appendChild(activeDiv);
         }
 
-        // 3. Draw the History List below the active card
+        // History List Rendering
         state.history.slice().reverse().forEach((e, i) => {
             const actualIdx = state.history.length - 1 - i;
-            if(actualIdx === state.editingIdx) return; // Hide the old card because it jumped up to the top
+            if(actualIdx === state.editingIdx) return; 
             
             const div = document.createElement('div');
             div.className = 'end-card';
             div.onclick = () => startEditing(actualIdx);
-            div.innerHTML = `<div><div class="end-meta">T${actualIdx+1} ${state.mode.includes('TARGET') ? '' : '• '+e.crawl+'mm'}</div><div class="end-val">${e.scores.map(s=>s===0?'M':s).join(' · ')}</div></div><div style="color:var(--accent); font-weight:900; font-size:24px">${e.total}</div>`;
+            div.innerHTML = `<div><div class="end-meta">T${actualIdx+1} ${(state.mode.includes('TARGET') || state.mode.includes('BAREBOW')) ? '' : '• '+e.crawl+'mm'}</div><div class="end-val">${e.scores.map(s=>s===0?'M':s).join(' · ')}</div></div><div style="color:var(--accent); font-weight:900; font-size:24px">${e.total}</div>`;
             list.appendChild(div);
         });
     }
@@ -248,6 +273,16 @@
             list.appendChild(div);
         });
     }
+
+    function saveVault() {
+        localStorage.setItem('allin_gear_name', document.getElementById('in-name').value);
+        showScreen('home');
+    }
+
+    window.onload = () => {
+        const n = localStorage.getItem('allin_gear_name');
+        if(n) { document.getElementById('in-name').value = n; }
+    };
 </script>
 </body>
 </html>
