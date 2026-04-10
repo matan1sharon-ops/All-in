@@ -9,38 +9,27 @@
         :root { --bg: #000; --text: #fff; --accent: #FFD700; --card: #151515; --gray: #888; --edit: #007aff; }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
         body { background: var(--bg); color: var(--text); font-family: -apple-system, sans-serif; margin: 0; height: 100vh; overflow: hidden; display: flex; justify-content: center; }
-        
         .app-container { width: 100%; max-width: 500px; height: 100%; display: flex; flex-direction: column; }
-        
         .screen { display: none; flex-direction: column; height: 100%; padding: 40px 20px 20px; animation: fadeIn 0.3s; }
         .active-screen { display: flex; }
-        
-        /* Home Screen Specific Layout */
         .home-content { flex-grow: 1; display: flex; flex-direction: column; overflow: hidden; }
         .menu-list { flex-grow: 1; overflow-y: auto; display: flex; flex-direction: column; padding-bottom: 20px; }
-        
         .logo-text { font-size: 40px; font-weight: 900; letter-spacing: 8px; text-align: center; margin-bottom: 30px; margin-top: 10px; }
         .menu-btn { background: #fff; color: #000; padding: 20px; margin-bottom: 12px; border-radius: 15px; font-size: 18px; font-weight: 800; border: none; text-align: left; flex-shrink: 0; }
-        
-        .vault-btn { background: var(--card); border: 1px solid #333; color: #fff; padding: 18px; border-radius: 15px; font-weight: bold; margin-bottom: 20px; flex-shrink: 0; text-align: center; }
-
+        .vault-btn { background: var(--card); border: 1px solid #333; color: #fff; padding: 18px; border-radius: 15px; font-weight: bold; margin-bottom: 10px; flex-shrink: 0; text-align: center; }
         header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 15px; border-bottom: 1px solid #222; }
         #score-list { flex-grow: 1; overflow-y: auto; padding: 15px 0; display: flex; flex-direction: column-reverse; gap: 10px; }
         .end-card { background: var(--card); padding: 15px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #222; }
         .editing-now { border: 2px solid var(--edit) !important; background: #001a33; }
         .end-val { font-size: 24px; font-weight: 900; }
         .end-meta { font-size: 11px; color: var(--gray); text-transform: uppercase; font-weight: bold; }
-        
         .controls { background: var(--bg); padding-top: 10px; padding-bottom: env(safe-area-inset-bottom, 20px); border-top: 1px solid #222; }
         .crawl-box { background: var(--card); padding: 10px 15px; border-radius: 12px; margin-bottom: 15px; border: 1px solid #333; display: flex; justify-content: space-between; align-items: center; }
         .crawl-btn { background: #333; color: #fff; border: none; padding: 10px 20px; border-radius: 8px; font-size: 20px; font-weight: bold; }
         .next-btn { background: var(--accent); color: #000; width: 100%; padding: 15px; border-radius: 12px; font-size: 18px; font-weight: 900; border: none; margin-bottom: 15px; }
-        
         .btn-grid { display: grid; gap: 8px; }
         .score-btn { height: 60px; border-radius: 10px; border: 1px solid #333; font-size: 24px; font-weight: 900; }
-        
-        input.vault-in { background: #1c1c1e; border: 1px solid #3a3a3c; color: #fff; padding: 18px; border-radius: 12px; margin-bottom: 15px; width: 100%; font-size: 16px; }
-        
+        .stat-box { background: var(--card); padding: 15px; border-radius: 12px; margin-bottom: 10px; border: 1px solid #333; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     </style>
 </head>
@@ -50,31 +39,36 @@
         <div class="logo-text">ALL IN</div>
         <div class="home-content">
             <div class="menu-list">
-                <button class="menu-btn" onclick="startApp('3D', 2)">3D Practice</button>
-                <button class="menu-btn" onclick="startApp('FIELD', 3)">Field Practice</button>
-                <button class="menu-btn" onclick="startApp('TARGET OUT', 6)">Target Outdoor</button>
-                <button class="menu-btn" onclick="startApp('TARGET IN', 3)">Target Indoor</button>
+                <button class="menu-btn" onclick="startApp('3D', 2, 24)">3D Practice (24)</button>
+                <button class="menu-btn" onclick="startApp('FIELD', 3, 24)">Field Practice (24)</button>
+                <button class="menu-btn" onclick="startApp('TARGET IN', 3, 20)">Target Indoor (20)</button>
+                <button class="menu-btn" onclick="startApp('TARGET OUT', 6, 12)">Target Outdoor (12)</button>
             </div>
-            <button class="vault-btn" onclick="showScreen('vault')">
-                ⚙ GEAR VAULT: <span id="v-name" style="color:var(--accent)">NOT SET</span>
-            </button>
+            <button class="vault-btn" onclick="loadJournal(); showScreen('journal')">📖 SESSION JOURNAL</button>
+            <button class="vault-btn" onclick="showScreen('vault')">⚙ GEAR VAULT: <span id="v-name" style="color:var(--accent)">SET</span></button>
         </div>
     </div>
 
+    <div id="journal" class="screen">
+        <header>
+            <button onclick="showScreen('home')" style="background:none; border:none; color:var(--gray); font-size:18px">← Back</button>
+            <div style="font-weight:900">JOURNAL</div>
+            <button onclick="if(confirm('Clear all stats?')) { localStorage.removeItem('archery_history'); loadJournal(); }" style="background:none; border:none; color:red; font-size:12px">CLEAR</button>
+        </header>
+        <div id="journal-list" style="flex-grow:1; overflow-y:auto; padding-top:20px;"></div>
+    </div>
+
     <div id="vault" class="screen">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:30px">
-            <h1 style="margin:0">Vault</h1>
-            <button onclick="saveVault()" style="background:var(--accent); border:none; padding:10px 20px; border-radius:20px; font-weight:bold; color:#000;">SAVE</button>
-        </div>
-        <input id="in-name" class="vault-in" placeholder="Bow Name">
-        <input id="in-weight" class="vault-in" placeholder="Draw Weight (lbs)">
-        <input id="in-arrow" class="vault-in" placeholder="Arrow Setup">
-        <button onclick="showScreen('home')" style="margin-top:auto; background:none; border:none; color:var(--gray); font-size:18px; padding:20px;">← Back to Home</button>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:30px"><h1>Vault</h1><button onclick="saveVault()" style="background:var(--accent); border:none; padding:10px 20px; border-radius:20px; font-weight:bold;">SAVE</button></div>
+        <input id="in-name" style="background:#1c1c1e; border:1px solid #3a3a3c; color:#fff; padding:18px; border-radius:12px; margin-bottom:15px; width:100%" placeholder="Bow Name">
+        <input id="in-weight" style="background:#1c1c1e; border:1px solid #3a3a3c; color:#fff; padding:18px; border-radius:12px; margin-bottom:15px; width:100%" placeholder="Draw Weight">
+        <input id="in-arrow" style="background:#1c1c1e; border:1px solid #3a3a3c; color:#fff; padding:18px; border-radius:12px; margin-bottom:15px; width:100%" placeholder="Arrow Setup">
+        <button onclick="showScreen('home')" style="margin-top:auto; background:none; border:none; color:var(--gray)">← Home</button>
     </div>
 
     <div id="scoring" class="screen">
         <header>
-            <button onclick="if(confirm('Exit?')) showScreen('home')" style="background:none; border:none; color:var(--gray); font-size:24px">✕</button>
+            <button onclick="if(confirm('Exit? Progress will be saved.')) finishSession()" style="background:none; border:none; color:var(--gray); font-size:24px">✕</button>
             <div id="mode-title" style="font-weight:900; letter-spacing:2px">3D</div>
             <div style="text-align:right">
                 <div id="target-count" style="background:var(--accent); color:#000; padding:2px 8px; border-radius:8px; font-weight:bold; font-size:12px">T1</div>
@@ -85,11 +79,7 @@
         <div class="controls">
             <div id="crawl-ui" class="crawl-box">
                 <span style="font-size:10px; font-weight:bold; color:var(--gray)">CRAWL</span>
-                <div style="display:flex; align-items:center; gap:10px;">
-                    <button class="crawl-btn" onclick="adjCrawl(-1)">-</button>
-                    <span style="color:var(--accent); font-weight:900; font-size:18px; width:40px; text-align:center;"><span id="crawl-val">0</span></span>
-                    <button class="crawl-btn" onclick="adjCrawl(1)">+</button>
-                </div>
+                <div style="display:flex; align-items:center; gap:10px;"><button class="crawl-btn" onclick="adjCrawl(-1)">-</button><span style="color:var(--accent); font-weight:900; font-size:18px; width:40px; text-align:center;"><span id="crawl-val">0</span></span><button class="crawl-btn" onclick="adjCrawl(1)">+</button></div>
             </div>
             <button id="main-action-btn" class="next-btn" onclick="nextEnd()">NEXT END</button>
             <div id="button-area" class="btn-grid"></div>
@@ -98,15 +88,15 @@
 </div>
 
 <script>
-    let state = { current: [], history: [], limit: 2, mode: '', editingIdx: -1 };
+    let state = { current: [], history: [], arrowLimit: 2, endLimit: 24, mode: '', editingIdx: -1 };
 
     function showScreen(id) {
         document.querySelectorAll('.screen').forEach(s => s.classList.remove('active-screen'));
         document.getElementById(id).classList.add('active-screen');
     }
 
-    function startApp(mode, limit) {
-        state = { current: [], history: [], limit, mode, editingIdx: -1 };
+    function startApp(mode, arrowLimit, endLimit) {
+        state = { current: [], history: [], arrowLimit, endLimit, mode, editingIdx: -1 };
         document.getElementById('mode-title').innerText = mode;
         document.getElementById('crawl-ui').style.display = (mode.includes('TARGET')) ? 'none' : 'flex';
         document.getElementById('crawl-val').innerText = '0';
@@ -115,38 +105,18 @@
         showScreen('scoring');
     }
 
-    function saveVault() {
-        const n = document.getElementById('in-name').value;
-        const w = document.getElementById('in-weight').value;
-        const a = document.getElementById('in-arrow').value;
-        localStorage.setItem('allin_gear_name', n);
-        localStorage.setItem('allin_gear_weight', w);
-        localStorage.setItem('allin_gear_arrow', a);
-        document.getElementById('v-name').innerText = n || "SET";
-        showScreen('home');
-    }
-
-    function adjCrawl(amount) {
-        let v = parseInt(document.getElementById('crawl-val').innerText) + amount;
-        document.getElementById('crawl-val').innerText = Math.max(0, v);
-    }
-
     function setupButtons(mode) {
-        const area = document.getElementById('button-area');
-        area.innerHTML = '';
+        const area = document.getElementById('button-area'); area.innerHTML = '';
         let scores = mode === 'FIELD' ? [6,5,4,3,2,1,0] : (mode.includes('TARGET') ? [10,9,8,7,6,5,4,3,2,1,0] : [11,10,8,5,0]);
         area.style.gridTemplateColumns = scores.length > 6 ? 'repeat(4, 1fr)' : 'repeat(3, 1fr)';
         scores.forEach(s => {
-            const btn = document.createElement('button');
-            btn.className = 'score-btn';
-            btn.style.backgroundColor = getBgColor(mode, s);
-            btn.style.color = getTextColor(mode, s);
+            const btn = document.createElement('button'); btn.className = 'score-btn';
+            btn.style.backgroundColor = getBgColor(mode, s); btn.style.color = getTextColor(mode, s);
             btn.innerText = s === 0 ? 'M' : s;
-            btn.onclick = () => { if(state.current.length < state.limit) { state.current.push(s); updateUI(); } };
+            btn.onclick = () => { if(state.current.length < state.arrowLimit) { state.current.push(s); updateUI(); } };
             area.appendChild(btn);
         });
-        const delBtn = document.createElement('button');
-        delBtn.className = 'score-btn'; delBtn.style.backgroundColor = '#333'; delBtn.style.color = '#fff';
+        const delBtn = document.createElement('button'); delBtn.className = 'score-btn'; delBtn.style.backgroundColor = '#333'; delBtn.style.color = '#fff';
         delBtn.innerText = '⌫'; delBtn.onclick = () => { state.current.pop(); updateUI(); };
         area.appendChild(delBtn);
     }
@@ -167,84 +137,76 @@
 
     function nextEnd() {
         if(state.current.length === 0) return;
-        
-        const endData = { 
-            scores: [...state.current], 
-            crawl: document.getElementById('crawl-val').innerText, 
-            total: state.current.reduce((a,b)=>a+b,0) 
-        };
-
-        if(state.editingIdx > -1) {
-            state.history[state.editingIdx] = endData;
-            state.editingIdx = -1;
-            state.current = [];
-        } else {
-            state.history.push(endData);
-            state.current = [];
-        }
-        
+        const endData = { scores: [...state.current], crawl: document.getElementById('crawl-val').innerText, total: state.current.reduce((a,b)=>a+b,0) };
+        if(state.editingIdx > -1) { state.history[state.editingIdx] = endData; state.editingIdx = -1; state.current = []; }
+        else { state.history.push(endData); state.current = []; }
         updateUI();
     }
 
-    function startEditing(index) {
-        if(state.editingIdx === index) return;
-        state.editingIdx = index;
-        const e = state.history[index];
-        state.current = [...e.scores];
-        document.getElementById('crawl-val').innerText = e.crawl;
-        updateUI();
+    function adjCrawl(amount) {
+        let v = parseInt(document.getElementById('crawl-val').innerText) + amount;
+        document.getElementById('crawl-val').innerText = Math.max(0, v);
     }
 
     function updateUI() {
-        const list = document.getElementById('score-list');
-        list.innerHTML = '';
+        const list = document.getElementById('score-list'); list.innerHTML = '';
         let grandTotal = state.history.reduce((a,b)=>a+b.total,0);
         document.getElementById('total-score').innerText = grandTotal;
-        
         const mainBtn = document.getElementById('main-action-btn');
-        
+
         if(state.editingIdx > -1) {
-            mainBtn.innerText = "FINISH EDIT";
-            mainBtn.style.background = "var(--edit)";
-            mainBtn.style.color = "#fff";
+            mainBtn.innerText = "FINISH EDIT"; mainBtn.style.background = "var(--edit)"; mainBtn.style.color = "#fff";
             document.getElementById('target-count').innerText = `EDIT T${state.editingIdx + 1}`;
+        } else if (state.history.length >= state.endLimit) {
+            mainBtn.innerText = "FINISH SESSION"; mainBtn.onclick = finishSession;
         } else {
-            mainBtn.innerText = "NEXT END";
-            mainBtn.style.background = "var(--accent)";
-            mainBtn.style.color = "#000";
-            document.getElementById('target-count').innerText = `T${state.history.length + 1}`;
-            
+            mainBtn.innerText = "NEXT END"; mainBtn.style.background = "var(--accent)"; mainBtn.style.color = "#000";
+            document.getElementById('target-count').innerText = `T${state.history.length + 1}/${state.endLimit}`;
             if(state.current.length > 0) {
-                const div = document.createElement('div');
-                div.className = 'end-card'; div.style.borderColor = 'var(--accent)';
-                div.innerHTML = `<div><div class="end-meta" style="color:var(--accent)">TARGET ${state.history.length + 1}</div><div class="end-val">${state.current.map(s=>s===0?'M':s).join(' · ')}</div></div>`;
+                const div = document.createElement('div'); div.className = 'end-card'; div.style.borderColor = 'var(--accent)';
+                div.innerHTML = `<div><div class="end-meta" style="color:var(--accent)">TARGET ${state.history.length+1}</div><div class="end-val">${state.current.map(s=>s===0?'M':s).join(' · ')}</div></div>`;
                 list.appendChild(div);
             }
         }
-        
+
         state.history.slice().reverse().forEach((e, i) => {
             const actualIndex = state.history.length - 1 - i;
-            const div = document.createElement('div');
-            div.className = 'end-card' + (state.editingIdx === actualIndex ? ' editing-now' : '');
-            div.onclick = () => startEditing(actualIndex);
-            
-            const displayScores = (state.editingIdx === actualIndex) ? state.current : e.scores;
-            const displayCrawl = (state.editingIdx === actualIndex) ? document.getElementById('crawl-val').innerText : e.crawl;
-            const displayTotal = (state.editingIdx === actualIndex) ? state.current.reduce((a,b)=>a+b,0) : e.total;
-
-            div.innerHTML = `<div><div class="end-meta">T${actualIndex+1} ${state.mode.includes('TARGET') ? '' : '• '+displayCrawl+'mm'}</div><div class="end-val">${displayScores.map(s=>s===0?'M':s).join(' · ')}</div></div><div style="color:var(--accent); font-weight:900; font-size:24px">${displayTotal}</div>`;
+            const div = document.createElement('div'); div.className = 'end-card' + (state.editingIdx === actualIndex ? ' editing-now' : '');
+            div.onclick = () => { state.editingIdx = actualIndex; state.current = [...e.scores]; document.getElementById('crawl-val').innerText = e.crawl; updateUI(); };
+            div.innerHTML = `<div><div class="end-meta">T${actualIndex+1} ${state.mode.includes('TARGET') ? '' : '• '+e.crawl+'mm'}</div><div class="end-val">${e.scores.map(s=>s===0?'M':s).join(' · ')}</div></div><div style="color:var(--accent); font-weight:900; font-size:24px">${e.total}</div>`;
             list.appendChild(div);
         });
     }
 
+    function finishSession() {
+        if(state.history.length > 0) {
+            let logs = JSON.parse(localStorage.getItem('archery_history') || '[]');
+            logs.push({ date: new Date().toLocaleDateString(), mode: state.mode, total: state.history.reduce((a,b)=>a+b.total,0), ends: state.history.length });
+            localStorage.setItem('archery_history', JSON.stringify(logs));
+        }
+        showScreen('home');
+    }
+
+    function loadJournal() {
+        const list = document.getElementById('journal-list'); list.innerHTML = '';
+        let logs = JSON.parse(localStorage.getItem('archery_history') || '[]');
+        if(logs.length === 0) { list.innerHTML = '<div style="color:var(--gray); text-align:center">No sessions recorded.</div>'; return; }
+        logs.slice().reverse().forEach(log => {
+            const div = document.createElement('div'); div.className = 'stat-box';
+            div.innerHTML = `<div style="display:flex; justify-content:space-between"><b>${log.mode}</b> <span style="color:var(--gray)">${log.date}</span></div><div style="font-size:22px; font-weight:900; color:var(--accent); margin-top:5px">${log.total} <small style="font-size:12px; color:var(--text)">PTS (${log.ends} ENDS)</small></div>`;
+            list.appendChild(div);
+        });
+    }
+
+    function saveVault() {
+        localStorage.setItem('allin_gear_name', document.getElementById('in-name').value);
+        document.getElementById('v-name').innerText = document.getElementById('in-name').value || "SET";
+        showScreen('home');
+    }
+
     window.onload = () => {
         const n = localStorage.getItem('allin_gear_name');
-        if(n) {
-            document.getElementById('v-name').innerText = n;
-            document.getElementById('in-name').value = n;
-            document.getElementById('in-weight').value = localStorage.getItem('allin_gear_weight') || '';
-            document.getElementById('in-arrow').value = localStorage.getItem('allin_gear_arrow') || '';
-        }
+        if(n) { document.getElementById('v-name').innerText = n; document.getElementById('in-name').value = n; }
     };
 </script>
 </body>
