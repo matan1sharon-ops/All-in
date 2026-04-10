@@ -2,184 +2,206 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Archery Scoring & Gear Vault</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Archery Pro - Mobile</title>
     <style>
         :root {
-            --bg-color: #121212;
-            --card-bg: #1e1e1e;
-            --primary: #bb86fc;
-            --secondary: #03dac6;
-            --text: #e0e0e0;
-            --danger: #cf6679;
+            --bg: #0f172a;
+            --card: #1e293b;
+            --accent: #38bdf8;
+            --text: #f8fafc;
+            --success: #22c55e;
+            --danger: #ef4444;
         }
 
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text);
-            margin: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 20px;
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { 
+            font-family: system-ui, -apple-system, sans-serif; 
+            background: var(--bg); color: var(--text); 
+            margin: 0; padding: 0; overflow-x: hidden;
         }
 
-        .container {
-            width: 100%;
-            max-width: 500px;
+        /* Navigation */
+        nav {
+            position: fixed; bottom: 0; width: 100%;
+            background: var(--card); border-top: 1px solid #334155;
+            display: flex; justify-content: space-around;
+            padding: 15px 0; z-index: 100;
         }
+        nav span { cursor: pointer; font-weight: 600; color: #94a3b8; font-size: 0.9rem; }
+        nav span.active { color: var(--accent); }
 
-        h1 { color: var(--primary); text-align: center; font-size: 1.5rem; }
+        /* Screens */
+        .screen { display: none; padding: 20px; padding-bottom: 80px; min-height: 100vh; }
+        .screen.active { display: block; animation: fadeIn 0.2s ease-in; }
 
-        .card {
-            background: var(--card-bg);
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 20px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        .card { background: var(--card); padding: 15px; border-radius: 12px; margin-bottom: 15px; }
+        h2 { margin-top: 0; color: var(--accent); }
+
+        /* Scoring UI */
+        .total-display { font-size: 3.5rem; text-align: center; margin: 20px 0; font-weight: 800; }
+        .score-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+        .btn {
+            background: #334155; border: none; color: white; padding: 20px;
+            border-radius: 10px; font-size: 1.3rem; font-weight: bold; cursor: pointer;
         }
+        .btn:active { transform: scale(0.95); background: #475569; }
+        .btn-xl { background: var(--accent); color: #000; }
+        .btn-clear { background: var(--danger); font-size: 0.9rem; }
 
-        .score-display {
-            font-size: 3rem;
-            text-align: center;
-            font-weight: bold;
-            margin: 10px 0;
-            color: var(--secondary);
-        }
+        /* History */
+        .history-list { font-family: monospace; background: #000; padding: 10px; border-radius: 8px; font-size: 0.8rem; height: 60px; overflow-y: auto; }
 
-        .button-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
-        }
-
-        button {
-            background: #333;
-            border: none;
-            color: white;
-            padding: 15px;
-            border-radius: 8px;
-            font-size: 1.2rem;
-            font-weight: bold;
-            cursor: pointer;
-            transition: transform 0.1s;
-        }
-
-        button:active { transform: scale(0.95); background: #444; }
-        
-        .btn-special { background: var(--primary); color: #000; }
-        .btn-miss { background: var(--danger); }
-
-        .history {
-            max-height: 150px;
-            overflow-y: auto;
-            background: rgba(0,0,0,0.2);
-            padding: 10px;
-            border-radius: 8px;
-            margin-top: 15px;
-            font-family: monospace;
-        }
-
-        .gear-vault input {
-            width: 100%;
-            padding: 10px;
-            margin-top: 10px;
-            background: #333;
-            border: 1px solid #444;
-            color: white;
-            border-radius: 4px;
-            box-sizing: border-box;
-        }
-
-        .status-bar {
-            text-align: center;
-            font-size: 0.8rem;
-            color: #888;
-            margin-top: 10px;
+        /* Gear Vault */
+        .vault-item { border-bottom: 1px solid #334155; padding: 10px 0; }
+        input { 
+            width: 100%; background: #0f172a; border: 1px solid #334155; 
+            color: white; padding: 10px; border-radius: 6px; margin: 5px 0;
         }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h1>Archery Tracker</h1>
-
-    <div class="card">
-        <div style="text-align: center; font-size: 0.9rem; color: #888;">CURRENT ROUND</div>
-        <div class="score-display" id="totalScore">0</div>
-        
-        <div class="button-grid">
-            <button class="btn-special" onclick="addScore(11)">11</button>
-            <button onclick="addScore(10)">10</button>
-            <button onclick="addScore(8)">8</button>
-            <button onclick="addScore(5)">5</button>
-            <button onclick="addScore(0)">0</button>
-            <button class="btn-miss" onclick="resetScores()">CLR</button>
+    <section id="home" class="screen active">
+        <h1>Archer Dashboard</h1>
+        <div class="card">
+            <h3>Quick Stats</h3>
+            <p id="lastSession">Last Session: --</p>
+            <p id="totalArrows">Total Arrows Today: 0</p>
         </div>
+        <button class="btn btn-xl" style="width:100%" onclick="showScreen('scoring')">Start New Shoot</button>
+    </section>
 
-        <div class="history" id="scoreHistory">History: </div>
-    </div>
+    <section id="scoring" class="screen">
+        <div style="display:flex; justify-content: space-between; align-items: center;">
+            <h2 id="modeTitle">3D Mode</h2>
+            <button class="btn btn-clear" style="padding: 5px 10px;" onclick="toggleMode()">Switch Mode</button>
+        </div>
+        
+        <div class="total-display" id="mainScore">0</div>
+        
+        <div class="score-grid" id="buttonContainer">
+            </div>
 
-    <div class="card gear-vault">
-        <h3>Gear Vault: Barebow Marks</h3>
-        <label>50m Crawl (mm):</label>
-        <input type="number" id="crawl50" placeholder="e.g. 25" onchange="saveGear()">
-        <label>3D Setup Note:</label>
-        <input type="text" id="gearNote" placeholder="Limbs, tab, etc." onchange="saveGear()">
-    </div>
+        <div class="card" style="margin-top:20px;">
+            <div class="history-list" id="scoreHistory">History: </div>
+            <div style="display:flex; gap:10px; margin-top:10px;">
+                <button class="btn btn-clear" style="flex:1" onclick="popLast()">Undo</button>
+                <button class="btn btn-clear" style="flex:1" onclick="resetSession()">Reset</button>
+            </div>
+        </div>
+    </section>
 
-    <div class="status-bar" id="syncStatus">System Ready | Not Synced</div>
-</div>
+    <section id="gear" class="screen">
+        <h2>Gear Vault</h2>
+        <div class="card">
+            <h4>Crawl Settings (50m)</h4>
+            <div class="vault-item">
+                <label>String Walking Mark (mm):</label>
+                <input type="number" id="v_crawl" placeholder="e.g. 24" onchange="saveVault()">
+            </div>
+            <div class="vault-item">
+                <label>Bow Setup Notes:</label>
+                <input type="text" id="v_notes" placeholder="Limbs, Plunger settings..." onchange="saveVault()">
+            </div>
+        </div>
+    </section>
+
+    <nav>
+        <span id="n-home" class="active" onclick="showScreen('home')">HOME</span>
+        <span id="n-scoring" onclick="showScreen('scoring')">SCORING</span>
+        <span id="n-gear" onclick="showScreen('gear')">VAULT</span>
+    </nav>
 
 <script>
-    let scores = [];
+    let appState = {
+        scores: [],
+        mode: '3D', // or 'Target'
+        vault: { crawl: '', notes: '' }
+    };
 
-    function addScore(val) {
-        scores.push(val);
-        updateUI();
-        syncData();
+    const modes = {
+        '3D': [11, 10, 8, 5, 0],
+        'Target': [10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0]
+    };
+
+    function showScreen(id) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.querySelectorAll('nav span').forEach(n => n.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+        document.getElementById('n-' + id).classList.add('active');
     }
 
-    function resetScores() {
+    function toggleMode() {
+        appState.mode = appState.mode === '3D' ? 'Target' : '3D';
+        document.getElementById('modeTitle').innerText = appState.mode + " Mode";
+        renderButtons();
+    }
+
+    function renderButtons() {
+        const container = document.getElementById('buttonContainer');
+        container.innerHTML = '';
+        modes[appState.mode].forEach(val => {
+            const b = document.createElement('button');
+            b.className = 'btn' + (val >= 10 ? ' btn-xl' : '');
+            b.innerText = val === 0 ? 'M' : val;
+            b.onclick = () => addArrow(val);
+            container.appendChild(b);
+        });
+    }
+
+    function addArrow(val) {
+        appState.scores.push(val);
+        updateUI();
+        saveToLocal();
+    }
+
+    function popLast() {
+        appState.scores.pop();
+        updateUI();
+    }
+
+    function resetSession() {
         if(confirm("Clear current round?")) {
-            scores = [];
+            appState.scores = [];
             updateUI();
         }
     }
 
     function updateUI() {
-        const total = scores.reduce((a, b) => a + b, 0);
-        document.getElementById('totalScore').innerText = total;
-        document.getElementById('scoreHistory').innerText = "History: " + scores.join(", ");
+        const total = appState.scores.reduce((a, b) => a + b, 0);
+        document.getElementById('mainScore').innerText = total;
+        document.getElementById('scoreHistory').innerText = "History: " + appState.scores.join(", ");
+        document.getElementById('totalArrows').innerText = "Total Arrows Today: " + appState.scores.length;
     }
 
-    function saveGear() {
-        const crawl = document.getElementById('crawl50').value;
-        const note = document.getElementById('gearNote').value;
-        localStorage.setItem('archeryGear', JSON.stringify({crawl, note}));
-        showStatus("Gear settings saved locally.");
+    function saveVault() {
+        appState.vault.crawl = document.getElementById('v_crawl').value;
+        appState.vault.notes = document.getElementById('v_notes').value;
+        saveToLocal();
     }
 
-    function syncData() {
-        // Logic for Google Sheets Sync would go here
-        showStatus("Syncing to Master Sheet...");
-        setTimeout(() => showStatus("Synced ✅"), 800);
+    function saveToLocal() {
+        localStorage.setItem('archery_pro_data', JSON.stringify(appState));
     }
 
-    function showStatus(msg) {
-        document.getElementById('syncStatus').innerText = msg;
-    }
-
-    // Load saved gear on startup
-    window.onload = () => {
-        const saved = JSON.parse(localStorage.getItem('archeryGear'));
-        if (saved) {
-            document.getElementById('crawl50').value = saved.crawl || "";
-            document.getElementById('gearNote').value = saved.note || "";
+    function loadLocal() {
+        const saved = localStorage.getItem('archery_pro_data');
+        if(saved) {
+            appState = JSON.parse(saved);
+            document.getElementById('v_crawl').value = appState.vault.crawl || '';
+            document.getElementById('v_notes').value = appState.vault.notes || '';
+            updateUI();
+            renderButtons();
         }
+    }
+
+    window.onload = () => {
+        loadLocal();
+        renderButtons();
     };
 </script>
-
 </body>
 </html>
