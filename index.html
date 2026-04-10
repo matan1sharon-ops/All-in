@@ -91,15 +91,31 @@
         const area = document.getElementById('button-area'); area.innerHTML = '';
         let scores = mode === 'FIELD' ? [6,5,4,3,2,1,0] : (mode.includes('TARGET') ? [10,9,8,7,6,5,4,3,2,1,0] : [11,10,8,5,0]);
         area.style.gridTemplateColumns = scores.length > 6 ? 'repeat(4, 1fr)' : 'repeat(3, 1fr)';
+        
         scores.forEach(s => {
             const btn = document.createElement('button'); btn.className = 'score-btn';
             btn.style.backgroundColor = getBgColor(mode, s); btn.style.color = getTextColor(mode, s);
             btn.innerText = s === 0 ? 'M' : s;
-            btn.onclick = () => { if(state.current.length < state.arrowLimit) { state.current.push(s); updateUI(); } };
+            btn.onclick = () => { 
+                if(state.current.length < state.arrowLimit) { 
+                    state.current.push(s); 
+                    updateUI(); // Updates instantly
+                } 
+            };
             area.appendChild(btn);
         });
-        const delBtn = document.createElement('button'); delBtn.className = 'score-btn'; delBtn.style.backgroundColor = '#333'; delBtn.style.color = '#fff';
-        delBtn.innerText = '⌫'; delBtn.onclick = () => { state.current.pop(); updateUI(); };
+        
+        const delBtn = document.createElement('button'); 
+        delBtn.className = 'score-btn'; 
+        delBtn.style.backgroundColor = '#333'; 
+        delBtn.style.color = '#fff';
+        delBtn.innerText = '⌫'; 
+        delBtn.onclick = () => { 
+            if(state.current.length > 0) {
+                state.current.pop(); // Removes the last arrow
+                updateUI(); // Updates instantly
+            }
+        };
         area.appendChild(delBtn);
     }
 
@@ -119,20 +135,119 @@
 
     function nextEnd() {
         if(state.current.length < state.arrowLimit) return;
+        
         const entry = { scores: [...state.current], crawl: document.getElementById('crawl-val').innerText, total: state.current.reduce((a,b)=>a+b,0) };
-        if(state.editingIdx > -1) { state.history[state.editingIdx] = entry; state.editingIdx = -1; }
-        else { state.history.push(entry); }
-        state.current = [];
-        updateUI();
+        
+        if(state.editingIdx > -1) { 
+            state.history[state.editingIdx] = entry; 
+            state.editingIdx = -1; 
+        } else { 
+            state.history.push(entry); 
+        }
+        
+        state.current = []; // Clears input for the NEXT target
+        updateUI(); // Triggers the fresh empty card
     }
 
     function startEditing(idx) {
         state.editingIdx = idx;
-        state.current = [...state.history[idx].scores]; // Keep current scores visible
+        // IMPORTANT: We KEEP the scores loaded so you can see them and backspace them!
+        state.current = [...state.history[idx].scores]; 
         document.getElementById('crawl-val').innerText = state.history[idx].crawl;
         updateUI();
     }
 
     function adjCrawl(amt) {
         let v = parseInt(document.getElementById('crawl-val').innerText) + amt;
-        document.getElementById('
+        document.getElementById('crawl-val').innerText = Math.max(0, v);
+        updateUI();
+    }
+
+    function updateUI() {
+        const list = document.getElementById('score-list'); 
+        list.innerHTML = '';
+        
+        let grandTotal = state.history.reduce((a,b)=>a+b.total,0);
+        document.getElementById('total-score').innerText = grandTotal;
+        const mainBtn = document.getElementById('main-action-btn');
+
+        const isFull = state.current.length === state.arrowLimit;
+        
+        // 1. Setup the Next / Save button
+        if(state.editingIdx > -1) {
+            mainBtn.innerText = "SAVE EDIT";
+            mainBtn.style.background = isFull ? "var(--edit)" : "#222";
+            mainBtn.style.color = isFull ? "#fff" : "#555";
+            document.getElementById('target-count').innerText = `EDIT T${state.editingIdx + 1}`;
+            mainBtn.onclick = nextEnd;
+            mainBtn.disabled = !isFull;
+        } else if (state.history.length >= state.endLimit) {
+            mainBtn.innerText = "FINISH SESSION";
+            mainBtn.style.background = "var(--accent)";
+            mainBtn.style.color = "#000";
+            mainBtn.onclick = finishSession;
+            mainBtn.disabled = false;
+            document.getElementById('target-count').innerText = "DONE";
+        } else {
+            mainBtn.innerText = "NEXT END";
+            mainBtn.style.background = isFull ? "var(--accent)" : "#222";
+            mainBtn.style.color = isFull ? "#000" : "#555";
+            document.getElementById('target-count').innerText = `T${state.history.length + 1}/${state.endLimit}`;
+            mainBtn.onclick = nextEnd;
+            mainBtn.disabled = !isFull;
+        }
+
+        // 2. ALWAYS draw the Active Input card at the top (unless finished)
+        if (state.history.length < state.endLimit || state.editingIdx > -1) {
+            const activeDiv = document.createElement('div');
+            const isEditing = state.editingIdx > -1;
+            activeDiv.className = 'end-card ' + (isEditing ? 'editing-card' : 'active-card');
+            
+            const curTot = state.current.reduce((a,b)=>a+b,0) || 0;
+            const curCrawl = document.getElementById('crawl-val').innerText;
+            const label = isEditing ? `EDITING T${state.editingIdx+1}` : `TARGET ${state.history.length+1}`;
+            
+            let scoreDisplay = '---';
+            if (state.current.length > 0) {
+                scoreDisplay = state.current.map(s => s === 0 ? 'M' : s).join(' · ');
+            }
+            
+            activeDiv.innerHTML = `<div><div class="end-meta" style="color:${isEditing ? 'var(--edit)' : 'var(--accent)'}">${label} • ${curCrawl}mm</div><div class="end-val">${scoreDisplay}</div></div><div style="font-weight:900; font-size:28px; color:${isEditing ? 'var(--edit)' : 'var(--accent)'}">${curTot}</div>`;
+            list.appendChild(activeDiv);
+        }
+
+        // 3. Draw the History List below the active card
+        state.history.slice().reverse().forEach((e, i) => {
+            const actualIdx = state.history.length - 1 - i;
+            if(actualIdx === state.editingIdx) return; // Hide the old card because it jumped up to the top
+            
+            const div = document.createElement('div');
+            div.className = 'end-card';
+            div.onclick = () => startEditing(actualIdx);
+            div.innerHTML = `<div><div class="end-meta">T${actualIdx+1} ${state.mode.includes('TARGET') ? '' : '• '+e.crawl+'mm'}</div><div class="end-val">${e.scores.map(s=>s===0?'M':s).join(' · ')}</div></div><div style="color:var(--accent); font-weight:900; font-size:24px">${e.total}</div>`;
+            list.appendChild(div);
+        });
+    }
+
+    function finishSession() {
+        if(state.history.length > 0) {
+            let logs = JSON.parse(localStorage.getItem('archery_history') || '[]');
+            logs.push({ date: new Date().toLocaleDateString(), mode: state.mode, total: state.history.reduce((a,b)=>a+b.total,0), ends: state.history.length });
+            localStorage.setItem('archery_history', JSON.stringify(logs));
+        }
+        showScreen('home');
+    }
+
+    function loadJournal() {
+        const list = document.getElementById('journal-list'); list.innerHTML = '';
+        let logs = JSON.parse(localStorage.getItem('archery_history') || '[]');
+        if(logs.length === 0) { list.innerHTML = '<div style="color:var(--gray); text-align:center">No sessions.</div>'; return; }
+        logs.slice().reverse().forEach(log => {
+            const div = document.createElement('div'); div.className = 'end-card'; div.style.marginBottom = "10px";
+            div.innerHTML = `<div><div class="end-meta">${log.mode} • ${log.date}</div><div class="end-val">${log.total} <small style="font-size:12px; font-weight:normal">PTS</small></div></div><div style="color:var(--gray); font-size:12px">${log.ends} ENDS</div>`;
+            list.appendChild(div);
+        });
+    }
+</script>
+</body>
+</html>
