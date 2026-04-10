@@ -11,13 +11,11 @@
         .app-container { width: 100%; max-width: 500px; height: 100%; display: flex; flex-direction: column; position: relative; }
         .screen { display: none; flex-direction: column; height: 100%; padding: 40px 20px 20px; position: absolute; top: 0; left: 0; width: 100%; }
         .active-screen { display: flex; z-index: 10; }
-        .logo-text { font-size: 40px; font-weight: 900; letter-spacing: 8px; text-align: center; margin-bottom: 30px; }
+        .logo-text { font-size: 40px; font-weight: 900; letter-spacing: 8px; text-align: center; margin-bottom: 20px; }
         
-        /* Fixed Home Screen Buttons */
-        .menu-list { display: flex; flex-direction: column; gap: 12px; flex-grow: 1; overflow-y: auto; }
-        .menu-btn { background: #fff; color: #000; padding: 20px; border-radius: 15px; font-size: 18px; font-weight: 800; border: none; text-align: left; cursor: pointer; }
-        .menu-btn:active { opacity: 0.8; transform: scale(0.98); }
-        .vault-btn { background: var(--card); border: 1px solid #333; color: #fff; padding: 18px; border-radius: 15px; font-weight: bold; margin-top: 10px; text-align: center; border: none; cursor: pointer; }
+        .menu-list { display: flex; flex-direction: column; gap: 10px; flex-grow: 1; overflow-y: auto; }
+        .menu-btn { background: #fff; color: #000; padding: 18px; border-radius: 15px; font-size: 16px; font-weight: 800; border: none; text-align: left; cursor: pointer; }
+        .vault-btn { background: var(--card); border: 1px solid #333; color: #fff; padding: 16px; border-radius: 15px; font-weight: bold; text-align: center; cursor: pointer; }
 
         header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 15px; border-bottom: 1px solid #222; }
         #score-list { flex-grow: 1; overflow-y: auto; padding: 15px 0; display: flex; flex-direction: column; gap: 10px; }
@@ -31,12 +29,9 @@
         .crawl-box { background: var(--card); padding: 10px 15px; border-radius: 12px; margin-bottom: 15px; border: 1px solid #333; display: flex; justify-content: space-between; align-items: center; }
         .crawl-btn { background: #333; color: #fff; border: none; padding: 10px 20px; border-radius: 8px; font-size: 20px; font-weight: bold; }
         
-        .next-btn { background: var(--accent); color: #000; width: 100%; padding: 18px; border-radius: 12px; font-size: 20px; font-weight: 900; border: none; margin-bottom: 15px; transition: background 0.2s; }
-        .next-btn:disabled { background: #222 !important; color: #555 !important; }
-        
+        .next-btn { background: var(--accent); color: #000; width: 100%; padding: 18px; border-radius: 12px; font-size: 20px; font-weight: 900; border: none; margin-bottom: 15px; }
         .btn-grid { display: grid; gap: 8px; }
-        .score-btn { height: 60px; border-radius: 10px; border: 1px solid #333; font-size: 24px; font-weight: 900; cursor: pointer; }
-        .score-btn:disabled { opacity: 0.3; pointer-events: none; }
+        .score-btn { height: 60px; border-radius: 10px; border: 1px solid #333; font-size: 22px; font-weight: 900; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -49,10 +44,10 @@
             <button class="menu-btn" onclick="startApp('FIELD', 3, 24)">Field Practice (24)</button>
             <button class="menu-btn" onclick="startApp('TARGET IN', 3, 20)">Target Indoor (20)</button>
             <button class="menu-btn" onclick="startApp('TARGET OUT', 6, 12)">Target Outdoor (12)</button>
-            <button class="menu-btn" onclick="startApp('BAREBOW 50M', 6, 12)" style="border: 2px solid var(--accent)">Barebow 50m (12)</button>
+            <hr style="border:0; border-top:1px solid #222; width:100%; margin:10px 0;">
+            <button class="vault-btn" onclick="openJournal()">📖 SESSION JOURNAL</button>
+            <button class="vault-btn" onclick="showScreen('vault')">⚙ GEAR VAULT</button>
         </div>
-        <button class="vault-btn" onclick="openJournal()">📖 SESSION JOURNAL</button>
-        <button class="vault-btn" onclick="showScreen('vault')">⚙ GEAR VAULT</button>
     </div>
 
     <div id="journal" class="screen">
@@ -69,14 +64,13 @@
             <h1 style="margin:0">Vault</h1>
             <button onclick="saveVault()" style="background:var(--accent); border:none; padding:10px 20px; border-radius:20px; font-weight:bold; color:#000;">SAVE</button>
         </div>
-        <label style="color:var(--gray); font-size:12px; font-weight:bold; margin-bottom:8px; display:block;">BOW NAME</label>
-        <input id="in-name" style="background:#1c1c1e; border:1px solid #3a3a3c; color:#fff; padding:18px; border-radius:12px; margin-bottom:15px; width:100%; font-size:16px;" placeholder="e.g. My Barebow">
-        <button onclick="showScreen('home')" style="margin-top:auto; background:none; border:none; color:var(--gray); padding:20px">← Back to Home</button>
+        <input id="in-name" style="background:#1c1c1e; border:1px solid #3a3a3c; color:#fff; padding:18px; border-radius:12px; width:100%;" placeholder="Bow Name">
+        <button onclick="showScreen('home')" style="margin-top:auto; background:none; border:none; color:var(--gray); padding:20px">← Back</button>
     </div>
 
     <div id="scoring" class="screen">
         <header>
-            <button onclick="if(confirm('Exit session?')) showScreen('home')" style="background:none; border:none; color:var(--gray); font-size:24px">✕</button>
+            <button onclick="if(confirm('Exit?')) showScreen('home')" style="background:none; border:none; color:var(--gray); font-size:24px">✕</button>
             <div id="mode-title" style="font-weight:900; letter-spacing:2px">3D</div>
             <div style="text-align:right">
                 <div id="target-count" style="background:var(--accent); color:#000; padding:2px 8px; border-radius:8px; font-weight:bold; font-size:12px">T1</div>
@@ -87,9 +81,9 @@
         <div class="controls">
             <div id="crawl-ui" class="crawl-box">
                 <span style="font-size:10px; font-weight:bold; color:var(--gray)">CRAWL</span>
-                <div style="display:flex; align-items:center; gap:10px;">
+                <div style="display:flex; align-items:center; gap:15px;">
                     <button class="crawl-btn" onclick="adjCrawl(-1)">-</button>
-                    <span id="crawl-val" style="color:var(--accent); font-weight:900; font-size:18px; width:40px; text-align:center;">0</span>
+                    <span id="crawl-val" style="color:var(--accent); font-weight:900; font-size:18px;">0</span>
                     <button class="crawl-btn" onclick="adjCrawl(1)">+</button>
                 </div>
             </div>
@@ -103,16 +97,14 @@
     let state = { current: [], history: [], arrowLimit: 2, endLimit: 24, mode: '', editingIdx: -1 };
 
     function showScreen(id) {
-        // Ensure all screens are hidden and only the target is shown
         document.querySelectorAll('.screen').forEach(s => s.classList.remove('active-screen'));
-        const target = document.getElementById(id);
-        if(target) target.classList.add('active-screen');
+        document.getElementById(id).classList.add('active-screen');
     }
 
     function startApp(mode, arrowLimit, endLimit) {
         state = { current: [], history: [], arrowLimit, endLimit, mode, editingIdx: -1 };
         document.getElementById('mode-title').innerText = mode;
-        document.getElementById('crawl-ui').style.display = (mode.includes('TARGET') || mode.includes('BAREBOW')) ? 'none' : 'flex';
+        document.getElementById('crawl-ui').style.display = (mode.includes('TARGET')) ? 'none' : 'flex';
         document.getElementById('crawl-val').innerText = '0';
         setupButtons(mode);
         updateUI();
@@ -121,51 +113,43 @@
 
     function setupButtons(mode) {
         const area = document.getElementById('button-area'); area.innerHTML = '';
-        let scores = mode === 'FIELD' ? [6,5,4,3,2,1,0] : (mode.includes('TARGET') || mode.includes('BAREBOW') ? [10,9,8,7,6,5,4,3,2,1,0] : [11,10,8,5,0]);
+        let scores = mode === 'FIELD' ? [6,5,4,3,2,1,0] : (mode.includes('TARGET') ? [10,9,8,7,6,5,4,3,2,1,0] : [11,10,8,5,0]);
         area.style.gridTemplateColumns = scores.length > 6 ? 'repeat(4, 1fr)' : 'repeat(3, 1fr)';
         
         scores.forEach(s => {
             const btn = document.createElement('button'); btn.className = 'score-btn';
-            btn.style.backgroundColor = getBgColor(mode, s); btn.style.color = getTextColor(mode, s);
+            const colors = getColors(mode, s);
+            btn.style.backgroundColor = colors.bg; btn.style.color = colors.txt;
             btn.innerText = s === 0 ? 'M' : s;
             btn.onclick = () => addScore(s);
             area.appendChild(btn);
         });
         
-        const delBtn = document.createElement('button'); 
-        delBtn.className = 'score-btn'; delBtn.id = 'del-btn';
-        delBtn.style.backgroundColor = '#333'; delBtn.style.color = '#fff';
-        delBtn.innerText = '⌫'; 
+        const delBtn = document.createElement('button'); delBtn.className = 'score-btn';
+        delBtn.style.backgroundColor = '#333'; delBtn.style.color = '#fff'; delBtn.innerText = '⌫'; 
         delBtn.onclick = popScore;
         area.appendChild(delBtn);
     }
 
     function addScore(s) {
-        if(state.current.length < state.arrowLimit) {
-            state.current.push(s);
-            updateUI();
-        }
+        if(state.current.length < state.arrowLimit) { state.current.push(s); updateUI(); }
     }
 
     function popScore() {
-        if(state.current.length > 0) {
-            state.current.pop();
-            updateUI();
+        if(state.current.length > 0) { state.current.pop(); updateUI(); }
+    }
+
+    function getColors(mode, s) {
+        if (mode === '3D') {
+            if (s === 11) return { bg: '#FFD700', txt: '#000' };
+            if (s === 10) return { bg: '#ff3b30', txt: '#fff' };
+            if (s === 8) return { bg: '#007aff', txt: '#fff' };
+            if (s === 5) return { bg: '#1c1c1e', txt: '#fff' };
+            if (s === 0) return { bg: '#34c759', txt: '#fff' };
         }
-    }
-
-    function getBgColor(mode, s) {
-        if(s === 0) return '#34c759';
-        if(mode === 'FIELD') return s >= 5 ? '#FFD700' : '#2c2c2e';
-        if(mode.includes('TARGET') || mode.includes('BAREBOW')) return s >= 9 ? '#FFD700' : (s >= 7 ? '#ff3b30' : (s >= 5 ? '#007aff' : (s >= 3 ? '#2c2c2e' : '#fff')));
-        return s >= 10 ? '#FFD700' : (s === 8 ? '#007aff' : '#2c2c2e');
-    }
-
-    function getTextColor(mode, s) {
-        if(s === 0) return '#fff';
-        if((mode.includes('TARGET') || mode.includes('BAREBOW')) && (s >= 9 || s <= 2)) return '#000';
-        if(mode === 'FIELD' && s >= 5) return '#000';
-        return (mode === '3D' && s >= 10) ? '#000' : '#fff';
+        if (s === 0) return { bg: '#34c759', txt: '#fff' };
+        if (mode === 'FIELD') return s >= 5 ? { bg: '#FFD700', txt: '#000' } : { bg: '#2c2c2e', txt: '#fff' };
+        return s >= 9 ? { bg: '#FFD700', txt: '#000' } : (s >= 7 ? { bg: '#ff3b30', txt: '#fff' } : { bg: '#007aff', txt: '#fff' });
     }
 
     function nextEnd() {
@@ -177,61 +161,39 @@
         updateUI(); 
     }
 
-    function startEditing(idx) {
-        if (state.current.length > 0 && state.editingIdx === -1) return;
-        state.editingIdx = idx;
-        state.current = [...state.history[idx].scores]; 
-        document.getElementById('crawl-val').innerText = state.history[idx].crawl;
-        updateUI();
-    }
-
-    function adjCrawl(amt) {
-        let v = parseInt(document.getElementById('crawl-val').innerText) + amt;
-        document.getElementById('crawl-val').innerText = Math.max(0, v);
-    }
-
     function updateUI() {
         const list = document.getElementById('score-list'); list.innerHTML = '';
-        let grandTotal = state.history.reduce((a,b)=>a+b.total,0);
+        const grandTotal = state.history.reduce((a,b)=>a+b.total,0);
         document.getElementById('total-score').innerText = grandTotal;
         
+        const targetNum = state.editingIdx > -1 ? state.editingIdx + 1 : state.history.length + 1;
+        document.getElementById('target-count').innerText = 'T' + targetNum;
+
         const mainBtn = document.getElementById('main-action-btn');
         const isFull = state.current.length === state.arrowLimit;
-
-        document.querySelectorAll('.score-btn').forEach(btn => {
-            if (btn.id !== 'del-btn') btn.disabled = isFull;
-        });
         
-        if(state.editingIdx > -1) {
-            mainBtn.innerText = "SAVE EDIT";
-            mainBtn.onclick = nextEnd;
-            mainBtn.disabled = !isFull;
-        } else if (state.history.length >= state.endLimit) {
+        if (state.history.length >= state.endLimit && state.editingIdx === -1) {
             mainBtn.innerText = "FINISH SESSION";
             mainBtn.onclick = finishSession;
-            mainBtn.disabled = false;
         } else {
-            mainBtn.innerText = "NEXT END";
+            mainBtn.innerText = state.editingIdx > -1 ? "SAVE EDIT" : "NEXT END";
             mainBtn.onclick = nextEnd;
             mainBtn.disabled = !isFull;
         }
 
-        // Active Card
         if (state.history.length < state.endLimit || state.editingIdx > -1) {
             const activeDiv = document.createElement('div');
             activeDiv.className = 'end-card ' + (state.editingIdx > -1 ? 'editing-card' : 'active-card');
-            const curTot = state.current.reduce((a,b)=>a+b,0) || 0;
-            activeDiv.innerHTML = `<div><div class="end-meta">TARGET ${state.editingIdx > -1 ? state.editingIdx+1 : state.history.length+1}</div><div class="end-val">${state.current.length ? state.current.map(s=>s===0?'M':s).join(' · ') : '---'}</div></div><div style="font-weight:900; font-size:28px">${curTot}</div>`;
+            activeDiv.innerHTML = `<div><div class="end-meta">TARGET ${targetNum}</div><div class="end-val">${state.current.length ? state.current.map(s=>s===0?'M':s).join(' · ') : '---'}</div></div><div style="font-weight:900; font-size:28px">${state.current.reduce((a,b)=>a+b,0)}</div>`;
             list.appendChild(activeDiv);
         }
 
         state.history.slice().reverse().forEach((e, i) => {
-            const actualIdx = state.history.length - 1 - i;
-            if(actualIdx === state.editingIdx) return;
-            const div = document.createElement('div');
-            div.className = 'end-card';
-            div.onclick = () => startEditing(actualIdx);
-            div.innerHTML = `<div><div class="end-meta">T${actualIdx+1}</div><div class="end-val">${e.scores.map(s=>s===0?'M':s).join(' · ')}</div></div><div style="color:var(--accent); font-weight:900; font-size:24px">${e.total}</div>`;
+            const idx = state.history.length - 1 - i;
+            if(idx === state.editingIdx) return;
+            const div = document.createElement('div'); div.className = 'end-card';
+            div.onclick = () => { state.editingIdx = idx; state.current = [...state.history[idx].scores]; updateUI(); };
+            div.innerHTML = `<div><div class="end-meta">T${idx+1}</div><div class="end-val">${e.scores.map(s=>s===0?'M':s).join(' · ')}</div></div><div style="color:var(--accent); font-weight:900; font-size:24px">${e.total}</div>`;
             list.appendChild(div);
         });
     }
@@ -243,30 +205,29 @@
         showScreen('home');
     }
 
-    function openJournal() { loadJournal(); showScreen('journal'); }
+    function adjCrawl(amt) {
+        let v = parseInt(document.getElementById('crawl-val').innerText) + amt;
+        document.getElementById('crawl-val').innerText = Math.max(0, v);
+    }
 
+    function openJournal() { loadJournal(); showScreen('journal'); }
     function loadJournal() {
         const list = document.getElementById('journal-list'); list.innerHTML = '';
         let logs = JSON.parse(localStorage.getItem('archery_history') || '[]');
         logs.slice().reverse().forEach(log => {
             const div = document.createElement('div'); div.className = 'end-card'; div.style.marginBottom = "10px";
-            div.innerHTML = `<div><div class="end-meta">${log.mode} • ${log.date}</div><div class="end-val">${log.total} <small style="font-size:12px">PTS</small></div></div><div style="color:var(--gray); font-size:12px">${log.ends} ENDS</div>`;
+            div.innerHTML = `<div><div class="end-meta">${log.mode} • ${log.date}</div><div class="end-val">${log.total} PTS</div></div><div style="color:var(--gray); font-size:12px">${log.ends} ENDS</div>`;
             list.appendChild(div);
         });
     }
 
-    function clearJournal() { if(confirm('Clear all history?')) { localStorage.removeItem('archery_history'); loadJournal(); } }
+    function clearJournal() { if(confirm('Clear all?')) { localStorage.removeItem('archery_history'); loadJournal(); } }
+    function saveVault() { localStorage.setItem('allin_gear_name', document.getElementById('in-name').value); showScreen('home'); }
 
-    function saveVault() {
-        localStorage.setItem('allin_gear_name', document.getElementById('in-name').value);
-        showScreen('home');
-    }
-
-    // Auto-load vault name
-    document.addEventListener('DOMContentLoaded', () => {
+    window.onload = () => {
         const n = localStorage.getItem('allin_gear_name');
         if(n) document.getElementById('in-name').value = n;
-    });
+    };
 </script>
 </body>
 </html>
