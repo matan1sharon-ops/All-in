@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>ALL IN Archery</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root { --bg: #000; --text: #fff; --accent: #FFD700; --card: #151515; --gray: #888; --edit: #007aff; }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; touch-action: manipulation; }
@@ -32,6 +33,8 @@
         .next-btn { background: var(--accent); color: #000; width: 100%; padding: 18px; border-radius: 12px; font-size: 20px; font-weight: 900; border: none; margin-bottom: 15px; }
         .btn-grid { display: grid; gap: 8px; }
         .score-btn { height: 60px; border-radius: 10px; border: 1px solid #333; font-size: 22px; font-weight: 900; cursor: pointer; }
+        
+        .chart-container { width: 100%; height: 200px; margin-top: 15px; margin-bottom: 15px; background: var(--card); padding: 10px; border-radius: 12px; border: 1px solid #222; }
     </style>
 </head>
 <body>
@@ -54,18 +57,23 @@
         <header>
             <button onclick="showScreen('home')" style="background:none; border:none; color:var(--gray); font-size:18px">← Back</button>
             <div style="font-weight:900">JOURNAL</div>
-            <button onclick="clearJournal()" style="background:none; border:none; color:red; font-size:12px">CLEAR</button>
+            <button onclick="clearJournal()" style="background:none; border:none; color:red; font-size:12px; font-weight:bold;">CLEAR</button>
         </header>
-        <div id="journal-list" style="flex-grow:1; overflow-y:auto; padding-top:20px;"></div>
+        <div class="chart-container">
+            <canvas id="progressChart"></canvas>
+        </div>
+        <div id="journal-list" style="flex-grow:1; overflow-y:auto; padding-top:10px;"></div>
     </div>
 
     <div id="vault" class="screen">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:30px">
-            <h1 style="margin:0">Vault</h1>
-            <button onclick="saveVault()" style="background:var(--accent); border:none; padding:10px 20px; border-radius:20px; font-weight:bold; color:#000;">SAVE</button>
+        <header>
+            <button onclick="showScreen('home')" style="background:none; border:none; color:var(--gray); font-size:18px">← Back</button>
+            <div style="font-weight:900">VAULT</div>
+            <button onclick="saveVault()" style="background:none; border:none; color:var(--accent); font-size:12px; font-weight:bold;">SAVE</button>
+        </header>
+        <div style="padding-top: 20px;">
+            <input id="in-name" style="background:#1c1c1e; border:1px solid #3a3a3c; color:#fff; padding:18px; border-radius:12px; width:100%; font-size: 16px;" placeholder="Bow Name">
         </div>
-        <input id="in-name" style="background:#1c1c1e; border:1px solid #3a3a3c; color:#fff; padding:18px; border-radius:12px; width:100%;" placeholder="Bow Name">
-        <button onclick="showScreen('home')" style="margin-top:auto; background:none; border:none; color:var(--gray); padding:20px">← Back</button>
     </div>
 
     <div id="scoring" class="screen">
@@ -95,6 +103,7 @@
 
 <script>
     let state = { current: [], history: [], arrowLimit: 2, endLimit: 24, mode: '', editingIdx: -1 };
+    let chartInstance = null;
 
     function showScreen(id) {
         document.querySelectorAll('.screen').forEach(s => s.classList.remove('active-screen'));
@@ -210,19 +219,72 @@
         document.getElementById('crawl-val').innerText = Math.max(0, v);
     }
 
-    function openJournal() { loadJournal(); showScreen('journal'); }
+    function openJournal() { 
+        loadJournal(); 
+        showScreen('journal'); 
+    }
+
     function loadJournal() {
         const list = document.getElementById('journal-list'); list.innerHTML = '';
         let logs = JSON.parse(localStorage.getItem('archery_history') || '[]');
+        
         logs.slice().reverse().forEach(log => {
             const div = document.createElement('div'); div.className = 'end-card'; div.style.marginBottom = "10px";
             div.innerHTML = `<div><div class="end-meta">${log.mode} • ${log.date}</div><div class="end-val">${log.total} PTS</div></div><div style="color:var(--gray); font-size:12px">${log.ends} ENDS</div>`;
             list.appendChild(div);
         });
+
+        drawChart(logs);
     }
 
-    function clearJournal() { if(confirm('Clear all?')) { localStorage.removeItem('archery_history'); loadJournal(); } }
-    function saveVault() { localStorage.setItem('allin_gear_name', document.getElementById('in-name').value); showScreen('home'); }
+    function drawChart(logs) {
+        const ctx = document.getElementById('progressChart').getContext('2d');
+        if (chartInstance) { chartInstance.destroy(); }
+        
+        if (logs.length === 0) return;
+
+        const labels = logs.map((_, i) => 'S' + (i + 1));
+        const dataPoints = logs.map(log => log.total);
+
+        chartInstance = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Session Score',
+                    data: dataPoints,
+                    borderColor: '#FFD700',
+                    backgroundColor: 'rgba(255, 215, 0, 0.1)',
+                    borderWidth: 3,
+                    pointBackgroundColor: '#fff',
+                    pointRadius: 4,
+                    fill: true,
+                    tension: 0.3
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { grid: { color: '#222' }, ticks: { color: '#888' } },
+                    y: { grid: { color: '#222' }, ticks: { color: '#888' }, beginAtZero: false }
+                }
+            }
+        });
+    }
+
+    function clearJournal() { 
+        if(confirm('Clear all?')) { 
+            localStorage.removeItem('archery_history'); 
+            loadJournal(); 
+        } 
+    }
+    
+    function saveVault() { 
+        localStorage.setItem('allin_gear_name', document.getElementById('in-name').value); 
+        showScreen('home'); 
+    }
 
     window.onload = () => {
         const n = localStorage.getItem('allin_gear_name');
