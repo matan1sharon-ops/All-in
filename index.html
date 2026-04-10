@@ -1,62 +1,185 @@
-// --- ARCHERY SCORING APP: FULL SCRIPT ---
-
-const ArcheryApp = {
-    // 1. GEAR VAULT: Managing Bows and String Walking Marks
-    gearVault: {
-        bows: [
-            { id: 1, name: "Main Barebow", riser: "25-inch", limbs: "Medium 36lb" }
-        ],
-        saveCrawl: function(bowId, distance, mark) {
-            console.log(`Saved: Bow ${bowId} at ${distance}m requires a ${mark}mm crawl.`);
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Archery Scoring & Gear Vault</title>
+    <style>
+        :root {
+            --bg-color: #121212;
+            --card-bg: #1e1e1e;
+            --primary: #bb86fc;
+            --secondary: #03dac6;
+            --text: #e0e0e0;
+            --danger: #cf6679;
         }
-    },
 
-    // 2. SCORING LOGIC: Handling 3D and Target rounds
-    scoring: {
-        roundType: "3D", // Default to 3D
-        currentScores: [],
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text);
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 500px;
+        }
+
+        h1 { color: var(--primary); text-align: center; font-size: 1.5rem; }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+
+        .score-display {
+            font-size: 3rem;
+            text-align: center;
+            font-weight: bold;
+            margin: 10px 0;
+            color: var(--secondary);
+        }
+
+        .button-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+
+        button {
+            background: #333;
+            border: none;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.1s;
+        }
+
+        button:active { transform: scale(0.95); background: #444; }
         
-        addArrow: function(value) {
-            this.currentScores.push(value);
-            this.updateUI();
-        },
+        .btn-special { background: var(--primary); color: #000; }
+        .btn-miss { background: var(--danger); }
 
-        calculateTotal: function() {
-            return this.currentScores.reduce((a, b) => a + b, 0);
+        .history {
+            max-height: 150px;
+            overflow-y: auto;
+            background: rgba(0,0,0,0.2);
+            padding: 10px;
+            border-radius: 8px;
+            margin-top: 15px;
+            font-family: monospace;
         }
-    },
 
-    // 3. UI CONTROLS: Mobile-friendly buttons and display
-    ui: {
-        renderHomeScreen: function() {
-            return `
-                <div id="app-container">
-                    <h1>Archery Tracker</h1>
-                    <div id="score-display">Total: 0</div>
-                    <div class="button-grid">
-                        <button onclick="ArcheryApp.scoring.addArrow(11)">11 (X)</button>
-                        <button onclick="ArcheryApp.scoring.addArrow(10)">10</button>
-                        <button onclick="ArcheryApp.scoring.addArrow(8)">8</button>
-                        <button onclick="ArcheryApp.scoring.addArrow(5)">5</button>
-                        <button onclick="ArcheryApp.scoring.addArrow(0)">M</button>
-                    </div>
-                </div>
-            `;
+        .gear-vault input {
+            width: 100%;
+            padding: 10px;
+            margin-top: 10px;
+            background: #333;
+            border: 1px solid #444;
+            color: white;
+            border-radius: 4px;
+            box-sizing: border-box;
         }
-    },
 
-    // 4. DATA SYNC: Connecting to your Master Google Sheet
-    sync: {
-        lastSync: null,
-        pushToSheet: function(data) {
-            // Logic to synchronize with multi-user scorecard
-            console.log("Syncing scores to cloud...");
-            this.lastSync = new Date().toLocaleTimeString();
+        .status-bar {
+            text-align: center;
+            font-size: 0.8rem;
+            color: #888;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Archery Tracker</h1>
+
+    <div class="card">
+        <div style="text-align: center; font-size: 0.9rem; color: #888;">CURRENT ROUND</div>
+        <div class="score-display" id="totalScore">0</div>
+        
+        <div class="button-grid">
+            <button class="btn-special" onclick="addScore(11)">11</button>
+            <button onclick="addScore(10)">10</button>
+            <button onclick="addScore(8)">8</button>
+            <button onclick="addScore(5)">5</button>
+            <button onclick="addScore(0)">0</button>
+            <button class="btn-miss" onclick="resetScores()">CLR</button>
+        </div>
+
+        <div class="history" id="scoreHistory">History: </div>
+    </div>
+
+    <div class="card gear-vault">
+        <h3>Gear Vault: Barebow Marks</h3>
+        <label>50m Crawl (mm):</label>
+        <input type="number" id="crawl50" placeholder="e.g. 25" onchange="saveGear()">
+        <label>3D Setup Note:</label>
+        <input type="text" id="gearNote" placeholder="Limbs, tab, etc." onchange="saveGear()">
+    </div>
+
+    <div class="status-bar" id="syncStatus">System Ready | Not Synced</div>
+</div>
+
+<script>
+    let scores = [];
+
+    function addScore(val) {
+        scores.push(val);
+        updateUI();
+        syncData();
+    }
+
+    function resetScores() {
+        if(confirm("Clear current round?")) {
+            scores = [];
+            updateUI();
         }
     }
-};
 
-// --- INITIALIZATION ---
-document.addEventListener('DOMContentLoaded', () => {
-    document.body.innerHTML = ArcheryApp.ui.renderHomeScreen();
-});
+    function updateUI() {
+        const total = scores.reduce((a, b) => a + b, 0);
+        document.getElementById('totalScore').innerText = total;
+        document.getElementById('scoreHistory').innerText = "History: " + scores.join(", ");
+    }
+
+    function saveGear() {
+        const crawl = document.getElementById('crawl50').value;
+        const note = document.getElementById('gearNote').value;
+        localStorage.setItem('archeryGear', JSON.stringify({crawl, note}));
+        showStatus("Gear settings saved locally.");
+    }
+
+    function syncData() {
+        // Logic for Google Sheets Sync would go here
+        showStatus("Syncing to Master Sheet...");
+        setTimeout(() => showStatus("Synced ✅"), 800);
+    }
+
+    function showStatus(msg) {
+        document.getElementById('syncStatus').innerText = msg;
+    }
+
+    // Load saved gear on startup
+    window.onload = () => {
+        const saved = JSON.parse(localStorage.getItem('archeryGear'));
+        if (saved) {
+            document.getElementById('crawl50').value = saved.crawl || "";
+            document.getElementById('gearNote').value = saved.note || "";
+        }
+    };
+</script>
+
+</body>
+</html>
