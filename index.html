@@ -10,28 +10,27 @@
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
         body { background: var(--bg); color: var(--text); font-family: -apple-system, sans-serif; margin: 0; height: 100vh; overflow: hidden; display: flex; justify-content: center; }
         .app-container { width: 100%; max-width: 500px; height: 100%; display: flex; flex-direction: column; }
-        .screen { display: none; flex-direction: column; height: 100%; padding: 40px 20px 20px; animation: fadeIn 0.2s; }
+        .screen { display: none; flex-direction: column; height: 100%; padding: 40px 20px 20px; animation: fadeIn 0.1s; }
         .active-screen { display: flex; }
         .home-content { flex-grow: 1; display: flex; flex-direction: column; overflow: hidden; }
         .menu-list { flex-grow: 1; overflow-y: auto; display: flex; flex-direction: column; padding-bottom: 20px; }
         .logo-text { font-size: 40px; font-weight: 900; letter-spacing: 8px; text-align: center; margin-bottom: 30px; margin-top: 10px; }
-        .menu-btn { background: #fff; color: #000; padding: 20px; margin-bottom: 12px; border-radius: 15px; font-size: 18px; font-weight: 800; border: none; text-align: left; flex-shrink: 0; }
-        .vault-btn { background: var(--card); border: 1px solid #333; color: #fff; padding: 18px; border-radius: 15px; font-weight: bold; margin-bottom: 10px; flex-shrink: 0; text-align: center; }
+        .menu-btn { background: #fff; color: #000; padding: 20px; margin-bottom: 12px; border-radius: 15px; font-size: 18px; font-weight: 800; border: none; text-align: left; }
+        .vault-btn { background: var(--card); border: 1px solid #333; color: #fff; padding: 18px; border-radius: 15px; font-weight: bold; margin-bottom: 10px; text-align: center; }
         header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 15px; border-bottom: 1px solid #222; }
-        #score-list { flex-grow: 1; overflow-y: auto; padding: 15px 0; display: flex; flex-direction: column-reverse; gap: 10px; }
-        .end-card { background: var(--card); padding: 15px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #222; min-height: 70px; }
-        .editing-now { border: 2px solid var(--edit) !important; background: #001a33; }
-        .active-card { border: 1px dashed var(--accent); background: #111; }
-        .end-val { font-size: 24px; font-weight: 900; }
-        .end-meta { font-size: 11px; color: var(--gray); text-transform: uppercase; font-weight: bold; }
+        #score-list { flex-grow: 1; overflow-y: auto; padding: 15px 0; display: flex; flex-direction: column; gap: 10px; }
+        .end-card { background: var(--card); padding: 15px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #222; min-height: 75px; }
+        .active-card { border: 2px solid var(--accent); background: #111; order: -1; }
+        .editing-card { border: 2px solid var(--edit); background: #001a33; order: -1; }
+        .end-val { font-size: 28px; font-weight: 900; letter-spacing: 2px; }
+        .end-meta { font-size: 11px; color: var(--gray); text-transform: uppercase; font-weight: bold; margin-bottom: 4px; }
         .controls { background: var(--bg); padding-top: 10px; padding-bottom: env(safe-area-inset-bottom, 20px); border-top: 1px solid #222; }
         .crawl-box { background: var(--card); padding: 10px 15px; border-radius: 12px; margin-bottom: 15px; border: 1px solid #333; display: flex; justify-content: space-between; align-items: center; }
         .crawl-btn { background: #333; color: #fff; border: none; padding: 10px 20px; border-radius: 8px; font-size: 20px; font-weight: bold; }
-        .next-btn { background: var(--accent); color: #000; width: 100%; padding: 15px; border-radius: 12px; font-size: 18px; font-weight: 900; border: none; margin-bottom: 15px; transition: 0.2s; }
+        .next-btn { background: var(--accent); color: #000; width: 100%; padding: 18px; border-radius: 12px; font-size: 20px; font-weight: 900; border: none; margin-bottom: 15px; }
         .next-btn:disabled { background: #222; color: #555; }
         .btn-grid { display: grid; gap: 8px; }
         .score-btn { height: 60px; border-radius: 10px; border: 1px solid #333; font-size: 24px; font-weight: 900; }
-        .stat-box { background: var(--card); padding: 15px; border-radius: 12px; margin-bottom: 10px; border: 1px solid #333; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     </style>
 </head>
@@ -47,19 +46,12 @@
                 <button class="menu-btn" onclick="startApp('TARGET OUT', 6, 12)">Target Outdoor (12)</button>
             </div>
             <button class="vault-btn" onclick="loadJournal(); showScreen('journal')">📖 SESSION JOURNAL</button>
-            <button class="vault-btn" onclick="showScreen('vault')">⚙ GEAR VAULT</button>
         </div>
     </div>
 
     <div id="journal" class="screen">
         <header><button onclick="showScreen('home')" style="background:none; border:none; color:var(--gray); font-size:18px">← Back</button><div style="font-weight:900">JOURNAL</div><button onclick="if(confirm('Clear all?')) { localStorage.removeItem('archery_history'); loadJournal(); }" style="background:none; border:none; color:red; font-size:12px">CLEAR</button></header>
-        <div id="journal-list" style="flex-grow:1; overflow-y:auto; padding-top:20px;"></div >
-    </div>
-
-    <div id="vault" class="screen">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:30px"><h1>Vault</h1><button onclick="saveVault()" style="background:var(--accent); border:none; padding:10px 20px; border-radius:20px; font-weight:bold; color:#000;">SAVE</button></div>
-        <input id="in-name" style="background:#1c1c1e; border:1px solid #3a3a3c; color:#fff; padding:18px; border-radius:12px; margin-bottom:15px; width:100%" placeholder="Bow Name">
-        <button onclick="showScreen('home')" style="margin-top:auto; background:none; border:none; color:var(--gray)">← Home</button>
+        <div id="journal-list" style="flex-grow:1; overflow-y:auto; padding-top:20px;"></div>
     </div>
 
     <div id="scoring" class="screen">
@@ -107,4 +99,73 @@
         area.style.gridTemplateColumns = scores.length > 6 ? 'repeat(4, 1fr)' : 'repeat(3, 1fr)';
         scores.forEach(s => {
             const btn = document.createElement('button'); btn.className = 'score-btn';
-            btn.style.backgroundColor = get
+            btn.style.backgroundColor = getBgColor(mode, s); btn.style.color = getTextColor(mode, s);
+            btn.innerText = s === 0 ? 'M' : s;
+            btn.onclick = () => { if(state.current.length < state.arrowLimit) { state.current.push(s); updateUI(); } };
+            area.appendChild(btn);
+        });
+        const delBtn = document.createElement('button'); delBtn.className = 'score-btn'; delBtn.style.backgroundColor = '#333'; delBtn.style.color = '#fff';
+        delBtn.innerText = '⌫'; delBtn.onclick = () => { state.current.pop(); updateUI(); };
+        area.appendChild(delBtn);
+    }
+
+    function getBgColor(mode, s) {
+        if(s === 0) return '#34c759';
+        if(mode === 'FIELD') return s >= 5 ? '#FFD700' : '#2c2c2e';
+        if(mode.includes('TARGET')) return s >= 9 ? '#FFD700' : (s >= 7 ? '#ff3b30' : (s >= 5 ? '#007aff' : (s >= 3 ? '#2c2c2e' : '#fff')));
+        return s >= 10 ? '#FFD700' : (s === 8 ? '#007aff' : '#2c2c2e');
+    }
+
+    function getTextColor(mode, s) {
+        if(s === 0) return '#fff';
+        if(mode.includes('TARGET') && (s >= 9 || s <= 2)) return '#000';
+        if(mode === 'FIELD' && s >= 5) return '#000';
+        return (mode === '3D' && s >= 10) ? '#000' : '#fff';
+    }
+
+    function nextEnd() {
+        if(state.current.length < state.arrowLimit) return;
+        const entry = { scores: [...state.current], crawl: document.getElementById('crawl-val').innerText, total: state.current.reduce((a,b)=>a+b,0) };
+        if(state.editingIdx > -1) { state.history[state.editingIdx] = entry; state.editingIdx = -1; }
+        else { state.history.push(entry); }
+        state.current = [];
+        updateUI();
+    }
+
+    function startEditing(idx) {
+        state.editingIdx = idx;
+        state.current = []; // Wipe scores for overwrite
+        document.getElementById('crawl-val').innerText = state.history[idx].crawl;
+        updateUI();
+    }
+
+    function adjCrawl(amt) {
+        let v = parseInt(document.getElementById('crawl-val').innerText) + amt;
+        document.getElementById('crawl-val').innerText = Math.max(0, v);
+        updateUI();
+    }
+
+    function updateUI() {
+        const list = document.getElementById('score-list'); list.innerHTML = '';
+        let grandTotal = state.history.reduce((a,b)=>a+b.total,0);
+        document.getElementById('total-score').innerText = grandTotal;
+        const mainBtn = document.getElementById('main-action-btn');
+
+        // Logic for the Next/Save Button
+        const isFull = state.current.length === state.arrowLimit;
+        if(state.editingIdx > -1) {
+            mainBtn.innerText = "SAVE EDIT";
+            mainBtn.style.background = isFull ? "var(--edit)" : "#222";
+            mainBtn.style.color = isFull ? "#fff" : "#555";
+            document.getElementById('target-count').innerText = `EDITING T${state.editingIdx + 1}`;
+        } else {
+            mainBtn.innerText = "NEXT END";
+            mainBtn.style.background = isFull ? "var(--accent)" : "#222";
+            mainBtn.style.color = isFull ? "#000" : "#555";
+            document.getElementById('target-count').innerText = `T${state.history.length + 1}/${state.endLimit}`;
+        }
+        mainBtn.disabled = !isFull;
+
+        // CREATE THE TOP ACTIVE CARD
+        const activeDiv = document.createElement('div');
+        activeDiv.className =
