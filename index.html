@@ -4,22 +4,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>ALL IN Archery</title>
-    <link rel="apple-touch-icon" href="logo.png">
     <style>
         :root { --bg: #000; --text: #fff; --accent: #FFD700; --card: #151515; --gray: #888; --edit: #007aff; }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
         body { background: var(--bg); color: var(--text); font-family: -apple-system, sans-serif; margin: 0; height: 100vh; overflow: hidden; display: flex; justify-content: center; }
         .app-container { width: 100%; max-width: 500px; height: 100%; display: flex; flex-direction: column; }
-        .screen { display: none; flex-direction: column; height: 100%; padding: 40px 20px 20px; animation: fadeIn 0.1s; }
+        .screen { display: none; flex-direction: column; height: 100%; padding: 40px 20px 20px; }
         .active-screen { display: flex; }
-        .home-content { flex-grow: 1; display: flex; flex-direction: column; overflow: hidden; }
-        .menu-list { flex-grow: 1; overflow-y: auto; display: flex; flex-direction: column; padding-bottom: 20px; }
-        .logo-text { font-size: 40px; font-weight: 900; letter-spacing: 8px; text-align: center; margin-bottom: 30px; margin-top: 10px; }
+        .logo-text { font-size: 40px; font-weight: 900; letter-spacing: 8px; text-align: center; margin-bottom: 30px; }
         .menu-btn { background: #fff; color: #000; padding: 20px; margin-bottom: 12px; border-radius: 15px; font-size: 18px; font-weight: 800; border: none; text-align: left; }
         .vault-btn { background: var(--card); border: 1px solid #333; color: #fff; padding: 18px; border-radius: 15px; font-weight: bold; margin-bottom: 10px; text-align: center; }
         header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 15px; border-bottom: 1px solid #222; }
         #score-list { flex-grow: 1; overflow-y: auto; padding: 15px 0; display: flex; flex-direction: column; gap: 10px; }
-        .end-card { background: var(--card); padding: 15px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #222; min-height: 75px; }
+        .end-card { background: var(--card); padding: 15px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #222; min-height: 80px; }
         .active-card { border: 2px solid var(--accent); background: #111; order: -1; }
         .editing-card { border: 2px solid var(--edit); background: #001a33; order: -1; }
         .end-val { font-size: 28px; font-weight: 900; letter-spacing: 2px; }
@@ -31,26 +28,23 @@
         .next-btn:disabled { background: #222; color: #555; }
         .btn-grid { display: grid; gap: 8px; }
         .score-btn { height: 60px; border-radius: 10px; border: 1px solid #333; font-size: 24px; font-weight: 900; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     </style>
 </head>
 <body>
 <div class="app-container">
     <div id="home" class="screen active-screen">
         <div class="logo-text">ALL IN</div>
-        <div class="home-content">
-            <div class="menu-list">
-                <button class="menu-btn" onclick="startApp('3D', 2, 24)">3D Practice (24)</button>
-                <button class="menu-btn" onclick="startApp('FIELD', 3, 24)">Field Practice (24)</button>
-                <button class="menu-btn" onclick="startApp('TARGET IN', 3, 20)">Target Indoor (20)</button>
-                <button class="menu-btn" onclick="startApp('TARGET OUT', 6, 12)">Target Outdoor (12)</button>
-            </div>
-            <button class="vault-btn" onclick="loadJournal(); showScreen('journal')">📖 SESSION JOURNAL</button>
+        <div class="menu-list" style="display:flex; flex-direction:column; flex-grow:1;">
+            <button class="menu-btn" onclick="startApp('3D', 2, 24)">3D Practice (24)</button>
+            <button class="menu-btn" onclick="startApp('FIELD', 3, 24)">Field Practice (24)</button>
+            <button class="menu-btn" onclick="startApp('TARGET IN', 3, 20)">Target Indoor (20)</button>
+            <button class="menu-btn" onclick="startApp('TARGET OUT', 6, 12)">Target Outdoor (12)</button>
         </div>
+        <button class="vault-btn" onclick="loadJournal(); showScreen('journal')">📖 SESSION JOURNAL</button>
     </div>
 
     <div id="journal" class="screen">
-        <header><button onclick="showScreen('home')" style="background:none; border:none; color:var(--gray); font-size:18px">← Back</button><div style="font-weight:900">JOURNAL</div><button onclick="if(confirm('Clear all?')) { localStorage.removeItem('archery_history'); loadJournal(); }" style="background:none; border:none; color:red; font-size:12px">CLEAR</button></header>
+        <header><button onclick="showScreen('home')" style="background:none; border:none; color:var(--gray); font-size:18px">← Back</button><div style="font-weight:900">JOURNAL</div><button onclick="if(confirm('Clear?')) { localStorage.removeItem('archery_history'); loadJournal(); }" style="background:none; border:none; color:red; font-size:12px">CLEAR</button></header>
         <div id="journal-list" style="flex-grow:1; overflow-y:auto; padding-top:20px;"></div>
     </div>
 
@@ -134,38 +128,11 @@
 
     function startEditing(idx) {
         state.editingIdx = idx;
-        state.current = []; // Wipe scores for overwrite
+        state.current = [...state.history[idx].scores]; // Keep current scores visible
         document.getElementById('crawl-val').innerText = state.history[idx].crawl;
         updateUI();
     }
 
     function adjCrawl(amt) {
         let v = parseInt(document.getElementById('crawl-val').innerText) + amt;
-        document.getElementById('crawl-val').innerText = Math.max(0, v);
-        updateUI();
-    }
-
-    function updateUI() {
-        const list = document.getElementById('score-list'); list.innerHTML = '';
-        let grandTotal = state.history.reduce((a,b)=>a+b.total,0);
-        document.getElementById('total-score').innerText = grandTotal;
-        const mainBtn = document.getElementById('main-action-btn');
-
-        // Logic for the Next/Save Button
-        const isFull = state.current.length === state.arrowLimit;
-        if(state.editingIdx > -1) {
-            mainBtn.innerText = "SAVE EDIT";
-            mainBtn.style.background = isFull ? "var(--edit)" : "#222";
-            mainBtn.style.color = isFull ? "#fff" : "#555";
-            document.getElementById('target-count').innerText = `EDITING T${state.editingIdx + 1}`;
-        } else {
-            mainBtn.innerText = "NEXT END";
-            mainBtn.style.background = isFull ? "var(--accent)" : "#222";
-            mainBtn.style.color = isFull ? "#000" : "#555";
-            document.getElementById('target-count').innerText = `T${state.history.length + 1}/${state.endLimit}`;
-        }
-        mainBtn.disabled = !isFull;
-
-        // CREATE THE TOP ACTIVE CARD
-        const activeDiv = document.createElement('div');
-        activeDiv.className =
+        document.getElementById('
