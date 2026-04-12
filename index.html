@@ -8,8 +8,8 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="ALL IN">
     
-    <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/asif-meitav/Archery/main/image_7455e3.jpg">
-    <link rel="icon" type="image/jpeg" href="https://raw.githubusercontent.com/asif-meitav/Archery/main/image_7455e3.jpg">
+    <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/asif-meitav/Archery/main/image_7455e3.jpg?v=2">
+    <link rel="icon" type="image/jpeg" href="https://raw.githubusercontent.com/asif-meitav/Archery/main/image_7455e3.jpg?v=2">
 
     <title>ALL IN Archery</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -17,34 +17,26 @@
         :root { --bg: #000; --text: #fff; --accent: #FFD700; --card: #151515; --gray: #888; --miss: #2ecc71; --edit: #007aff; --target-blue: #3498db; --target-red: #e74c3c; --target-yellow: #f1c40f; }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; }
         body { background: var(--bg); color: var(--text); font-family: -apple-system, sans-serif; height: 100vh; overflow: hidden; padding-top: env(safe-area-inset-top); }
-        
         .app-container { width: 100%; max-width: 500px; height: 100%; margin: 0 auto; position: relative; }
         .screen { display: none; flex-direction: column; height: 100%; padding: 20px; background: var(--bg); position: absolute; width: 100%; top: 0; left: 0; bottom: 0; right: 0; }
         .active-screen { display: flex; z-index: 10; }
-
         header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 15px; border-bottom: 1px solid #222; min-height: 60px; }
-        .logo-small { height: 30px; border-radius: 4px; }
-        
         .tab-bar { display: flex; gap: 4px; margin-bottom: 15px; overflow-x: auto; padding-bottom: 5px; }
         .tab-btn { flex: 1; min-width: 80px; padding: 10px 5px; border-radius: 8px; border: 1px solid #333; background: #111; color: var(--gray); font-size: 10px; font-weight: 800; text-transform: uppercase; cursor: pointer; }
         .tab-active { background: var(--accent); color: #000; border-color: var(--accent); }
-
         #journal-list { overflow-y: auto; flex-grow: 1; }
         .session-card { background: var(--card); padding: 15px; border-radius: 12px; border: 1px solid #222; margin-bottom: 10px; cursor: pointer; }
         .card-main { display: flex; justify-content: space-between; align-items: center; }
         .session-details { display: none; margin-top: 15px; border-top: 1px solid #333; padding-top: 15px; }
-        
         .dist-row { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
         .dist-label { width: 25px; font-size: 12px; font-weight: 900; color: var(--gray); }
         .dist-bar-bg { flex-grow: 1; height: 8px; background: #222; border-radius: 4px; overflow: hidden; }
         .dist-bar-fill { height: 100%; border-radius: 4px; }
         .dist-count { width: 20px; font-size: 11px; text-align: right; font-weight: bold; }
-
         .stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 20px; }
         .stat-box { background: #222; padding: 10px; border-radius: 8px; text-align: center; }
         .stat-label { font-size: 9px; color: var(--gray); text-transform: uppercase; }
         .stat-value { font-size: 16px; font-weight: 900; color: var(--accent); }
-
         .menu-list { display: flex; flex-direction: column; gap: 12px; margin-top: 20px; }
         .menu-btn { background: #fff; color: #000; padding: 20px; border-radius: 15px; font-size: 16px; font-weight: 800; border: none; text-align: left; }
         .vault-btn { background: var(--card); border: 1px solid #333; color: #fff; padding: 16px; border-radius: 15px; font-weight: bold; text-align: center; margin-top: 10px; }
@@ -62,7 +54,7 @@
 <div class="app-container">
     <div id="home" class="screen active-screen">
         <div style="text-align:center; margin-top:20px;">
-            <img src="https://raw.githubusercontent.com/asif-meitav/Archery/main/image_7455e3.jpg" style="width: 120px; border-radius: 20px; margin-bottom: 10px;">
+            <img src="https://raw.githubusercontent.com/asif-meitav/Archery/main/image_7455e3.jpg" style="width: 100px; border-radius: 20px; margin-bottom: 10px; border: 2px solid #333;">
             <div style="font-size:32px; font-weight:900; letter-spacing:6px;">ALL IN</div>
         </div>
         <div class="menu-list">
@@ -113,57 +105,28 @@
 <script>
     let state = { current: [], history: [], arrows: 2, ends: 24, mode: '', editIdx: -1, journalTab: '3D' };
     let myChart = null;
-
-    function showScreen(id) {
-        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active-screen'));
-        document.getElementById(id).classList.add('active-screen');
-        if(id === 'journal') switchJournal(state.journalTab);
-        if(id === 'vault') loadVault();
-    }
-
-    function startApp(mode, arrows, ends) {
-        state = { current: [], history: [], arrows, ends, mode, editIdx: -1, journalTab: mode };
-        document.getElementById('mode-title').innerText = mode;
-        renderButtons(); renderUI(); showScreen('scoring');
-    }
-
-    function getHexColor(s) {
-        if (s === 'X' || s >= 9) return '#f1c40f';
-        if (s >= 7) return '#e74c3c';
-        if (s >= 5) return '#3498db';
-        if (s === 0) return '#2ecc71';
-        return '#2c3e50';
-    }
-
+    function showScreen(id) { document.querySelectorAll('.screen').forEach(s => s.classList.remove('active-screen')); document.getElementById(id).classList.add('active-screen'); if(id === 'journal') switchJournal(state.journalTab); if(id === 'vault') loadVault(); }
+    function startApp(mode, arrows, ends) { state = { current: [], history: [], arrows, ends, mode, editIdx: -1, journalTab: mode }; document.getElementById('mode-title').innerText = mode; renderButtons(); renderUI(); showScreen('scoring'); }
+    function getHexColor(s) { if (s === 'X' || s >= 9) return '#f1c40f'; if (s >= 7) return '#e74c3c'; if (s >= 5) return '#3498db'; if (s === 0) return '#2ecc71'; return '#2c3e50'; }
     function renderButtons() {
         const grid = document.getElementById('button-grid'); grid.innerHTML = '';
         let scs = state.mode === 'FIELD' ? [6,5,4,3,2,1,0] : (state.mode === 'TARGET OUTDOOR' ? ['X',10,9,8,7,6,5,4,3,2,1,0] : (state.mode.includes('TARGET') ? [10,9,8,7,6,5,4,3,2,1,0] : [11,10,8,5,0]));
         grid.style.gridTemplateColumns = scs.length > 5 ? 'repeat(4, 1fr)' : 'repeat(3, 1fr)';
         scs.forEach(s => {
-            const b = document.createElement('button');
-            b.className = 'score-btn'; b.innerText = s === 0 ? 'M' : s;
-            b.style.background = getHexColor(s);
-            b.style.color = (s === 'X' || s >= 9) ? '#000' : '#fff';
-            b.onclick = () => {
-                let target = state.editIdx > -1 ? state.history[state.editIdx].scores : state.current;
-                if(target.length < state.arrows) { target.push(s); if(state.editIdx > -1) state.history[state.editIdx].total = calcTotal(target); renderUI(); }
-            };
+            const b = document.createElement('button'); b.className = 'score-btn'; b.innerText = s === 0 ? 'M' : s; b.style.background = getHexColor(s); b.style.color = (s === 'X' || s >= 9) ? '#000' : '#fff';
+            b.onclick = () => { let target = state.editIdx > -1 ? state.history[state.editIdx].scores : state.current; if(target.length < state.arrows) { target.push(s); if(state.editIdx > -1) state.history[state.editIdx].total = calcTotal(target); renderUI(); } };
             grid.appendChild(b);
         });
         const del = document.createElement('button'); del.className = 'score-btn'; del.innerText = '⌫'; del.style.background = '#333';
         del.onclick = () => { if (state.editIdx > -1) state.history[state.editIdx].scores.pop(); else state.current.pop(); renderUI(); };
         grid.appendChild(del);
     }
-
     function calcTotal(arr) { return arr.reduce((a,b) => a + (b === 'X' ? 10 : b), 0); }
-
     function renderUI() {
         const list = document.getElementById('score-list'); list.innerHTML = '';
         document.getElementById('total-score').innerText = state.history.reduce((a, b) => a + b.total, 0);
         state.history.forEach((end, i) => {
-            const card = document.createElement('div'); card.className = 'end-card';
-            if(state.editIdx === i) card.style.border = '2px solid var(--edit)';
-            card.onclick = () => { state.editIdx = i; renderUI(); };
+            const card = document.createElement('div'); card.className = 'end-card'; if(state.editIdx === i) card.style.border = '2px solid var(--edit)'; card.onclick = () => { state.editIdx = i; renderUI(); };
             card.innerHTML = `<div><div style="font-size:10px; color:var(--gray);">TARGET ${i + 1}</div><div style="font-size:18px; font-weight:700;">${end.scores.join(' · ') || '---'}</div></div><div class="end-total">${end.total}</div>`;
             list.appendChild(card);
         });
@@ -172,11 +135,9 @@
             active.innerHTML = `<div><div style="font-size:10px; color:var(--gray);">TARGET ${state.history.length + 1}</div><div style="font-size:18px; font-weight:700;">${state.current.join(' · ') || '---'}</div></div><div class="end-total">${calcTotal(state.current)}</div>`;
             list.appendChild(active);
         }
-        const btn = document.getElementById('next-btn');
-        btn.innerText = (state.history.length >= state.ends - 1 && state.editIdx === -1) ? "FINISH SESSION" : (state.editIdx > -1 ? "SAVE EDIT" : "NEXT END");
+        const btn = document.getElementById('next-btn'); btn.innerText = (state.history.length >= state.ends - 1 && state.editIdx === -1) ? "FINISH SESSION" : (state.editIdx > -1 ? "SAVE EDIT" : "NEXT END");
         btn.disabled = state.editIdx > -1 ? state.history[state.editIdx].scores.length < state.arrows : state.current.length < state.arrows;
     }
-
     function handleMainAction() {
         if (state.editIdx > -1) { state.editIdx = -1; renderUI(); }
         else {
@@ -189,90 +150,27 @@
             } else { state.current = []; renderUI(); setTimeout(() => { document.getElementById('score-list').scrollTop = 9999; }, 50); }
         }
     }
-
-    function saveVault() {
-        const gear = { name: document.getElementById('v-name').value, bow: document.getElementById('v-bow').value, limbs: document.getElementById('v-limbs').value, pounds: document.getElementById('v-pounds').value, arrow: document.getElementById('v-arrow').value, spine: document.getElementById('v-spine').value, length: document.getElementById('v-length').value };
-        localStorage.setItem('archery_gear', JSON.stringify(gear));
-        alert("Saved!"); showScreen('home');
-    }
-
-    function loadVault() {
-        const gear = JSON.parse(localStorage.getItem('archery_gear') || '{}');
-        document.getElementById('v-name').value = gear.name || '';
-        document.getElementById('v-bow').value = gear.bow || '';
-        document.getElementById('v-limbs').value = gear.limbs || '';
-        document.getElementById('v-pounds').value = gear.pounds || '';
-        document.getElementById('v-arrow').value = gear.arrow || '';
-        document.getElementById('v-spine').value = gear.spine || '';
-        document.getElementById('v-length').value = gear.length || '';
-    }
-
-    function switchJournal(tab) {
-        state.journalTab = tab;
-        document.querySelectorAll('.tab-btn').forEach(b => {
-            b.classList.remove('tab-active');
-            if(b.id === 'tab-' + (tab.includes('INDOOR') ? 'INDOOR' : tab.includes('OUTDOOR') ? 'OUTDOOR' : tab)) b.classList.add('tab-active');
-        });
-        loadJournal();
-    }
-
+    function saveVault() { const gear = { name: document.getElementById('v-name').value, bow: document.getElementById('v-bow').value, limbs: document.getElementById('v-limbs').value, pounds: document.getElementById('v-pounds').value, arrow: document.getElementById('v-arrow').value, spine: document.getElementById('v-spine').value, length: document.getElementById('v-length').value }; localStorage.setItem('archery_gear', JSON.stringify(gear)); alert("Saved!"); showScreen('home'); }
+    function loadVault() { const gear = JSON.parse(localStorage.getItem('archery_gear') || '{}'); document.getElementById('v-name').value = gear.name || ''; document.getElementById('v-bow').value = gear.bow || ''; document.getElementById('v-limbs').value = gear.limbs || ''; document.getElementById('v-pounds').value = gear.pounds || ''; document.getElementById('v-arrow').value = gear.arrow || ''; document.getElementById('v-spine').value = gear.spine || ''; document.getElementById('v-length').value = gear.length || ''; }
+    function switchJournal(tab) { state.journalTab = tab; document.querySelectorAll('.tab-btn').forEach(b => { b.classList.remove('tab-active'); if(b.id === 'tab-' + (tab.includes('INDOOR') ? 'INDOOR' : tab.includes('OUTDOOR') ? 'OUTDOOR' : tab)) b.classList.add('tab-active'); }); loadJournal(); }
     function loadJournal() {
         const list = document.getElementById('journal-list'); list.innerHTML = '';
         let logs = JSON.parse(localStorage.getItem('archery_logs_v2') || '[]');
         let filtered = logs.filter(l => l.mode.includes(state.journalTab));
-        
         if(myChart) { myChart.destroy(); myChart = null; }
         const ctx = document.getElementById('progressChart').getContext('2d');
-        
-        myChart = new Chart(ctx, {
-            type: 'line',
-            data: { 
-                labels: filtered.map(l => l.date), 
-                datasets: [{ 
-                    data: filtered.map(l => l.score), 
-                    borderColor: '#FFD700', 
-                    backgroundColor: 'rgba(255,215,0,0.1)',
-                    borderWidth: 3, pointRadius: 5, fill: true, tension: 0.15 
-                }] 
-            },
-            options: { 
-                responsive: true, maintainAspectRatio: false, 
-                plugins: { legend: { display: false } }, 
-                scales: { 
-                    y: { grid: { color: '#222' }, ticks: { color: '#888' } }, 
-                    x: { grid: { display: false }, ticks: { color: '#888' } } 
-                } 
-            }
-        });
-
+        myChart = new Chart(ctx, { type: 'line', data: { labels: filtered.map(l => l.date), datasets: [{ data: filtered.map(l => l.score), borderColor: '#FFD700', backgroundColor: 'rgba(255,215,0,0.1)', borderWidth: 3, pointRadius: 5, fill: true, tension: 0.15 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { grid: { color: '#222' }, ticks: { color: '#888' } }, x: { grid: { display: false }, ticks: { color: '#888' } } } } });
         filtered.reverse().forEach((l, idx) => {
             const allArrows = l.details.flatMap(d => d.scores);
             const counts = {}; allArrows.forEach(val => counts[val] = (counts[val] || 0) + 1);
             const sortedKeys = Object.keys(counts).sort((a,b) => (a === 'X' ? -1 : b === 'X' ? 1 : b - a));
-            
-            const distributionHtml = sortedKeys.map(k => `
-                <div class="dist-row">
-                    <div class="dist-label">${k === 0 ? 'M' : k}</div>
-                    <div class="dist-bar-bg"><div class="dist-bar-fill" style="width: ${(counts[k] / allArrows.length) * 100}%; background: ${getHexColor(k)};"></div></div>
-                    <div class="dist-count">${counts[k]}</div>
-                </div>`).join('');
-
+            const distHtml = sortedKeys.map(k => `<div class="dist-row"><div class="dist-label">${k === 0 ? 'M' : k}</div><div class="dist-bar-bg"><div class="dist-bar-fill" style="width: ${(counts[k] / allArrows.length) * 100}%; background: ${getHexColor(k)};"></div></div><div class="dist-count">${counts[k]}</div></div>`).join('');
             const d = document.createElement('div'); d.className = 'session-card';
-            d.innerHTML = `
-                <div class="card-main"><div><div style="font-size:10px; color:var(--gray);">${l.date}</div><div style="font-weight:bold;">${l.mode}</div></div><div class="end-total">${l.score}</div></div>
-                <div id="details-${idx}" class="session-details">
-                    <div class="stats-grid">
-                        <div class="stat-box"><div class="stat-label">Avg/Arrow</div><div class="stat-value">${(l.score / allArrows.length).toFixed(2)}</div></div>
-                        <div class="stat-box"><div class="stat-label">Hit Rate</div><div class="stat-value">${((allArrows.filter(s=>s!==0).length / allArrows.length)*100).toFixed(0)}%</div></div>
-                    </div>
-                    ${distributionHtml}
-                    <div style="font-size:12px; color:#aaa; font-family:monospace; margin-top:10px; border-top:1px solid #222; padding-top:10px;">${l.details.map((end, i) => `T${i+1}: [${end.scores.join(',')}]`).join('<br>')}</div>
-                </div>`;
+            d.innerHTML = `<div class="card-main"><div><div style="font-size:10px; color:var(--gray);">${l.date}</div><div style="font-weight:bold;">${l.mode}</div></div><div class="end-total">${l.score}</div></div><div id="details-${idx}" class="session-details"><div class="stats-grid"><div class="stat-box"><div class="stat-label">Avg/Arrow</div><div class="stat-value">${(l.score / allArrows.length).toFixed(2)}</div></div><div class="stat-box"><div class="stat-label">Hit Rate</div><div class="stat-value">${((allArrows.filter(s=>s!==0).length / allArrows.length)*100).toFixed(0)}%</div></div></div>${distHtml}<div style="font-size:12px; color:#aaa; font-family:monospace; margin-top:10px; border-top:1px solid #222; padding-top:10px;">${l.details.map((end, i) => `T${i+1}: [${end.scores.join(',')}]`).join('<br>')}</div></div>`;
             d.onclick = () => { const det = document.getElementById(`details-${idx}`); det.style.display = det.style.display === 'block' ? 'none' : 'block'; };
             list.appendChild(d);
         });
     }
-
     function clearLogs() { if(confirm('Clear?')) { localStorage.removeItem('archery_logs_v2'); loadJournal(); } }
     window.onload = loadVault;
 </script>
