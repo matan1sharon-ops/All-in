@@ -3,19 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    
     <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="ALL IN">
+    
+    <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/asif-meitav/Archery/main/image_7455e3.jpg">
+    <link rel="icon" type="image/jpeg" href="https://raw.githubusercontent.com/asif-meitav/Archery/main/image_7455e3.jpg">
+
     <title>ALL IN Archery</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        :root { --bg: #000; --text: #fff; --accent: #FFD700; --card: #151515; --gray: #888; --miss: #2ecc71; --edit: #007aff; --target-blue: #3498db; --target-red: #e74c3c; --target-yellow: #f1c40f; --target-black: #2c3e50; }
+        :root { --bg: #000; --text: #fff; --accent: #FFD700; --card: #151515; --gray: #888; --miss: #2ecc71; --edit: #007aff; --target-blue: #3498db; --target-red: #e74c3c; --target-yellow: #f1c40f; }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; }
-        body { background: var(--bg); color: var(--text); font-family: -apple-system, sans-serif; height: 100vh; overflow: hidden; }
+        body { background: var(--bg); color: var(--text); font-family: -apple-system, sans-serif; height: 100vh; overflow: hidden; padding-top: env(safe-area-inset-top); }
         
         .app-container { width: 100%; max-width: 500px; height: 100%; margin: 0 auto; position: relative; }
-        .screen { display: none; flex-direction: column; height: 100%; padding: 40px 20px 20px; background: var(--bg); position: absolute; width: 100%; top: 0; left: 0; bottom: 0; right: 0; }
+        .screen { display: none; flex-direction: column; height: 100%; padding: 20px; background: var(--bg); position: absolute; width: 100%; top: 0; left: 0; bottom: 0; right: 0; }
         .active-screen { display: flex; z-index: 10; }
 
         header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 15px; border-bottom: 1px solid #222; min-height: 60px; }
+        .logo-small { height: 30px; border-radius: 4px; }
         
         .tab-bar { display: flex; gap: 4px; margin-bottom: 15px; overflow-x: auto; padding-bottom: 5px; }
         .tab-btn { flex: 1; min-width: 80px; padding: 10px 5px; border-radius: 8px; border: 1px solid #333; background: #111; color: var(--gray); font-size: 10px; font-weight: 800; text-transform: uppercase; cursor: pointer; }
@@ -53,7 +61,10 @@
 
 <div class="app-container">
     <div id="home" class="screen active-screen">
-        <div style="text-align:center; margin-top:20px; font-size:32px; font-weight:900; letter-spacing:6px;">ALL IN</div>
+        <div style="text-align:center; margin-top:20px;">
+            <img src="https://raw.githubusercontent.com/asif-meitav/Archery/main/image_7455e3.jpg" style="width: 120px; border-radius: 20px; margin-bottom: 10px;">
+            <div style="font-size:32px; font-weight:900; letter-spacing:6px;">ALL IN</div>
+        </div>
         <div class="menu-list">
             <button class="menu-btn" onclick="startApp('3D', 2, 24)">3D Practice (24)</button>
             <button class="menu-btn" onclick="startApp('FIELD', 3, 24)">Field Practice (24)</button>
@@ -72,9 +83,7 @@
             <button id="tab-INDOOR" class="tab-btn" onclick="switchJournal('TARGET INDOOR')">Indoor</button>
             <button id="tab-OUTDOOR" class="tab-btn" onclick="switchJournal('TARGET OUTDOOR')">Outdoor</button>
         </div>
-        <div style="height: 140px; margin-bottom: 10px; position: relative;">
-            <canvas id="progressChart"></canvas>
-        </div>
+        <div style="height: 140px; margin-bottom: 10px;"><canvas id="progressChart"></canvas></div>
         <div id="journal-list"></div>
     </div>
 
@@ -212,7 +221,6 @@
         let logs = JSON.parse(localStorage.getItem('archery_logs_v2') || '[]');
         let filtered = logs.filter(l => l.mode.includes(state.journalTab));
         
-        // DESTROY AND RECREATE CHART
         if(myChart) { myChart.destroy(); myChart = null; }
         const ctx = document.getElementById('progressChart').getContext('2d');
         
