@@ -27,7 +27,7 @@
         .tab-btn { flex: 1; padding: 10px; border-radius: 8px; border: 1px solid #333; background: #111; color: var(--gray); font-size: 11px; font-weight: 800; text-transform: uppercase; cursor: pointer; }
         .tab-active { background: var(--accent); color: #000; border-color: var(--accent); }
 
-        /* Session Cards & Stats */
+        /* Breakdown Styles */
         #journal-list { overflow-y: auto; flex-grow: 1; }
         .session-card { background: var(--card); padding: 15px; border-radius: 12px; border: 1px solid #222; margin-bottom: 10px; cursor: pointer; }
         .session-details { display: none; margin-top: 12px; border-top: 1px solid #333; padding-top: 12px; }
@@ -35,7 +35,14 @@
         .stat-box { background: #222; padding: 10px; border-radius: 8px; text-align: center; }
         .stat-label { font-size: 9px; color: var(--gray); text-transform: uppercase; margin-bottom: 4px; }
         .stat-value { font-size: 16px; font-weight: 900; color: var(--accent); }
-        .history-text { font-size: 13px; color: #ccc; line-height: 1.6; font-family: monospace; }
+        
+        .breakdown-row { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 15px; justify-content: center; }
+        .breakdown-chip { background: #333; padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: bold; color: #fff; }
+        .chip-yellow { border-left: 3px solid var(--target-yellow); }
+        .chip-red { border-left: 3px solid var(--target-red); }
+        .chip-blue { border-left: 3px solid var(--target-blue); }
+        
+        .history-text { font-size: 13px; color: #ccc; line-height: 1.6; font-family: monospace; border-top: 1px solid #222; padding-top: 10px; }
 
         /* Vault Form */
         .vault-scroll { overflow-y: auto; flex-grow: 1; padding-bottom: 40px; }
@@ -125,6 +132,7 @@
 
     function getBtnStyle(s, mode) {
         if (s === 0) return { bg: 'var(--miss)', text: '#fff' };
+        if (s === 'X') return { bg: 'var(--target-yellow)', text: '#000' };
         if (mode === '3D') {
             if (s === 11) return { bg: 'var(--target-yellow)', text: '#000' };
             if (s === 10) return { bg: 'var(--target-red)', text: '#fff' };
@@ -142,14 +150,23 @@
 
     function renderButtons() {
         const grid = document.getElementById('button-grid'); grid.innerHTML = '';
-        let scores = state.mode === 'FIELD' ? [6,5,4,3,2,1,0] : (state.mode.includes('TARGET') ? [10,9,8,7,6,5,4,3,2,1,0] : [11,10,8,5,0]);
+        let scores = [];
+        if (state.mode === 'FIELD') scores = [6,5,4,3,2,1,0];
+        else if (state.mode === 'TARGET OUTDOOR') scores = ['X',10,9,8,7,6,5,4,3,2,1,0];
+        else if (state.mode.includes('TARGET')) scores = [10,9,8,7,6,5,4,3,2,1,0];
+        else scores = [11,10,8,5,0];
+
         grid.style.gridTemplateColumns = scores.length > 5 ? 'repeat(4, 1fr)' : 'repeat(3, 1fr)';
         scores.forEach(s => {
             const b = document.createElement('button'); const style = getBtnStyle(s, state.mode);
             b.className = 'score-btn'; b.innerText = s === 0 ? 'M' : s; b.style.background = style.bg; b.style.color = style.text;
             b.onclick = () => {
                 let target = state.editIdx > -1 ? state.history[state.editIdx].scores : state.current;
-                if(target.length < state.arrows) { target.push(s); if(state.editIdx > -1) state.history[state.editIdx].total = target.reduce((a,b)=>a+b,0); renderUI(); }
+                if(target.length < state.arrows) { 
+                    target.push(s); 
+                    if(state.editIdx > -1) state.history[state.editIdx].total = calcTotal(target); 
+                    renderUI(); 
+                }
             };
             grid.appendChild(b);
         });
@@ -157,6 +174,8 @@
         del.onclick = () => { if (state.editIdx > -1) state.history[state.editIdx].scores.pop(); else state.current.pop(); renderUI(); };
         grid.appendChild(del);
     }
+
+    function calcTotal(arr) { return arr.reduce((a,b) => a + (b === 'X' ? 10 : b), 0); }
 
     function renderUI() {
         const list = document.getElementById('score-list'); list.innerHTML = '';
@@ -169,7 +188,7 @@
         });
         if (state.history.length < state.ends && state.editIdx === -1) {
             const active = document.createElement('div'); active.className = 'end-card active-card';
-            active.innerHTML = `<div><div class="end-meta">TARGET ${state.history.length + 1}</div><div class="end-val">${state.current.join(' · ') || '---'}</div></div><div class="end-total">${state.current.reduce((a,b)=>a+b,0)}</div>`;
+            active.innerHTML = `<div><div class="end-meta">TARGET ${state.history.length + 1}</div><div class="end-val">${state.current.join(' · ') || '---'}</div></div><div class="end-total">${calcTotal(state.current)}</div>`;
             list.appendChild(active);
         }
         const btn = document.getElementById('next-btn');
@@ -180,7 +199,7 @@
     function handleMainAction() {
         if (state.editIdx > -1) { state.editIdx = -1; renderUI(); }
         else {
-            state.history.push({ scores: [...state.current], total: state.current.reduce((a,b)=>a+b,0) });
+            state.history.push({ scores: [...state.current], total: calcTotal(state.current) });
             if(state.history.length >= state.ends) {
                 let logs = JSON.parse(localStorage.getItem('archery_logs_v2') || '[]');
                 logs.push({ date: new Date().toLocaleDateString(), mode: state.mode, score: state.history.reduce((a,b)=>a+b.total,0), details: state.history });
@@ -232,10 +251,25 @@
         filtered.reverse().forEach((l, idx) => {
             const allArrows = l.details.flatMap(d => d.scores);
             const totalArrows = allArrows.length;
+            const counts = {};
+            allArrows.forEach(val => counts[val] = (counts[val] || 0) + 1);
+            
+            // Re-order so X is first in breakdown
+            const keys = Object.keys(counts).sort((a,b) => {
+                if (a === 'X') return -1; if (b === 'X') return 1;
+                return b - a;
+            });
+
+            const breakdownHtml = keys.map(s => {
+                let colorClass = 'chip-blue';
+                if(s === 'X' || s >= 9) colorClass = 'chip-yellow';
+                else if(s >= 7) colorClass = 'chip-red';
+                return `<div class="breakdown-chip ${colorClass}">${s}: ${counts[s]}</div>`;
+            }).join('');
+
             const avg = (l.score / totalArrows).toFixed(2);
-            const hits = allArrows.filter(s => s > 0).length;
+            const hits = allArrows.filter(s => s !== 0).length;
             const hitRate = ((hits / totalArrows) * 100).toFixed(0);
-            const bestEnd = Math.max(...l.details.map(d => d.total));
 
             const d = document.createElement('div'); d.className = 'session-card';
             d.innerHTML = `
@@ -247,9 +281,8 @@
                     <div class="stats-grid">
                         <div class="stat-box"><div class="stat-label">Avg/Arrow</div><div class="stat-value">${avg}</div></div>
                         <div class="stat-box"><div class="stat-label">Hit Rate</div><div class="stat-value">${hitRate}%</div></div>
-                        <div class="stat-box"><div class="stat-label">Best End</div><div class="stat-value">${bestEnd}</div></div>
-                        <div class="stat-box"><div class="stat-label">Total Arrows</div><div class="stat-value">${totalArrows}</div></div>
                     </div>
+                    <div class="breakdown-row">${breakdownHtml}</div>
                     <div class="history-text">${l.details.map((end, i) => `T${i+1}: [${end.scores.join(',')}] = ${end.total}`).join('<br>')}</div>
                 </div>`;
             d.onclick = () => {
