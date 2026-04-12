@@ -27,6 +27,12 @@
         .tab-btn { flex: 1; padding: 10px; border-radius: 8px; border: 1px solid #333; background: #111; color: var(--gray); font-size: 11px; font-weight: 800; text-transform: uppercase; cursor: pointer; }
         .tab-active { background: var(--accent); color: #000; border-color: var(--accent); }
 
+        /* Vault Form */
+        .vault-scroll { overflow-y: auto; flex-grow: 1; padding-bottom: 40px; }
+        .input-group { margin-bottom: 15px; }
+        .input-label { font-size: 10px; color: var(--gray); text-transform: uppercase; font-weight: 800; margin-bottom: 5px; margin-left: 5px; }
+        .vault-input { background: #1c1c1e; border: 1px solid #3a3a3c; color: #fff; padding: 16px; border-radius: 12px; width: 100%; font-size: 16px; outline: none; }
+
         /* Session Cards */
         #journal-list { overflow-y: auto; flex-grow: 1; }
         .session-card { background: var(--card); padding: 15px; border-radius: 12px; border: 1px solid #222; margin-bottom: 10px; cursor: pointer; }
@@ -64,6 +70,23 @@
         </div>
     </div>
 
+    <div id="vault" class="screen">
+        <header>
+            <button onclick="showScreen('home')" style="background:none; border:none; color:var(--gray); font-size:18px">← Back</button>
+            <div style="font-weight:900">GEAR VAULT</div>
+            <button onclick="saveVault()" style="background:none; border:none; color:var(--accent); font-weight:bold;">SAVE</button>
+        </header>
+        <div class="vault-scroll" style="margin-top:15px;">
+            <div class="input-group"><div class="input-label">Archer Name</div><input id="v-name" class="vault-input" placeholder="Name"></div>
+            <div class="input-group"><div class="input-label">Bow Make</div><input id="v-bow" class="vault-input" placeholder="e.g. Hoyt"></div>
+            <div class="input-group"><div class="input-label">Limbs Make</div><input id="v-limbs" class="vault-input" placeholder="e.g. Uukha"></div>
+            <div class="input-group"><div class="input-label">Limb Poundage</div><input id="v-pounds" class="vault-input" placeholder="e.g. 42#"></div>
+            <div class="input-group"><div class="input-label">Arrow Made</div><input id="v-arrow" class="vault-input" placeholder="e.g. Easton"></div>
+            <div class="input-group"><div class="input-label">Arrow Spine</div><input id="v-spine" class="vault-input" placeholder="e.g. 400"></div>
+            <div class="input-group"><div class="input-label">Arrow Length</div><input id="v-length" class="vault-input" placeholder="e.g. 29.5 in"></div>
+        </div>
+    </div>
+
     <div id="journal" class="screen">
         <header><button onclick="showScreen('home')" style="background:none; border:none; color:var(--gray); font-size:18px">← Back</button><div>JOURNAL</div><button onclick="clearLogs()" style="background:none; border:none; color:red; font-size:10px;">RESET</button></header>
         <div class="tab-bar" style="margin-top:15px;">
@@ -73,13 +96,6 @@
         </div>
         <div style="height: 140px; margin-bottom: 15px;"><canvas id="progressChart"></canvas></div>
         <div id="journal-list"></div>
-    </div>
-
-    <div id="vault" class="screen">
-        <header><button onclick="showScreen('home')" style="background:none; border:none; color:var(--gray); font-size:18px">← Back</button><div>GEAR</div><button onclick="saveVault()" style="background:none; border:none; color:var(--accent); font-weight:bold;">SAVE</button></header>
-        <div style="overflow-y:auto; margin-top:20px;">
-            <input id="v-name" style="width:100%; padding:15px; margin-bottom:10px; background:#111; border:1px solid #333; color:#fff; border-radius:10px;" placeholder="Archer Name">
-        </div>
     </div>
 
     <div id="scoring" class="screen">
@@ -97,15 +113,7 @@
         document.querySelectorAll('.screen').forEach(s => s.classList.remove('active-screen'));
         document.getElementById(id).classList.add('active-screen');
         if(id === 'journal') switchJournal('3D');
-    }
-
-    function switchJournal(tab) {
-        state.journalTab = tab;
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('tab-active'));
-        if(tab === '3D') document.getElementById('tab-3d').classList.add('tab-active');
-        if(tab === 'FIELD') document.getElementById('tab-field').classList.add('tab-active');
-        if(tab === 'TARGET') document.getElementById('tab-target').classList.add('tab-active');
-        loadJournal();
+        if(id === 'vault') loadVault();
     }
 
     function startApp(mode, arrows, ends) {
@@ -181,12 +189,46 @@
         }
     }
 
+    function saveVault() {
+        const gear = {
+            name: document.getElementById('v-name').value,
+            bow: document.getElementById('v-bow').value,
+            limbs: document.getElementById('v-limbs').value,
+            pounds: document.getElementById('v-pounds').value,
+            arrow: document.getElementById('v-arrow').value,
+            spine: document.getElementById('v-spine').value,
+            length: document.getElementById('v-length').value
+        };
+        localStorage.setItem('archery_gear', JSON.stringify(gear));
+        alert("Gear Saved!");
+        showScreen('home');
+    }
+
+    function loadVault() {
+        const gear = JSON.parse(localStorage.getItem('archery_gear') || '{}');
+        document.getElementById('v-name').value = gear.name || '';
+        document.getElementById('v-bow').value = gear.bow || '';
+        document.getElementById('v-limbs').value = gear.limbs || '';
+        document.getElementById('v-pounds').value = gear.pounds || '';
+        document.getElementById('v-arrow').value = gear.arrow || '';
+        document.getElementById('v-spine').value = gear.spine || '';
+        document.getElementById('v-length').value = gear.length || '';
+    }
+
+    function switchJournal(tab) {
+        state.journalTab = tab;
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('tab-active'));
+        if(tab === '3D') document.getElementById('tab-3d').classList.add('tab-active');
+        if(tab === 'FIELD') document.getElementById('tab-field').classList.add('tab-active');
+        if(tab === 'TARGET') document.getElementById('tab-target').classList.add('tab-active');
+        loadJournal();
+    }
+
     function loadJournal() {
         const list = document.getElementById('journal-list'); list.innerHTML = '';
         let logs = JSON.parse(localStorage.getItem('archery_logs_v2') || '[]');
         let filtered = logs.filter(l => l.mode.includes(state.journalTab));
         
-        // Draw Chart
         const ctx = document.getElementById('progressChart').getContext('2d');
         if(myChart) myChart.destroy();
         myChart = new Chart(ctx, {
@@ -201,14 +243,15 @@
             d.onclick = () => {
                 const det = document.getElementById(`details-${idx}`);
                 det.style.display = det.style.display === 'block' ? 'none' : 'block';
-                det.innerHTML = l.details.map((end, i) => `Target ${i+1}: [${end.scores.join(',')}] = ${end.total}`).join('<br>');
+                det.innerHTML = l.details.map((end, i) => `T${i+1}: [${end.scores.join(',')}] = ${end.total}`).join('<br>');
             };
             list.appendChild(d);
         });
     }
 
-    function clearLogs() { if(confirm('Clear all?')) { localStorage.removeItem('archery_logs_v2'); loadJournal(); } }
-    function saveVault() { localStorage.setItem('arch_name', document.getElementById('v-name').value); showScreen('home'); }
+    function clearLogs() { if(confirm('Clear logs?')) { localStorage.removeItem('archery_logs_v2'); loadJournal(); } }
+    
+    window.onload = loadVault;
 </script>
 </body>
 </html>
