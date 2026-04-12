@@ -22,7 +22,7 @@
         #mode-title { font-size: 18px; font-weight: 900; color: #fff; }
         #score-list { flex-grow: 1; overflow-y: auto; padding: 15px 0; display: flex; flex-direction: column; gap: 10px; }
         .end-card { background: var(--card); padding: 12px 15px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #222; }
-        .active-card { border: 2px solid var(--accent); }
+        .active-card { border: 2px solid var(--accent); background: #111; }
         .end-val { font-size: 18px; font-weight: 700; color: #fff; }
         .end-total { font-weight: 900; font-size: 20px; color: var(--accent); }
         .end-meta { font-size: 10px; color: var(--gray); text-transform: uppercase; margin-bottom: 2px; }
@@ -106,7 +106,7 @@
             if (s >= 7) return { bg: 'var(--target-red)', text: '#fff' };
             if (s >= 5) return { bg: 'var(--target-blue)', text: '#fff' };
             if (s >= 3) return { bg: 'var(--target-black)', text: '#fff' };
-            return { bg: 'var(--target-white)', text: '#000' }; // 1 and 2 are White
+            return { bg: 'var(--target-white)', text: '#000' };
         }
         if (mode === 'FIELD') {
             if (s >= 5) return { bg: 'var(--target-yellow)', text: '#000' };
@@ -131,3 +131,48 @@
             b.style.background = style.bg;
             b.style.color = style.text;
             b.onclick = () => { if(state.current.length < state.arrows) { state.current.push(s); renderUI(); } };
+            grid.appendChild(b);
+        });
+        const del = document.createElement('button');
+        del.className = 'score-btn'; del.innerText = '⌫'; del.style.background = '#333'; del.style.color = '#fff';
+        del.onclick = () => { state.current.pop(); renderUI(); };
+        grid.appendChild(del);
+    }
+
+    function renderUI() {
+        const list = document.getElementById('score-list');
+        list.innerHTML = '';
+        document.getElementById('total-score').innerText = state.history.reduce((a, b) => a + b.total, 0);
+
+        // History first (T1, T2...)
+        state.history.forEach((end, i) => {
+            const card = document.createElement('div');
+            card.className = 'end-card';
+            card.innerHTML = `<div><div class="end-meta">TARGET ${i + 1}</div><div class="end-val">${end.scores.join(' · ')}</div></div><div class="end-total">${end.total}</div>`;
+            list.appendChild(card);
+        });
+
+        // Current Active Card at the BOTTOM
+        if (state.history.length < state.ends) {
+            const active = document.createElement('div');
+            active.className = 'end-card active-card';
+            active.innerHTML = `<div><div class="end-meta">TARGET ${state.history.length + 1}</div><div class="end-val">${state.current.join(' · ') || '---'}</div></div><div class="end-total">${state.current.reduce((a,b)=>a+b,0)}</div>`;
+            list.appendChild(active);
+        }
+
+        // Auto-scroll to bottom so the active target is always visible
+        setTimeout(() => { list.scrollTop = list.scrollHeight; }, 10);
+
+        document.getElementById('next-btn').disabled = state.current.length < state.arrows;
+        document.getElementById('next-btn').innerText = state.history.length >= state.ends - 1 ? "FINISH & SAVE" : "NEXT END";
+    }
+
+    function nextEnd() {
+        if(state.current.length < state.arrows) return;
+        state.history.push({ scores: [...state.current], total: state.current.reduce((a,b)=>a+b,0) });
+        if(state.history.length >= state.ends) finishSession();
+        else { state.current = []; renderUI(); }
+    }
+
+    function finishSession() {
+        let logs = JSON.parse
