@@ -15,63 +15,49 @@
         .screen { display: none; flex-direction: column; height: 100%; padding: 40px 20px 20px; background: var(--bg); position: absolute; width: 100%; top: 0; left: 0; bottom: 0; right: 0; }
         .active-screen { display: flex; z-index: 10; }
 
-        /* Home */
-        .logo-container { text-align: center; margin-bottom: 30px; margin-top: 20px; }
-        .logo-text { font-size: 32px; font-weight: 900; letter-spacing: 6px; }
-        .menu-list { display: flex; flex-direction: column; gap: 12px; }
-        .menu-btn { background: #fff; color: #000; padding: 20px; border-radius: 15px; font-size: 16px; font-weight: 800; border: none; text-align: left; cursor: pointer; }
-        .vault-btn { background: var(--card); border: 1px solid #333; color: #fff; padding: 16px; border-radius: 15px; font-weight: bold; text-align: center; margin-top: 10px; cursor: pointer; }
-
-        /* Journal Tabs */
-        .tab-bar { display: flex; gap: 5px; margin-bottom: 15px; }
-        .tab-btn { flex: 1; padding: 10px; border-radius: 8px; border: 1px solid #333; background: #111; color: var(--gray); font-size: 11px; font-weight: 800; text-transform: uppercase; cursor: pointer; }
+        header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 15px; border-bottom: 1px solid #222; min-height: 60px; }
+        
+        /* Tabs */
+        .tab-bar { display: flex; gap: 4px; margin-bottom: 15px; overflow-x: auto; padding-bottom: 5px; }
+        .tab-btn { flex: 1; min-width: 80px; padding: 10px 5px; border-radius: 8px; border: 1px solid #333; background: #111; color: var(--gray); font-size: 10px; font-weight: 800; text-transform: uppercase; cursor: pointer; }
         .tab-active { background: var(--accent); color: #000; border-color: var(--accent); }
 
-        /* Breakdown Styles */
+        /* Journal Cards */
         #journal-list { overflow-y: auto; flex-grow: 1; }
         .session-card { background: var(--card); padding: 15px; border-radius: 12px; border: 1px solid #222; margin-bottom: 10px; cursor: pointer; }
-        .session-details { display: none; margin-top: 12px; border-top: 1px solid #333; padding-top: 12px; }
-        .stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 15px; }
+        .card-main { display: flex; justify-content: space-between; align-items: center; }
+        .session-details { display: none; margin-top: 15px; border-top: 1px solid #333; padding-top: 15px; }
+        
+        /* Hit Distribution Bar Styles */
+        .dist-row { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+        .dist-label { width: 25px; font-size: 12px; font-weight: 900; color: var(--gray); }
+        .dist-bar-bg { flex-grow: 1; height: 8px; background: #222; border-radius: 4px; overflow: hidden; }
+        .dist-bar-fill { height: 100%; border-radius: 4px; transition: width 0.3s ease; }
+        .dist-count { width: 20px; font-size: 11px; text-align: right; font-weight: bold; }
+
+        .stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 20px; }
         .stat-box { background: #222; padding: 10px; border-radius: 8px; text-align: center; }
         .stat-label { font-size: 9px; color: var(--gray); text-transform: uppercase; margin-bottom: 4px; }
         .stat-value { font-size: 16px; font-weight: 900; color: var(--accent); }
-        
-        .breakdown-row { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 15px; justify-content: center; }
-        .breakdown-chip { background: #333; padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: bold; color: #fff; }
-        .chip-yellow { border-left: 3px solid var(--target-yellow); }
-        .chip-red { border-left: 3px solid var(--target-red); }
-        .chip-blue { border-left: 3px solid var(--target-blue); }
-        
-        .history-text { font-size: 13px; color: #ccc; line-height: 1.6; font-family: monospace; border-top: 1px solid #222; padding-top: 10px; }
 
-        /* Vault Form */
-        .vault-scroll { overflow-y: auto; flex-grow: 1; padding-bottom: 40px; }
-        .input-group { margin-bottom: 15px; }
-        .input-label { font-size: 10px; color: var(--gray); text-transform: uppercase; font-weight: 800; margin-bottom: 5px; margin-left: 5px; }
-        .vault-input { background: #1c1c1e; border: 1px solid #3a3a3c; color: #fff; padding: 16px; border-radius: 12px; width: 100%; font-size: 16px; outline: none; }
-
-        /* Scoring Header */
-        header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 15px; border-bottom: 1px solid #222; min-height: 60px; }
+        /* Scoring Components */
+        .menu-list { display: flex; flex-direction: column; gap: 12px; margin-top: 20px; }
+        .menu-btn { background: #fff; color: #000; padding: 20px; border-radius: 15px; font-size: 16px; font-weight: 800; border: none; text-align: left; }
+        .vault-btn { background: var(--card); border: 1px solid #333; color: #fff; padding: 16px; border-radius: 15px; font-weight: bold; text-align: center; margin-top: 10px; }
+        .vault-input { background: #1c1c1e; border: 1px solid #3a3a3c; color: #fff; padding: 16px; border-radius: 12px; width: 100%; font-size: 16px; margin-bottom: 10px; outline: none; }
         #score-list { flex-grow: 1; overflow-y: auto; padding: 15px 0; display: flex; flex-direction: column; gap: 10px; }
         .end-card { background: var(--card); padding: 12px 15px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #222; }
-        .active-card { border: 2px solid var(--accent); }
-        .editing-card { border: 2px solid var(--edit); background: #001a33; }
-        .end-val { font-size: 18px; font-weight: 700; color: #fff; }
         .end-total { font-weight: 900; font-size: 20px; color: var(--accent); }
-        .end-meta { font-size: 10px; color: var(--gray); text-transform: uppercase; margin-bottom: 2px; }
-
-        /* Controls */
-        .controls { background: var(--bg); padding-top: 10px; padding-bottom: 30px; border-top: 1px solid #222; }
+        .next-btn { background: var(--accent); color: #000; width: 100%; padding: 18px; border-radius: 12px; font-size: 20px; font-weight: 900; border: none; }
         .btn-grid { display: grid; gap: 8px; margin-top: 10px; }
-        .score-btn { height: 60px; border-radius: 10px; border: 1px solid #333; font-size: 22px; font-weight: 900; color: #fff; cursor: pointer; }
-        .next-btn { background: var(--accent); color: #000; width: 100%; padding: 18px; border-radius: 12px; font-size: 20px; font-weight: 900; border: none; cursor: pointer; }
+        .score-btn { height: 60px; border-radius: 10px; border: 1px solid #333; font-size: 22px; font-weight: 900; color: #fff; }
     </style>
 </head>
 <body>
 
 <div class="app-container">
     <div id="home" class="screen active-screen">
-        <div class="logo-container"><div class="logo-text">ALL IN</div></div>
+        <div style="text-align:center; margin-top:20px; font-size:32px; font-weight:900; letter-spacing:6px;">ALL IN</div>
         <div class="menu-list">
             <button class="menu-btn" onclick="startApp('3D', 2, 24)">3D Practice (24)</button>
             <button class="menu-btn" onclick="startApp('FIELD', 3, 24)">Field Practice (24)</button>
@@ -82,34 +68,38 @@
         </div>
     </div>
 
-    <div id="vault" class="screen">
-        <header><button onclick="showScreen('home')" style="background:none; border:none; color:var(--gray); font-size:18px">← Back</button><div style="font-weight:900">GEAR VAULT</div><button onclick="saveVault()" style="background:none; border:none; color:var(--accent); font-weight:bold;">SAVE</button></header>
-        <div class="vault-scroll" style="margin-top:15px;">
-            <div class="input-group"><div class="input-label">Archer Name</div><input id="v-name" class="vault-input" placeholder="Name"></div>
-            <div class="input-group"><div class="input-label">Bow Make</div><input id="v-bow" class="vault-input" placeholder="e.g. Hoyt"></div>
-            <div class="input-group"><div class="input-label">Limbs Make</div><input id="v-limbs" class="vault-input" placeholder="e.g. Uukha"></div>
-            <div class="input-group"><div class="input-label">Limb Poundage</div><input id="v-pounds" class="vault-input" placeholder="e.g. 42#"></div>
-            <div class="input-group"><div class="input-label">Arrow Made</div><input id="v-arrow" class="vault-input" placeholder="e.g. Easton"></div>
-            <div class="input-group"><div class="input-label">Arrow Spine</div><input id="v-spine" class="vault-input" placeholder="e.g. 400"></div>
-            <div class="input-group"><div class="input-label">Arrow Length</div><input id="v-length" class="vault-input" placeholder="e.g. 29.5 in"></div>
+    <div id="journal" class="screen">
+        <header><button onclick="showScreen('home')" style="background:none; border:none; color:var(--gray); font-size:18px">←</button><div>JOURNAL</div><button onclick="clearLogs()" style="background:none; border:none; color:red; font-size:10px;">RESET</button></header>
+        <div class="tab-bar" style="margin-top:15px;">
+            <button id="tab-3D" class="tab-btn tab-active" onclick="switchJournal('3D')">3D</button>
+            <button id="tab-FIELD" class="tab-btn" onclick="switchJournal('FIELD')">Field</button>
+            <button id="tab-INDOOR" class="tab-btn" onclick="switchJournal('TARGET INDOOR')">Indoor</button>
+            <button id="tab-OUTDOOR" class="tab-btn" onclick="switchJournal('TARGET OUTDOOR')">Outdoor</button>
         </div>
+        <div style="height: 140px; margin-bottom: 10px;"><canvas id="progressChart"></canvas></div>
+        <div id="journal-list"></div>
     </div>
 
-    <div id="journal" class="screen">
-        <header><button onclick="showScreen('home')" style="background:none; border:none; color:var(--gray); font-size:18px">← Back</button><div>JOURNAL</div><button onclick="clearLogs()" style="background:none; border:none; color:red; font-size:10px;">RESET</button></header>
-        <div class="tab-bar" style="margin-top:15px;">
-            <button id="tab-3d" class="tab-btn tab-active" onclick="switchJournal('3D')">3D</button>
-            <button id="tab-field" class="tab-btn" onclick="switchJournal('FIELD')">Field</button>
-            <button id="tab-target" class="tab-btn" onclick="switchJournal('TARGET')">Target</button>
+    <div id="vault" class="screen">
+        <header><button onclick="showScreen('home')" style="background:none; border:none; color:var(--gray); font-size:18px">←</button><div>GEAR</div><button onclick="saveVault()" style="background:none; border:none; color:var(--accent); font-weight:bold;">SAVE</button></header>
+        <div style="overflow-y:auto; margin-top:15px; padding-bottom:30px;">
+            <input id="v-name" class="vault-input" placeholder="Archer Name">
+            <input id="v-bow" class="vault-input" placeholder="Bow Make">
+            <input id="v-limbs" class="vault-input" placeholder="Limbs Make">
+            <input id="v-pounds" class="vault-input" placeholder="Poundage">
+            <input id="v-arrow" class="vault-input" placeholder="Arrow Model">
+            <input id="v-spine" class="vault-input" placeholder="Spine">
+            <input id="v-length" class="vault-input" placeholder="Length">
         </div>
-        <div style="height: 140px; margin-bottom: 15px;"><canvas id="progressChart"></canvas></div>
-        <div id="journal-list"></div>
     </div>
 
     <div id="scoring" class="screen">
         <header><button onclick="if(confirm('Quit?')) showScreen('home')" style="background:none; border:none; color:var(--gray); font-size:24px">✕</button><div id="mode-title">SCORING</div><div id="total-score" style="font-size:22px; font-weight:900;">0</div></header>
         <div id="score-list"></div>
-        <div class="controls"><button id="next-btn" class="next-btn" onclick="handleMainAction()">NEXT END</button><div id="button-grid" class="btn-grid"></div></div>
+        <div style="padding-bottom:30px; border-top: 1px solid #222;">
+            <button id="next-btn" class="next-btn" onclick="handleMainAction()">NEXT END</button>
+            <div id="button-grid" class="btn-grid"></div>
+        </div>
     </div>
 </div>
 
@@ -125,48 +115,31 @@
     }
 
     function startApp(mode, arrows, ends) {
-        state = { current: [], history: [], arrows, ends, mode, editIdx: -1, journalTab: '3D' };
+        state = { current: [], history: [], arrows, ends, mode, editIdx: -1, journalTab: mode };
         document.getElementById('mode-title').innerText = mode;
         renderButtons(); renderUI(); showScreen('scoring');
     }
 
-    function getBtnStyle(s, mode) {
-        if (s === 0) return { bg: 'var(--miss)', text: '#fff' };
-        if (s === 'X') return { bg: 'var(--target-yellow)', text: '#000' };
-        if (mode === '3D') {
-            if (s === 11) return { bg: 'var(--target-yellow)', text: '#000' };
-            if (s === 10) return { bg: 'var(--target-red)', text: '#fff' };
-            if (s === 8) return { bg: 'var(--target-blue)', text: '#fff' };
-            return { bg: 'var(--target-black)', text: '#fff' };
-        }
-        if (mode.includes('TARGET')) {
-            if (s >= 9) return { bg: 'var(--target-yellow)', text: '#000' };
-            if (s >= 7) return { bg: 'var(--target-red)', text: '#fff' };
-            if (s >= 5) return { bg: 'var(--target-blue)', text: '#fff' };
-            return { bg: 'var(--target-black)', text: '#fff' };
-        }
-        return { bg: 'var(--target-yellow)', text: '#000' };
+    function getHexColor(s) {
+        if (s === 'X' || s >= 9) return '#f1c40f'; // Yellow
+        if (s >= 7) return '#e74c3c'; // Red
+        if (s >= 5) return '#3498db'; // Blue
+        if (s === 0) return '#2ecc71'; // Miss/Green
+        return '#2c3e50'; // Black/Dark
     }
 
     function renderButtons() {
         const grid = document.getElementById('button-grid'); grid.innerHTML = '';
-        let scores = [];
-        if (state.mode === 'FIELD') scores = [6,5,4,3,2,1,0];
-        else if (state.mode === 'TARGET OUTDOOR') scores = ['X',10,9,8,7,6,5,4,3,2,1,0];
-        else if (state.mode.includes('TARGET')) scores = [10,9,8,7,6,5,4,3,2,1,0];
-        else scores = [11,10,8,5,0];
-
+        let scores = state.mode === 'FIELD' ? [6,5,4,3,2,1,0] : (state.mode === 'TARGET OUTDOOR' ? ['X',10,9,8,7,6,5,4,3,2,1,0] : (state.mode.includes('TARGET') ? [10,9,8,7,6,5,4,3,2,1,0] : [11,10,8,5,0]));
         grid.style.gridTemplateColumns = scores.length > 5 ? 'repeat(4, 1fr)' : 'repeat(3, 1fr)';
         scores.forEach(s => {
-            const b = document.createElement('button'); const style = getBtnStyle(s, state.mode);
-            b.className = 'score-btn'; b.innerText = s === 0 ? 'M' : s; b.style.background = style.bg; b.style.color = style.text;
+            const b = document.createElement('button');
+            b.className = 'score-btn'; b.innerText = s === 0 ? 'M' : s;
+            b.style.background = getHexColor(s);
+            b.style.color = (s === 'X' || s >= 9) ? '#000' : '#fff';
             b.onclick = () => {
                 let target = state.editIdx > -1 ? state.history[state.editIdx].scores : state.current;
-                if(target.length < state.arrows) { 
-                    target.push(s); 
-                    if(state.editIdx > -1) state.history[state.editIdx].total = calcTotal(target); 
-                    renderUI(); 
-                }
+                if(target.length < state.arrows) { target.push(s); if(state.editIdx > -1) state.history[state.editIdx].total = calcTotal(target); renderUI(); }
             };
             grid.appendChild(b);
         });
@@ -181,19 +154,20 @@
         const list = document.getElementById('score-list'); list.innerHTML = '';
         document.getElementById('total-score').innerText = state.history.reduce((a, b) => a + b.total, 0);
         state.history.forEach((end, i) => {
-            const card = document.createElement('div'); card.className = 'end-card ' + (state.editIdx === i ? 'editing-card' : '');
+            const card = document.createElement('div'); card.className = 'end-card';
+            if(state.editIdx === i) card.style.border = '2px solid var(--edit)';
             card.onclick = () => { state.editIdx = i; renderUI(); };
-            card.innerHTML = `<div><div class="end-meta">TARGET ${i + 1}</div><div class="end-val">${end.scores.join(' · ') || '---'}</div></div><div class="end-total">${end.total}</div>`;
+            card.innerHTML = `<div><div style="font-size:10px; color:var(--gray);">TARGET ${i + 1}</div><div style="font-size:18px; font-weight:700;">${end.scores.join(' · ') || '---'}</div></div><div class="end-total">${end.total}</div>`;
             list.appendChild(card);
         });
         if (state.history.length < state.ends && state.editIdx === -1) {
-            const active = document.createElement('div'); active.className = 'end-card active-card';
-            active.innerHTML = `<div><div class="end-meta">TARGET ${state.history.length + 1}</div><div class="end-val">${state.current.join(' · ') || '---'}</div></div><div class="end-total">${calcTotal(state.current)}</div>`;
+            const active = document.createElement('div'); active.className = 'end-card'; active.style.border = '2px solid var(--accent)';
+            active.innerHTML = `<div><div style="font-size:10px; color:var(--gray);">TARGET ${state.history.length + 1}</div><div style="font-size:18px; font-weight:700;">${state.current.join(' · ') || '---'}</div></div><div class="end-total">${calcTotal(state.current)}</div>`;
             list.appendChild(active);
         }
         const btn = document.getElementById('next-btn');
-        if (state.editIdx > -1) { btn.innerText = "SAVE EDIT"; btn.style.background = "var(--edit)"; btn.disabled = state.history[state.editIdx].scores.length < state.arrows; }
-        else { btn.innerText = (state.history.length >= state.ends - 1) ? "FINISH SESSION" : "NEXT END"; btn.style.background = "var(--accent)"; btn.disabled = state.current.length < state.arrows; }
+        btn.innerText = (state.history.length >= state.ends - 1 && state.editIdx === -1) ? "FINISH SESSION" : (state.editIdx > -1 ? "SAVE EDIT" : "NEXT END");
+        btn.disabled = state.editIdx > -1 ? state.history[state.editIdx].scores.length < state.arrows : state.current.length < state.arrows;
     }
 
     function handleMainAction() {
@@ -212,7 +186,7 @@
     function saveVault() {
         const gear = { name: document.getElementById('v-name').value, bow: document.getElementById('v-bow').value, limbs: document.getElementById('v-limbs').value, pounds: document.getElementById('v-pounds').value, arrow: document.getElementById('v-arrow').value, spine: document.getElementById('v-spine').value, length: document.getElementById('v-length').value };
         localStorage.setItem('archery_gear', JSON.stringify(gear));
-        alert("Gear Saved!"); showScreen('home');
+        alert("Saved!"); showScreen('home');
     }
 
     function loadVault() {
@@ -228,10 +202,10 @@
 
     function switchJournal(tab) {
         state.journalTab = tab;
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('tab-active'));
-        if(tab === '3D') document.getElementById('tab-3d').classList.add('tab-active');
-        if(tab === 'FIELD') document.getElementById('tab-field').classList.add('tab-active');
-        if(tab === 'TARGET') document.getElementById('tab-target').classList.add('tab-active');
+        document.querySelectorAll('.tab-btn').forEach(b => {
+            b.classList.remove('tab-active');
+            if(b.id === 'tab-' + (tab.includes('INDOOR') ? 'INDOOR' : tab.includes('OUTDOOR') ? 'OUTDOOR' : tab)) b.classList.add('tab-active');
+        });
         loadJournal();
     }
 
@@ -243,57 +217,55 @@
         const ctx = document.getElementById('progressChart').getContext('2d');
         if(myChart) myChart.destroy();
         myChart = new Chart(ctx, {
-            type: 'line',
-            data: { labels: filtered.map(l => l.date), datasets: [{ label: 'Score', data: filtered.map(l => l.score), borderColor: '#FFD700', tension: 0.1, backgroundColor: 'rgba(255,215,0,0.1)', fill: true }] },
-            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: false, grid: { color: '#222' } }, x: { grid: { display: false } } } }
+            type: 'bar',
+            data: { labels: filtered.map(l => l.date), datasets: [{ data: filtered.map(l => l.score), backgroundColor: '#FFD700', borderRadius: 4 }] },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { grid: { color: '#222' }, ticks: { color: '#888' } }, x: { grid: { display: false }, ticks: { color: '#888' } } } }
         });
 
         filtered.reverse().forEach((l, idx) => {
             const allArrows = l.details.flatMap(d => d.scores);
             const totalArrows = allArrows.length;
-            const counts = {};
-            allArrows.forEach(val => counts[val] = (counts[val] || 0) + 1);
+            const counts = {}; allArrows.forEach(val => counts[val] = (counts[val] || 0) + 1);
+            const sortedKeys = Object.keys(counts).sort((a,b) => (a === 'X' ? -1 : b === 'X' ? 1 : b - a));
             
-            // Re-order so X is first in breakdown
-            const keys = Object.keys(counts).sort((a,b) => {
-                if (a === 'X') return -1; if (b === 'X') return 1;
-                return b - a;
-            });
-
-            const breakdownHtml = keys.map(s => {
-                let colorClass = 'chip-blue';
-                if(s === 'X' || s >= 9) colorClass = 'chip-yellow';
-                else if(s >= 7) colorClass = 'chip-red';
-                return `<div class="breakdown-chip ${colorClass}">${s}: ${counts[s]}</div>`;
+            // Build the Hit Distribution Bar Graph
+            const distributionHtml = sortedKeys.map(k => {
+                const percent = (counts[k] / totalArrows) * 100;
+                return `
+                    <div class="dist-row">
+                        <div class="dist-label">${k === 0 ? 'M' : k}</div>
+                        <div class="dist-bar-bg">
+                            <div class="dist-bar-fill" style="width: ${percent}%; background: ${getHexColor(k)};"></div>
+                        </div>
+                        <div class="dist-count">${counts[k]}</div>
+                    </div>`;
             }).join('');
-
-            const avg = (l.score / totalArrows).toFixed(2);
-            const hits = allArrows.filter(s => s !== 0).length;
-            const hitRate = ((hits / totalArrows) * 100).toFixed(0);
 
             const d = document.createElement('div'); d.className = 'session-card';
             d.innerHTML = `
-                <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <div><div class="end-meta">${l.date}</div><div style="font-weight:bold;">${l.mode}</div></div>
+                <div class="card-main">
+                    <div><div style="font-size:10px; color:var(--gray);">${l.date}</div><div style="font-weight:bold;">${l.mode}</div></div>
                     <div class="end-total">${l.score}</div>
                 </div>
                 <div id="details-${idx}" class="session-details">
                     <div class="stats-grid">
-                        <div class="stat-box"><div class="stat-label">Avg/Arrow</div><div class="stat-value">${avg}</div></div>
-                        <div class="stat-box"><div class="stat-label">Hit Rate</div><div class="stat-value">${hitRate}%</div></div>
+                        <div class="stat-box"><div class="stat-label">Avg/Arrow</div><div class="stat-value">${(l.score / totalArrows).toFixed(2)}</div></div>
+                        <div class="stat-box"><div class="stat-label">Hit Rate</div><div class="stat-value">${((allArrows.filter(s=>s!==0).length / totalArrows)*100).toFixed(0)}%</div></div>
                     </div>
-                    <div class="breakdown-row">${breakdownHtml}</div>
-                    <div class="history-text">${l.details.map((end, i) => `T${i+1}: [${end.scores.join(',')}] = ${end.total}`).join('<br>')}</div>
+                    <div style="margin-bottom: 20px;">
+                        <div style="font-size: 10px; color: var(--gray); text-transform: uppercase; margin-bottom: 10px; font-weight: 800;">Hit Distribution</div>
+                        ${distributionHtml}
+                    </div>
+                    <div class="history-text" style="border-top: 1px solid #222; padding-top: 10px;">
+                        ${l.details.map((end, i) => `T${i+1}: [${end.scores.join(',')}] = ${end.total}`).join('<br>')}
+                    </div>
                 </div>`;
-            d.onclick = () => {
-                const det = document.getElementById(`details-${idx}`);
-                det.style.display = det.style.display === 'block' ? 'none' : 'block';
-            };
+            d.onclick = () => { const det = document.getElementById(`details-${idx}`); det.style.display = det.style.display === 'block' ? 'none' : 'block'; };
             list.appendChild(d);
         });
     }
 
-    function clearLogs() { if(confirm('Clear logs?')) { localStorage.removeItem('archery_logs_v2'); loadJournal(); } }
+    function clearLogs() { if(confirm('Clear?')) { localStorage.removeItem('archery_logs_v2'); loadJournal(); } }
     window.onload = loadVault;
 </script>
 </body>
