@@ -1,29 +1,155 @@
-function nextEnd() {
-        if(state.current.length < state.arrowLimit) return;
-        
-        const currentCrawl = document.getElementById('crawl-val').innerText;
-        
-        const entry = { 
-            scores: [...state.current], 
-            crawl: currentCrawl, 
-            total: state.current.reduce((a,b)=>a+b,0) 
-        };
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="ALL IN">
+    <meta name="theme-color" content="#000000">
+    <link rel="apple-touch-icon" href="data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23151515'/%3E%3Ccircle cx='50' cy='50' r='35' fill='%23FFD700'/%3E%3Ccircle cx='50' cy='50' r='20' fill='%23151515'/%3E%3Ccircle cx='50' cy='50' r='8' fill='%23FFD700'/%3E%3C/svg%3E">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23151515'/%3E%3Ccircle cx='50' cy='50' r='35' fill='%23FFD700'/%3E%3Ccircle cx='50' cy='50' r='20' fill='%23151515'/%3E%3Ccircle cx='50' cy='50' r='8' fill='%23FFD700'/%3E%3C/svg%3E">
 
-        if(state.editingIdx > -1) { 
-            state.history[state.editingIdx] = entry; 
-            state.editingIdx = -1; 
-        } else { 
-            state.history.push(entry); 
-        }
-
-        state.current = []; 
+    <title>ALL IN Archery</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root { --bg: #000; --text: #fff; --accent: #FFD700; --card: #151515; --gray: #888; --edit: #007aff; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; touch-action: manipulation; }
+        body { background: var(--bg); color: var(--text); font-family: -apple-system, sans-serif; margin: 0; height: 100vh; overflow: hidden; display: flex; justify-content: center; }
+        .app-container { width: 100%; max-width: 500px; height: 100%; display: flex; flex-direction: column; position: relative; }
+        .screen { display: none; flex-direction: column; height: 100%; padding: 40px 20px 20px; position: absolute; top: 0; left: 0; width: 100%; }
+        .active-screen { display: flex; z-index: 10; }
         
-        // --- ADD THIS PART BELOW ---
-        // If the mode is 3D or FIELD, reset the crawl to 0 for the next target
-        if (state.mode === '3D' || state.mode === 'FIELD') {
-            document.getElementById('crawl-val').innerText = '0';
-        }
-        // ---------------------------
+        .logo-container { display: flex; flex-direction: column; align-items: center; margin-bottom: 30px; }
+        .logo-svg { width: 80px; height: 80px; margin-bottom: 10px; }
+        .logo-text { font-size: 32px; font-weight: 900; letter-spacing: 6px; text-align: center; }
+        
+        .menu-list { display: flex; flex-direction: column; gap: 10px; flex-grow: 1; overflow-y: auto; }
+        .menu-btn { background: #fff; color: #000; padding: 18px; border-radius: 15px; font-size: 16px; font-weight: 800; border: none; text-align: left; cursor: pointer; }
+        .vault-btn { background: var(--card); border: 1px solid #333; color: #fff; padding: 16px; border-radius: 15px; font-weight: bold; text-align: center; cursor: pointer; }
 
-        updateUI(); 
+        header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 15px; border-bottom: 1px solid #222; }
+        #score-list { flex-grow: 1; overflow-y: auto; padding: 15px 0; display: flex; flex-direction: column; gap: 10px; }
+        .end-card { background: var(--card); padding: 15px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #222; min-height: 80px; }
+        .active-card { border: 2px solid var(--accent); background: #111; order: -1; }
+        .editing-card { border: 2px solid var(--edit); background: #001a33; order: -1; }
+        .end-val { font-size: 28px; font-weight: 900; letter-spacing: 2px; }
+        .end-meta { font-size: 11px; color: var(--gray); text-transform: uppercase; font-weight: bold; margin-bottom: 4px; }
+        
+        .controls { background: var(--bg); padding-top: 10px; padding-bottom: env(safe-area-inset-bottom, 20px); border-top: 1px solid #222; }
+        .crawl-box { background: var(--card); padding: 10px 15px; border-radius: 12px; margin-bottom: 15px; border: 1px solid #333; display: flex; justify-content: space-between; align-items: center; }
+        .crawl-btn { background: #333; color: #fff; border: none; padding: 10px 20px; border-radius: 8px; font-size: 20px; font-weight: bold; }
+        
+        .next-btn { background: var(--accent); color: #000; width: 100%; padding: 18px; border-radius: 12px; font-size: 20px; font-weight: 900; border: none; margin-bottom: 15px; }
+        .btn-grid { display: grid; gap: 8px; }
+        .score-btn { height: 60px; border-radius: 10px; border: 1px solid #333; font-size: 22px; font-weight: 900; cursor: pointer; }
+        
+        .chart-container { width: 100%; height: 200px; margin-top: 15px; margin-bottom: 15px; background: var(--card); padding: 10px; border-radius: 12px; border: 1px solid #222; }
+        
+        .input-group { margin-bottom: 15px; }
+        .input-label { color: var(--gray); font-size: 12px; font-weight: bold; margin-bottom: 5px; display: block; text-transform: uppercase; }
+        .vault-input { background: #1c1c1e; border: 1px solid #3a3a3c; color: #fff; padding: 16px; border-radius: 12px; width: 100%; font-size: 16px; }
+    </style>
+</head>
+<body>
+<div class="app-container">
+    
+    <div id="home" class="screen active-screen">
+        <div class="logo-container">
+            <svg class="logo-svg" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                <rect width="100" height="100" rx="20" fill="#151515"/>
+                <circle cx="50" cy="50" r="35" fill="#FFD700"/>
+                <circle cx="50" cy="50" r="20" fill="#151515"/>
+                <circle cx="50" cy="50" r="8" fill="#FFD700"/>
+            </svg>
+            <div class="logo-text">ALL IN</div>
+        </div>
+        <div class="menu-list">
+            <button class="menu-btn" onclick="startApp('3D', 2, 24)">3D Practice (24)</button>
+            <button class="menu-btn" onclick="startApp('FIELD', 3, 24)">Field Practice (24)</button>
+            <button class="menu-btn" onclick="startApp('TARGET IN', 3, 20)">Target Indoor (20)</button>
+            <button class="menu-btn" onclick="startApp('TARGET OUT', 6, 12)">Target Outdoor (12)</button>
+            <hr style="border:0; border-top:1px solid #222; width:100%; margin:10px 0;">
+            <button class="vault-btn" onclick="openJournal()">📖 SESSION JOURNAL</button>
+            <button class="vault-btn" onclick="showScreen('vault')">⚙ GEAR VAULT</button>
+        </div>
+    </div>
+
+    <div id="journal" class="screen">
+        <header>
+            <button onclick="showScreen('home')" style="background:none; border:none; color:var(--gray); font-size:18px">← Back</button>
+            <div style="font-weight:900">JOURNAL</div>
+            <button onclick="clearJournal()" style="background:none; border:none; color:red; font-size:12px; font-weight:bold;">CLEAR</button>
+        </header>
+        <div class="chart-container">
+            <canvas id="progressChart"></canvas>
+        </div>
+        <div id="journal-list" style="flex-grow:1; overflow-y:auto; padding-top:10px;"></div>
+    </div>
+
+    <div id="vault" class="screen">
+        <header>
+            <button onclick="showScreen('home')" style="background:none; border:none; color:var(--gray); font-size:18px">← Back</button>
+            <div style="font-weight:900">VAULT</div>
+            <button onclick="saveVault()" style="background:none; border:none; color:var(--accent); font-size:14px; font-weight:bold;">SAVE</button>
+        </header>
+        <div style="padding-top: 20px; overflow-y: auto; flex-grow: 1;">
+            <div class="input-group">
+                <label class="input-label">Archer Name</label>
+                <input id="in-name" class="vault-input" placeholder="Your Name">
+            </div>
+            <div class="input-group">
+                <label class="input-label">Bow Make</label>
+                <input id="in-bow" class="vault-input" placeholder="e.g., Gillo, Hoyt, WNS">
+            </div>
+            <div class="input-group">
+                <label class="input-label">Arrow Make</label>
+                <input id="in-arrow-make" class="vault-input" placeholder="e.g., Easton, Skylon">
+            </div>
+            <div class="input-group">
+                <label class="input-label">Arrow Spine</label>
+                <input id="in-spine" type="number" class="vault-input" placeholder="e.g., 500">
+            </div>
+        </div>
+    </div>
+
+    <div id="scoring" class="screen">
+        <header>
+            <button onclick="if(confirm('Exit?')) showScreen('home')" style="background:none; border:none; color:var(--gray); font-size:24px">✕</button>
+            <div id="mode-title" style="font-weight:900; letter-spacing:2px">3D</div>
+            <div style="text-align:right">
+                <div id="target-count" style="background:var(--accent); color:#000; padding:2px 8px; border-radius:8px; font-weight:bold; font-size:12px">T1</div>
+                <div id="total-score" style="font-size:18px; font-weight:900; margin-top:4px">0</div>
+            </div>
+        </header>
+        <div id="score-list"></div>
+        <div class="controls">
+            <div id="crawl-ui" class="crawl-box">
+                <span style="font-size:10px; font-weight:bold; color:var(--gray)">CRAWL</span>
+                <div style="display:flex; align-items:center; gap:15px;">
+                    <button class="crawl-btn" onclick="adjCrawl(-1)">-</button>
+                    <span id="crawl-val" style="color:var(--accent); font-weight:900; font-size:18px;">0</span>
+                    <button class="crawl-btn" onclick="adjCrawl(1)">+</button>
+                </div>
+            </div>
+            <button id="main-action-btn" class="next-btn" onclick="nextEnd()">NEXT END</button>
+            <div id="button-area" class="btn-grid"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let state = { current: [], history: [], arrowLimit: 2, endLimit: 24, mode: '', editingIdx: -1 };
+    let chartInstance = null;
+
+    function showScreen(id) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active-screen'));
+        document.getElementById(id).classList.add('active-screen');
     }
+
+    function startApp(mode, arrowLimit, endLimit) {
+        state = { current: [], history: [], arrowLimit, endLimit, mode, editingIdx: -1 };
+        document.getElementById('mode-title').innerText = mode;
+        document.getElementById('crawl-ui').style.display = (mode.includes('TARGET')) ? 'none' : 'flex';
+        document.getElementById('crawl-val').innerText = '0';
