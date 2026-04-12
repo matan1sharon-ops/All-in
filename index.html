@@ -153,3 +153,217 @@
         document.getElementById('mode-title').innerText = mode;
         document.getElementById('crawl-ui').style.display = (mode.includes('TARGET')) ? 'none' : 'flex';
         document.getElementById('crawl-val').innerText = '0';
+        setupButtons(mode);
+        updateUI();
+        showScreen('scoring');
+    }
+
+    function setupButtons(mode) {
+        const area = document.getElementById('button-area'); area.innerHTML = '';
+        let scores = mode === 'FIELD' ? [6,5,4,3,2,1,0] : (mode.includes('TARGET') ? [10,9,8,7,6,5,4,3,2,1,0] : [11,10,8,5,0]);
+        area.style.gridTemplateColumns = scores.length > 6 ? 'repeat(4, 1fr)' : 'repeat(3, 1fr)';
+        
+        scores.forEach(s => {
+            const btn = document.createElement('button'); btn.className = 'score-btn';
+            const colors = getColors(mode, s);
+            btn.style.backgroundColor = colors.bg; btn.style.color = colors.txt;
+            btn.innerText = s === 0 ? 'M' : s;
+            btn.onclick = () => addScore(s);
+            area.appendChild(btn);
+        });
+        
+        const delBtn = document.createElement('button'); delBtn.className = 'score-btn';
+        delBtn.style.backgroundColor = '#333'; delBtn.style.color = '#fff'; delBtn.innerText = '⌫'; 
+        delBtn.onclick = popScore;
+        area.appendChild(delBtn);
+    }
+
+    function addScore(s) {
+        if(state.current.length < state.arrowLimit) { state.current.push(s); updateUI(); }
+    }
+
+    function popScore() {
+        if(state.current.length > 0) { state.current.pop(); updateUI(); }
+    }
+
+    function getColors(mode, s) {
+        if (mode === '3D') {
+            if (s === 11) return { bg: '#FFD700', txt: '#000' };
+            if (s === 10) return { bg: '#ff3b30', txt: '#fff' };
+            if (s === 8) return { bg: '#007aff', txt: '#fff' };
+            if (s === 5) return { bg: '#1c1c1e', txt: '#fff' };
+            if (s === 0) return { bg: '#34c759', txt: '#fff' };
+        }
+        if (s === 0) return { bg: '#34c759', txt: '#fff' };
+        if (mode === 'FIELD') return s >= 5 ? { bg: '#FFD700', txt: '#000' } : { bg: '#2c2c2e', txt: '#fff' };
+        return s >= 9 ? { bg: '#FFD700', txt: '#000' } : (s >= 7 ? { bg: '#ff3b30', txt: '#fff' } : { bg: '#007aff', txt: '#fff' });
+    }
+
+    function nextEnd() {
+        if(state.current.length < state.arrowLimit) return;
+        
+        const currentCrawl = document.getElementById('crawl-val').innerText;
+        const entry = { 
+            scores: [...state.current], 
+            crawl: currentCrawl, 
+            total: state.current.reduce((a,b)=>a+b,0) 
+        };
+
+        if(state.editingIdx > -1) { 
+            state.history[state.editingIdx] = entry; 
+            state.editingIdx = -1; 
+        } else { 
+            state.history.push(entry); 
+        }
+
+        state.current = []; 
+        
+        // Smart Reset: Reset crawl to 0 only for variable distance modes
+        if (state.mode === '3D' || state.mode === 'FIELD') {
+            document.getElementById('crawl-val').innerText = '0';
+        }
+        
+        updateUI(); 
+    }
+
+    function updateUI() {
+        const list = document.getElementById('score-list'); list.innerHTML = '';
+        const grandTotal = state.history.reduce((a,b)=>a+b.total,0);
+        document.getElementById('total-score').innerText = grandTotal;
+        
+        const targetNum = state.editingIdx > -1 ? state.editingIdx + 1 : state.history.length + 1;
+        document.getElementById('target-count').innerText = 'T' + targetNum;
+
+        const mainBtn = document.getElementById('main-action-btn');
+        const isFull = state.current.length === state.arrowLimit;
+        
+        if (state.history.length >= state.endLimit && state.editingIdx === -1) {
+            mainBtn.innerText = "FINISH SESSION";
+            mainBtn.onclick = finishSession;
+            mainBtn.disabled = false;
+        } else {
+            mainBtn.innerText = state.editingIdx > -1 ? "SAVE EDIT" : "NEXT END";
+            mainBtn.onclick = nextEnd;
+            mainBtn.disabled = !isFull;
+        }
+
+        if (state.history.length < state.endLimit || state.editingIdx > -1) {
+            const activeDiv = document.createElement('div');
+            activeDiv.className = 'end-card ' + (state.editingIdx > -1 ? 'editing-card' : 'active-card');
+            activeDiv.innerHTML = `<div><div class="end-meta">TARGET ${targetNum}</div><div class="end-val">${state.current.length ? state.current.map(s=>s===0?'M':s).join(' · ') : '---'}</div></div><div style="font-weight:900; font-size:28px">${state.current.reduce((a,b)=>a+b,0)}</div>`;
+            list.appendChild(activeDiv);
+        }
+
+        state.history.slice().reverse().forEach((e, i) => {
+            const idx = state.history.length - 1 - i;
+            if(idx === state.editingIdx) return;
+            const div = document.createElement('div'); div.className = 'end-card';
+            div.onclick = () => { 
+                state.editingIdx = idx; 
+                state.current = [...state.history[idx].scores]; 
+                document.getElementById('crawl-val').innerText = e.crawl;
+                updateUI(); 
+            };
+            // Now displays Crawl in the metadata line
+            const crawlInfo = (state.mode === '3D' || state.mode === 'FIELD') ? ` • C: ${e.crawl}` : '';
+            div.innerHTML = `<div><div class="end-meta">T${idx+1}${crawlInfo}</div><div class="end-val">${e.scores.map(s=>s===0?'M':s).join(' · ')}</div></div><div style="color:var(--accent); font-weight:900; font-size:24px">${e.total}</div>`;
+            list.appendChild(div);
+        });
+    }
+
+    function finishSession() {
+        let logs = JSON.parse(localStorage.getItem('archery_history') || '[]');
+        logs.push({ date: new Date().toLocaleDateString(), mode: state.mode, total: state.history.reduce((a,b)=>a+b.total,0), ends: state.history.length });
+        localStorage.setItem('archery_history', JSON.stringify(logs));
+        showScreen('home');
+    }
+
+    function adjCrawl(amt) {
+        let v = parseInt(document.getElementById('crawl-val').innerText) + amt;
+        document.getElementById('crawl-val').innerText = Math.max(0, v);
+    }
+
+    function openJournal() { 
+        loadJournal(); 
+        showScreen('journal'); 
+    }
+
+    function loadJournal() {
+        const list = document.getElementById('journal-list'); list.innerHTML = '';
+        let logs = JSON.parse(localStorage.getItem('archery_history') || '[]');
+        
+        logs.slice().reverse().forEach(log => {
+            const div = document.createElement('div'); div.className = 'end-card'; div.style.marginBottom = "10px";
+            div.innerHTML = `<div><div class="end-meta">${log.mode} • ${log.date}</div><div class="end-val">${log.total} PTS</div></div><div style="color:var(--gray); font-size:12px">${log.ends} ENDS</div>`;
+            list.appendChild(div);
+        });
+
+        drawChart(logs);
+    }
+
+    function drawChart(logs) {
+        const ctx = document.getElementById('progressChart').getContext('2d');
+        if (chartInstance) { chartInstance.destroy(); }
+        
+        if (logs.length === 0) return;
+
+        const labels = logs.map((_, i) => 'S' + (i + 1));
+        const dataPoints = logs.map(log => log.total);
+
+        chartInstance = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Session Score',
+                    data: dataPoints,
+                    borderColor: '#FFD700',
+                    backgroundColor: 'rgba(255, 215, 0, 0.1)',
+                    borderWidth: 3,
+                    pointBackgroundColor: '#fff',
+                    pointRadius: 4,
+                    fill: true,
+                    tension: 0.3
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { grid: { color: '#222' }, ticks: { color: '#888' } },
+                    y: { grid: { color: '#222' }, ticks: { color: '#888' }, beginAtZero: false }
+                }
+            }
+        });
+    }
+
+    function clearJournal() { 
+        if(confirm('Clear all?')) { 
+            localStorage.removeItem('archery_history'); 
+            loadJournal(); 
+        } 
+    }
+    
+    function saveVault() { 
+        localStorage.setItem('allin_user_name', document.getElementById('in-name').value); 
+        localStorage.setItem('allin_bow_make', document.getElementById('in-bow').value); 
+        localStorage.setItem('allin_arrow_make', document.getElementById('in-arrow-make').value); 
+        localStorage.setItem('allin_arrow_spine', document.getElementById('in-spine').value); 
+        showScreen('home'); 
+    }
+
+    window.onload = () => {
+        const uName = localStorage.getItem('allin_user_name');
+        const bMake = localStorage.getItem('allin_bow_make');
+        const aMake = localStorage.getItem('allin_arrow_make');
+        const aSpine = localStorage.getItem('allin_arrow_spine');
+        
+        if(uName) document.getElementById('in-name').value = uName;
+        if(bMake) document.getElementById('in-bow').value = bMake;
+        if(aMake) document.getElementById('in-arrow-make').value = aMake;
+        if(aSpine) document.getElementById('in-spine').value = aSpine;
+    };
+</script>
+</body>
+</html>
