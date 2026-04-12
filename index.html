@@ -175,4 +175,24 @@
     }
 
     function finishSession() {
-        let logs = JSON.parse
+        let logs = JSON.parse(localStorage.getItem('archery_logs') || '[]');
+        logs.push({ date: new Date().toLocaleDateString(), mode: state.mode, score: state.history.reduce((a,b)=>a+b.total,0) });
+        localStorage.setItem('archery_logs', JSON.stringify(logs));
+        showScreen('home');
+    }
+
+    function loadJournal() {
+        const list = document.getElementById('journal-list'); list.innerHTML = '';
+        let logs = JSON.parse(localStorage.getItem('archery_logs') || '[]');
+        logs.reverse().forEach(l => {
+            const d = document.createElement('div'); d.className = 'end-card'; d.style.marginBottom = '8px';
+            d.innerHTML = `<div><div class="end-meta">${l.date}</div><div class="end-val">${l.mode}</div></div><div class="end-total">${l.score}</div>`;
+            list.appendChild(d);
+        });
+    }
+
+    function clearLogs() { if(confirm('Clear all?')) { localStorage.removeItem('archery_logs'); loadJournal(); } }
+    function saveVault() { localStorage.setItem('arch_name', document.getElementById('v-name').value); showScreen('home'); }
+</script>
+</body>
+</html>
