@@ -26,13 +26,13 @@
         #mode-title { font-size: 24px; font-weight: 900; letter-spacing: 1px; color: #fff; flex-grow: 1; text-align: center; margin: 0 10px; }
         
         #score-list { flex-grow: 1; overflow-y: auto; padding: 15px 0; display: flex; flex-direction: column; gap: 10px; }
-        .end-card { background: var(--card); padding: 12px 15px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #222; min-height: 70px; }
+        .end-card { background: var(--card); padding: 10px 15px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #222; min-height: 60px; }
         .active-card { border: 2px solid var(--accent); background: #111; }
         .editing-card { border: 2px solid var(--edit); background: #001a33; }
         
-        /* Smaller font for the history/target cards */
-        .end-val { font-size: 20px; font-weight: 700; letter-spacing: 1px; color: #fff; }
-        .end-total { font-weight: 900; font-size: 22px; }
+        /* Reduced End Numbers to 18px */
+        .end-val { font-size: 18px; font-weight: 700; letter-spacing: 1px; color: #fff; }
+        .end-total { font-weight: 900; font-size: 20px; }
         .end-meta { font-size: 10px; color: var(--gray); text-transform: uppercase; font-weight: bold; margin-bottom: 2px; }
         
         .controls { background: var(--bg); padding-top: 10px; padding-bottom: env(safe-area-inset-bottom, 20px); border-top: 1px solid #222; }
@@ -94,137 +94,4 @@
 </div>
 
 <script>
-    let state = { current: [], history: [], arrowLimit: 2, endLimit: 24, mode: '', editingIdx: -1 };
-    let chartInstance = null;
-
-    function showScreen(id) {
-        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active-screen'));
-        document.getElementById(id).classList.add('active-screen');
-    }
-
-    function startApp(mode, arrowLimit, endLimit) {
-        state = { current: [], history: [], arrowLimit, endLimit, mode, editingIdx: -1 };
-        document.getElementById('mode-title').innerText = mode;
-        document.getElementById('crawl-ui').style.display = (mode.includes('TARGET')) ? 'none' : 'flex';
-        document.getElementById('crawl-val').innerText = '0';
-        setupButtons(mode);
-        updateUI();
-        showScreen('scoring');
-    }
-
-    function setupButtons(mode) {
-        const area = document.getElementById('button-area'); area.innerHTML = '';
-        let scores = mode === 'FIELD' ? [6,5,4,3,2,1,0] : (mode.includes('TARGET') ? [10,9,8,7,6,5,4,3,2,1,0] : [11,10,8,5,0]);
-        area.style.gridTemplateColumns = scores.length > 6 ? 'repeat(4, 1fr)' : 'repeat(3, 1fr)';
-        scores.forEach(s => {
-            const btn = document.createElement('button'); btn.className = 'score-btn';
-            const colors = getColors(mode, s);
-            btn.style.backgroundColor = colors.bg; btn.style.color = colors.txt;
-            btn.innerText = s === 0 ? 'M' : s;
-            btn.onclick = () => addScore(s);
-            area.appendChild(btn);
-        });
-        const delBtn = document.createElement('button'); delBtn.className = 'score-btn';
-        delBtn.style.backgroundColor = '#333'; delBtn.style.color = '#fff'; delBtn.innerText = '⌫'; 
-        delBtn.onclick = popScore;
-        area.appendChild(delBtn);
-    }
-
-    function getColors(mode, s) {
-        if (s === 0) return { bg: '#34c759', txt: '#fff' };
-        if (mode === '3D') {
-            if (s === 11) return { bg: '#FFD700', txt: '#000' };
-            if (s === 10) return { bg: '#ff3b30', txt: '#fff' };
-            if (s === 8) return { bg: '#007aff', txt: '#fff' };
-            return { bg: '#1c1c1e', txt: '#fff' };
-        }
-        if (mode === 'FIELD') return s >= 5 ? { bg: '#FFD700', txt: '#000' } : { bg: '#2c2c2e', txt: '#fff' };
-        return s >= 9 ? { bg: '#FFD700', txt: '#000' } : (s >= 7 ? { bg: '#ff3b30', txt: '#fff' } : { bg: '#007aff', txt: '#fff' });
-    }
-
-    function addScore(s) { if(state.current.length < state.arrowLimit) { state.current.push(s); updateUI(); } }
-    function popScore() { if(state.current.length > 0) { state.current.pop(); updateUI(); } }
-    function adjCrawl(amt) { let v = parseInt(document.getElementById('crawl-val').innerText) + amt; document.getElementById('crawl-val').innerText = Math.max(0, v); }
-
-    function nextEnd() {
-        if(state.current.length < state.arrowLimit) return;
-        const entry = { scores: [...state.current], crawl: document.getElementById('crawl-val').innerText, total: state.current.reduce((a,b)=>a+b,0) };
-        if(state.editingIdx > -1) { state.history[state.editingIdx] = entry; state.editingIdx = -1; } 
-        else { state.history.push(entry); }
-        state.current = [];
-        if (state.mode === '3D' || state.mode === 'FIELD') document.getElementById('crawl-val').innerText = '0';
-        updateUI();
-    }
-
-    function updateUI() {
-        const list = document.getElementById('score-list'); list.innerHTML = '';
-        const grandTotal = state.history.reduce((a,b)=>a+b.total,0);
-        document.getElementById('total-score').innerText = grandTotal;
-        const targetNum = state.editingIdx > -1 ? state.editingIdx + 1 : state.history.length + 1;
-        document.getElementById('target-count').innerText = 'T' + targetNum;
-        
-        const mainBtn = document.getElementById('main-action-btn');
-        if (state.history.length >= state.endLimit && state.editingIdx === -1) {
-            mainBtn.innerText = "FINISH SESSION";
-            mainBtn.onclick = finishSession;
-            mainBtn.disabled = false;
-        } else {
-            mainBtn.innerText = state.editingIdx > -1 ? "SAVE EDIT" : "NEXT END";
-            mainBtn.onclick = nextEnd;
-            mainBtn.disabled = (state.current.length < state.arrowLimit);
-        }
-
-        const activeDiv = document.createElement('div');
-        activeDiv.className = 'end-card ' + (state.editingIdx > -1 ? 'editing-card' : 'active-card');
-        activeDiv.innerHTML = `<div><div class="end-meta">TARGET ${targetNum}</div><div class="end-val">${state.current.length ? state.current.join(' · ') : '---'}</div></div><div class="end-total">${state.current.reduce((a,b)=>a+b,0)}</div>`;
-        list.appendChild(activeDiv);
-
-        state.history.slice().reverse().forEach((e, i) => {
-            const idx = state.history.length - 1 - i;
-            if(idx === state.editingIdx) return;
-            const div = document.createElement('div'); div.className = 'end-card';
-            div.onclick = () => { state.editingIdx = idx; state.current = [...state.history[idx].scores]; document.getElementById('crawl-val').innerText = e.crawl; updateUI(); };
-            const crawlInfo = (state.mode === '3D' || state.mode === 'FIELD') ? ` • C: ${e.crawl}` : '';
-            div.innerHTML = `<div><div class="end-meta">T${idx+1}${crawlInfo}</div><div class="end-val">${e.scores.join(' · ')}</div></div><div class="end-total" style="color:var(--accent);">${e.total}</div>`;
-            list.appendChild(div);
-        });
-    }
-
-    function finishSession() {
-        let logs = JSON.parse(localStorage.getItem('archery_history') || '[]');
-        logs.push({ date: new Date().toLocaleDateString(), mode: state.mode, total: state.history.reduce((a,b)=>a+b.total,0), ends: state.history.length });
-        localStorage.setItem('archery_history', JSON.stringify(logs));
-        showScreen('home');
-    }
-
-    function openJournal() { loadJournal(); showScreen('journal'); }
-    function loadJournal() {
-        const list = document.getElementById('journal-list'); list.innerHTML = '';
-        let logs = JSON.parse(localStorage.getItem('archery_history') || '[]');
-        logs.slice().reverse().forEach(log => {
-            const div = document.createElement('div'); div.className = 'end-card'; div.style.marginBottom = "10px";
-            div.innerHTML = `<div><div class="end-meta">${log.mode} • ${log.date}</div><div class="end-val" style="font-size:18px;">${log.total} PTS</div></div><div style="color:var(--gray); font-size:12px">${log.ends} ENDS</div>`;
-            list.appendChild(div);
-        });
-        drawChart(logs);
-    }
-
-    function drawChart(logs) {
-        const ctx = document.getElementById('progressChart').getContext('2d');
-        if (chartInstance) chartInstance.destroy();
-        if (logs.length === 0) return;
-        chartInstance = new Chart(ctx, { type: 'line', data: { labels: logs.map((_, i) => 'S'+(i+1)), datasets: [{ data: logs.map(l => l.total), borderColor: '#FFD700', fill: false }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } } });
-    }
-
-    function clearJournal() { if(confirm('Clear all?')) { localStorage.removeItem('archery_history'); loadJournal(); } }
-    function saveVault() { localStorage.setItem('allin_user_name', document.getElementById('in-name').value); localStorage.setItem('allin_bow_make', document.getElementById('in-bow').value); localStorage.setItem('allin_arrow_make', document.getElementById('in-arrow-make').value); localStorage.setItem('allin_arrow_spine', document.getElementById('in-spine').value); showScreen('home'); }
-
-    window.onload = () => {
-        document.getElementById('in-name').value = localStorage.getItem('allin_user_name') || '';
-        document.getElementById('in-bow').value = localStorage.getItem('allin_bow_make') || '';
-        document.getElementById('in-arrow-make').value = localStorage.getItem('allin_arrow_make') || '';
-        document.getElementById('in-spine').value = localStorage.getItem('allin_arrow_spine') || '';
-    };
-</script>
-</body>
-</html>
+    let state = { current: [], history: [], arrowLimit: 2,
