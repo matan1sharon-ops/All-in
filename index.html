@@ -2,174 +2,344 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Archery Pro - Master Version</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="ALL IN">
+    <meta name="theme-color" content="#000000">
+    <link rel="apple-touch-icon" href="data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23151515'/%3E%3Ccircle cx='50' cy='50' r='35' fill='%23FFD700'/%3E%3Ccircle cx='50' cy='50' r='20' fill='%23151515'/%3E%3Ccircle cx='50' cy='50' r='8' fill='%23FFD700'/%3E%3C/svg%3E">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23151515'/%3E%3Ccircle cx='50' cy='50' r='35' fill='%23FFD700'/%3E%3Ccircle cx='50' cy='50' r='20' fill='%23151515'/%3E%3Ccircle cx='50' cy='50' r='8' fill='%23FFD700'/%3E%3C/svg%3E">
+
+    <title>ALL IN Archery</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        :root {
-            --bg: #0a0a0c; --card: #16161a; --accent: #00f2ff;
-            --text: #ffffff; --dim: #8e8e93; --gold: #ffd700;
-        }
-        body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding-bottom: 80px; }
-        .screen { display: none; padding: 20px; animation: slideUp 0.3s ease; }
-        .screen.active { display: block; }
-        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-
-        /* Navigation */
-        nav { position: fixed; bottom: 0; width: 100%; background: #1c1c1e; display: flex; border-top: 1px solid #333; z-index: 1000; }
-        .nav-item { flex: 1; padding: 15px; text-align: center; color: var(--dim); font-size: 12px; font-weight: 600; cursor: pointer; }
-        .nav-item.active { color: var(--accent); }
-
-        /* Cards & UI */
-        .card { background: var(--card); border-radius: 16px; padding: 20px; margin-bottom: 20px; border: 1px solid #2c2c2e; }
-        .score-box { font-size: 80px; font-weight: 800; text-align: center; color: var(--accent); margin: 20px 0; text-shadow: 0 0 20px rgba(0,242,255,0.3); }
+        :root { --bg: #000; --text: #fff; --accent: #FFD700; --card: #151515; --gray: #888; --edit: #007aff; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; touch-action: manipulation; }
+        body { background: var(--bg); color: var(--text); font-family: -apple-system, sans-serif; margin: 0; height: 100vh; overflow: hidden; display: flex; justify-content: center; }
+        .app-container { width: 100%; max-width: 500px; height: 100%; display: flex; flex-direction: column; position: relative; }
+        .screen { display: none; flex-direction: column; height: 100%; padding: 40px 20px 20px; position: absolute; top: 0; left: 0; width: 100%; }
+        .active-screen { display: flex; z-index: 10; }
         
-        /* Buttons */
-        .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
-        .btn { background: #2c2c2e; border: none; color: white; padding: 25px 10px; border-radius: 12px; font-size: 24px; font-weight: bold; cursor: pointer; transition: 0.1s; }
-        .btn:active { background: #3a3a3c; transform: scale(0.95); }
-        .btn.special { background: var(--accent); color: #000; }
-        .btn.gold { background: var(--gold); color: #000; }
+        /* Logo Styles */
+        .logo-container { display: flex; flex-direction: column; align-items: center; margin-bottom: 30px; }
+        .logo-svg { width: 80px; height: 80px; margin-bottom: 10px; }
+        .logo-text { font-size: 32px; font-weight: 900; letter-spacing: 6px; text-align: center; }
         
-        .history { background: #000; padding: 15px; border-radius: 12px; font-family: monospace; color: #0f0; margin-top: 20px; min-height: 40px; word-break: break-all; }
-        input { width: 100%; background: #2c2c2e; border: 1px solid #3a3a3c; color: white; padding: 15px; border-radius: 8px; margin: 10px 0; font-size: 16px; }
+        .menu-list { display: flex; flex-direction: column; gap: 10px; flex-grow: 1; overflow-y: auto; }
+        .menu-btn { background: #fff; color: #000; padding: 18px; border-radius: 15px; font-size: 16px; font-weight: 800; border: none; text-align: left; cursor: pointer; }
+        .vault-btn { background: var(--card); border: 1px solid #333; color: #fff; padding: 16px; border-radius: 15px; font-weight: bold; text-align: center; cursor: pointer; }
+
+        header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 15px; border-bottom: 1px solid #222; }
+        #score-list { flex-grow: 1; overflow-y: auto; padding: 15px 0; display: flex; flex-direction: column; gap: 10px; }
+        .end-card { background: var(--card); padding: 15px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #222; min-height: 80px; }
+        .active-card { border: 2px solid var(--accent); background: #111; order: -1; }
+        .editing-card { border: 2px solid var(--edit); background: #001a33; order: -1; }
+        .end-val { font-size: 28px; font-weight: 900; letter-spacing: 2px; }
+        .end-meta { font-size: 11px; color: var(--gray); text-transform: uppercase; font-weight: bold; margin-bottom: 4px; }
+        
+        .controls { background: var(--bg); padding-top: 10px; padding-bottom: env(safe-area-inset-bottom, 20px); border-top: 1px solid #222; }
+        .crawl-box { background: var(--card); padding: 10px 15px; border-radius: 12px; margin-bottom: 15px; border: 1px solid #333; display: flex; justify-content: space-between; align-items: center; }
+        .crawl-btn { background: #333; color: #fff; border: none; padding: 10px 20px; border-radius: 8px; font-size: 20px; font-weight: bold; }
+        
+        .next-btn { background: var(--accent); color: #000; width: 100%; padding: 18px; border-radius: 12px; font-size: 20px; font-weight: 900; border: none; margin-bottom: 15px; }
+        .btn-grid { display: grid; gap: 8px; }
+        .score-btn { height: 60px; border-radius: 10px; border: 1px solid #333; font-size: 22px; font-weight: 900; cursor: pointer; }
+        
+        .chart-container { width: 100%; height: 200px; margin-top: 15px; margin-bottom: 15px; background: var(--card); padding: 10px; border-radius: 12px; border: 1px solid #222; }
+        
+        /* Input Styles */
+        .input-group { margin-bottom: 15px; }
+        .input-label { color: var(--gray); font-size: 12px; font-weight: bold; margin-bottom: 5px; display: block; text-transform: uppercase; }
+        .vault-input { background: #1c1c1e; border: 1px solid #3a3a3c; color: #fff; padding: 16px; border-radius: 12px; width: 100%; font-size: 16px; }
     </style>
 </head>
 <body>
-
-    <div id="home" class="screen active">
-        <h1 style="color: var(--accent)">Dashboard</h1>
-        <div class="card">
-            <h3 style="margin-top:0">Personal Best</h3>
-            <div style="font-size: 24px; color: var(--gold)">50m Barebow: 308</div>
+<div class="app-container">
+    
+    <div id="home" class="screen active-screen">
+        <div class="logo-container">
+            <svg class="logo-svg" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                <rect width="100" height="100" rx="20" fill="#151515"/>
+                <circle cx="50" cy="50" r="35" fill="#FFD700"/>
+                <circle cx="50" cy="50" r="20" fill="#151515"/>
+                <circle cx="50" cy="50" r="8" fill="#FFD700"/>
+            </svg>
+            <div class="logo-text">ALL IN</div>
         </div>
-        <div class="card" onclick="showScreen('scoring')">
-            <h3>Start Session</h3>
-            <p style="color:var(--dim)">3D Logic & Target Scoring ready.</p>
+        <div class="menu-list">
+            <button class="menu-btn" onclick="startApp('3D', 2, 24)">3D Practice (24)</button>
+            <button class="menu-btn" onclick="startApp('FIELD', 3, 24)">Field Practice (24)</button>
+            <button class="menu-btn" onclick="startApp('TARGET IN', 3, 20)">Target Indoor (20)</button>
+            <button class="menu-btn" onclick="startApp('TARGET OUT', 6, 12)">Target Outdoor (12)</button>
+            <hr style="border:0; border-top:1px solid #222; width:100%; margin:10px 0;">
+            <button class="vault-btn" onclick="openJournal()">📖 SESSION JOURNAL</button>
+            <button class="vault-btn" onclick="showScreen('vault')">⚙ GEAR VAULT</button>
+        </div>
+    </div>
+
+    <div id="journal" class="screen">
+        <header>
+            <button onclick="showScreen('home')" style="background:none; border:none; color:var(--gray); font-size:18px">← Back</button>
+            <div style="font-weight:900">JOURNAL</div>
+            <button onclick="clearJournal()" style="background:none; border:none; color:red; font-size:12px; font-weight:bold;">CLEAR</button>
+        </header>
+        <div class="chart-container">
+            <canvas id="progressChart"></canvas>
+        </div>
+        <div id="journal-list" style="flex-grow:1; overflow-y:auto; padding-top:10px;"></div>
+    </div>
+
+    <div id="vault" class="screen">
+        <header>
+            <button onclick="showScreen('home')" style="background:none; border:none; color:var(--gray); font-size:18px">← Back</button>
+            <div style="font-weight:900">VAULT</div>
+            <button onclick="saveVault()" style="background:none; border:none; color:var(--accent); font-size:14px; font-weight:bold;">SAVE</button>
+        </header>
+        <div style="padding-top: 20px; overflow-y: auto; flex-grow: 1;">
+            <div class="input-group">
+                <label class="input-label">Archer Name</label>
+                <input id="in-name" class="vault-input" placeholder="Your Name">
+            </div>
+            <div class="input-group">
+                <label class="input-label">Bow Make</label>
+                <input id="in-bow" class="vault-input" placeholder="e.g., Gillo, Hoyt, WNS">
+            </div>
+            <div class="input-group">
+                <label class="input-label">Arrow Make</label>
+                <input id="in-arrow-make" class="vault-input" placeholder="e.g., Easton, Skylon">
+            </div>
+            <div class="input-group">
+                <label class="input-label">Arrow Spine</label>
+                <input id="in-spine" type="number" class="vault-input" placeholder="e.g., 500">
+            </div>
         </div>
     </div>
 
     <div id="scoring" class="screen">
-        <div style="display:flex; justify-content:space-between; align-items:center">
-            <h2 id="modeTitle">3D Round</h2>
-            <button onclick="switchMode()" style="background:none; border:1px solid var(--accent); color:var(--accent); padding:5px 10px; border-radius:5px;">Toggle Mode</button>
-        </div>
-        
-        <div class="score-box" id="display">0</div>
-        
-        <div class="grid" id="btnGrid">
+        <header>
+            <button onclick="if(confirm('Exit?')) showScreen('home')" style="background:none; border:none; color:var(--gray); font-size:24px">✕</button>
+            <div id="mode-title" style="font-weight:900; letter-spacing:2px">3D</div>
+            <div style="text-align:right">
+                <div id="target-count" style="background:var(--accent); color:#000; padding:2px 8px; border-radius:8px; font-weight:bold; font-size:12px">T1</div>
+                <div id="total-score" style="font-size:18px; font-weight:900; margin-top:4px">0</div>
             </div>
-
-        <div class="history" id="history">Log: Ready</div>
-        
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-top:15px;">
-            <button class="btn" style="font-size:16px; padding:15px;" onclick="undo()">Undo</button>
-            <button class="btn" style="font-size:16px; padding:15px; background:#400;" onclick="reset()">Reset</button>
+        </header>
+        <div id="score-list"></div>
+        <div class="controls">
+            <div id="crawl-ui" class="crawl-box">
+                <span style="font-size:10px; font-weight:bold; color:var(--gray)">CRAWL</span>
+                <div style="display:flex; align-items:center; gap:15px;">
+                    <button class="crawl-btn" onclick="adjCrawl(-1)">-</button>
+                    <span id="crawl-val" style="color:var(--accent); font-weight:900; font-size:18px;">0</span>
+                    <button class="crawl-btn" onclick="adjCrawl(1)">+</button>
+                </div>
+            </div>
+            <button id="main-action-btn" class="next-btn" onclick="nextEnd()">NEXT END</button>
+            <div id="button-area" class="btn-grid"></div>
         </div>
     </div>
-
-    <div id="gear" class="screen">
-        <h1 style="color: var(--accent)">Gear Vault</h1>
-        <div class="card">
-            <h3>String Walking (Crawl)</h3>
-            <label>50 Meters Mark:</label>
-            <input type="number" id="c50" placeholder="mm" onchange="saveVault()">
-            <label>Notes:</label>
-            <input type="text" id="gNote" placeholder="Setup details..." onchange="saveVault()">
-        </div>
-    </div>
-
-    <nav>
-        <div class="nav-item active" id="n-home" onclick="showScreen('home')">HOME</div>
-        <div class="nav-item" id="n-scoring" onclick="showScreen('scoring')">SCORE</div>
-        <div class="nav-item" id="n-gear" onclick="showScreen('gear')">VAULT</div>
-    </nav>
+</div>
 
 <script>
-    let state = {
-        scores: [],
-        mode: '3D', // 3D or Target
-        vault: { crawl: '', note: '' }
-    };
-
-    const config = {
-        '3D': [11, 10, 8, 5, 0],
-        'Target': [10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0]
-    };
+    let state = { current: [], history: [], arrowLimit: 2, endLimit: 24, mode: '', editingIdx: -1 };
+    let chartInstance = null;
 
     function showScreen(id) {
-        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-        document.getElementById(id).classList.add('active');
-        document.getElementById('n-' + id).classList.add('active');
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active-screen'));
+        document.getElementById(id).classList.add('active-screen');
     }
 
-    function switchMode() {
-        state.mode = state.mode === '3D' ? 'Target' : '3D';
-        document.getElementById('modeTitle').innerText = state.mode + " Round";
-        renderButtons();
+    function startApp(mode, arrowLimit, endLimit) {
+        state = { current: [], history: [], arrowLimit, endLimit, mode, editingIdx: -1 };
+        document.getElementById('mode-title').innerText = mode;
+        document.getElementById('crawl-ui').style.display = (mode.includes('TARGET')) ? 'none' : 'flex';
+        document.getElementById('crawl-val').innerText = '0';
+        setupButtons(mode);
+        updateUI();
+        showScreen('scoring');
     }
 
-    function renderButtons() {
-        const grid = document.getElementById('btnGrid');
-        grid.innerHTML = '';
-        config[state.mode].forEach(val => {
-            const b = document.createElement('button');
-            b.className = 'btn' + (val >= 10 ? ' gold' : '');
-            b.innerText = val === 0 ? 'M' : val;
-            b.onclick = () => addArrow(val);
-            grid.appendChild(b);
+    function setupButtons(mode) {
+        const area = document.getElementById('button-area'); area.innerHTML = '';
+        let scores = mode === 'FIELD' ? [6,5,4,3,2,1,0] : (mode.includes('TARGET') ? [10,9,8,7,6,5,4,3,2,1,0] : [11,10,8,5,0]);
+        area.style.gridTemplateColumns = scores.length > 6 ? 'repeat(4, 1fr)' : 'repeat(3, 1fr)';
+        
+        scores.forEach(s => {
+            const btn = document.createElement('button'); btn.className = 'score-btn';
+            const colors = getColors(mode, s);
+            btn.style.backgroundColor = colors.bg; btn.style.color = colors.txt;
+            btn.innerText = s === 0 ? 'M' : s;
+            btn.onclick = () => addScore(s);
+            area.appendChild(btn);
         });
+        
+        const delBtn = document.createElement('button'); delBtn.className = 'score-btn';
+        delBtn.style.backgroundColor = '#333'; delBtn.style.color = '#fff'; delBtn.innerText = '⌫'; 
+        delBtn.onclick = popScore;
+        area.appendChild(delBtn);
     }
 
-    function addArrow(v) {
-        state.scores.push(v);
-        updateUI();
-        save();
+    function addScore(s) {
+        if(state.current.length < state.arrowLimit) { state.current.push(s); updateUI(); }
     }
 
-    function undo() {
-        state.scores.pop();
-        updateUI();
-        save();
+    function popScore() {
+        if(state.current.length > 0) { state.current.pop(); updateUI(); }
     }
 
-    function reset() {
-        if(confirm("Reset scorecard?")) {
-            state.scores = [];
-            updateUI();
-            save();
+    function getColors(mode, s) {
+        if (mode === '3D') {
+            if (s === 11) return { bg: '#FFD700', txt: '#000' };
+            if (s === 10) return { bg: '#ff3b30', txt: '#fff' };
+            if (s === 8) return { bg: '#007aff', txt: '#fff' };
+            if (s === 5) return { bg: '#1c1c1e', txt: '#fff' };
+            if (s === 0) return { bg: '#34c759', txt: '#fff' };
         }
+        if (s === 0) return { bg: '#34c759', txt: '#fff' };
+        if (mode === 'FIELD') return s >= 5 ? { bg: '#FFD700', txt: '#000' } : { bg: '#2c2c2e', txt: '#fff' };
+        return s >= 9 ? { bg: '#FFD700', txt: '#000' } : (s >= 7 ? { bg: '#ff3b30', txt: '#fff' } : { bg: '#007aff', txt: '#fff' });
+    }
+
+    function nextEnd() {
+        if(state.current.length < state.arrowLimit) return;
+        const entry = { scores: [...state.current], crawl: document.getElementById('crawl-val').innerText, total: state.current.reduce((a,b)=>a+b,0) };
+        if(state.editingIdx > -1) { state.history[state.editingIdx] = entry; state.editingIdx = -1; } 
+        else { state.history.push(entry); }
+        state.current = []; 
+        updateUI(); 
     }
 
     function updateUI() {
-        const total = state.scores.reduce((a, b) => a + b, 0);
-        document.getElementById('display').innerText = total;
-        document.getElementById('history').innerText = "Log: " + state.scores.join(", ");
-    }
+        const list = document.getElementById('score-list'); list.innerHTML = '';
+        const grandTotal = state.history.reduce((a,b)=>a+b.total,0);
+        document.getElementById('total-score').innerText = grandTotal;
+        
+        const targetNum = state.editingIdx > -1 ? state.editingIdx + 1 : state.history.length + 1;
+        document.getElementById('target-count').innerText = 'T' + targetNum;
 
-    function saveVault() {
-        state.vault.crawl = document.getElementById('c50').value;
-        state.vault.note = document.getElementById('gNote').value;
-        save();
-    }
-
-    function save() {
-        localStorage.setItem('archery_master_data', JSON.stringify(state));
-    }
-
-    function load() {
-        const raw = localStorage.getItem('archery_master_data');
-        if(raw) {
-            state = JSON.parse(raw);
-            document.getElementById('c50').value = state.vault.crawl || '';
-            document.getElementById('gNote').value = state.vault.note || '';
-            document.getElementById('modeTitle').innerText = state.mode + " Round";
-            updateUI();
+        const mainBtn = document.getElementById('main-action-btn');
+        const isFull = state.current.length === state.arrowLimit;
+        
+        if (state.history.length >= state.endLimit && state.editingIdx === -1) {
+            mainBtn.innerText = "FINISH SESSION";
+            mainBtn.onclick = finishSession;
+        } else {
+            mainBtn.innerText = state.editingIdx > -1 ? "SAVE EDIT" : "NEXT END";
+            mainBtn.onclick = nextEnd;
+            mainBtn.disabled = !isFull;
         }
-        renderButtons();
+
+        if (state.history.length < state.endLimit || state.editingIdx > -1) {
+            const activeDiv = document.createElement('div');
+            activeDiv.className = 'end-card ' + (state.editingIdx > -1 ? 'editing-card' : 'active-card');
+            activeDiv.innerHTML = `<div><div class="end-meta">TARGET ${targetNum}</div><div class="end-val">${state.current.length ? state.current.map(s=>s===0?'M':s).join(' · ') : '---'}</div></div><div style="font-weight:900; font-size:28px">${state.current.reduce((a,b)=>a+b,0)}</div>`;
+            list.appendChild(activeDiv);
+        }
+
+        state.history.slice().reverse().forEach((e, i) => {
+            const idx = state.history.length - 1 - i;
+            if(idx === state.editingIdx) return;
+            const div = document.createElement('div'); div.className = 'end-card';
+            div.onclick = () => { state.editingIdx = idx; state.current = [...state.history[idx].scores]; updateUI(); };
+            div.innerHTML = `<div><div class="end-meta">T${idx+1}</div><div class="end-val">${e.scores.map(s=>s===0?'M':s).join(' · ')}</div></div><div style="color:var(--accent); font-weight:900; font-size:24px">${e.total}</div>`;
+            list.appendChild(div);
+        });
     }
 
-    window.onload = load;
+    function finishSession() {
+        let logs = JSON.parse(localStorage.getItem('archery_history') || '[]');
+        logs.push({ date: new Date().toLocaleDateString(), mode: state.mode, total: state.history.reduce((a,b)=>a+b.total,0), ends: state.history.length });
+        localStorage.setItem('archery_history', JSON.stringify(logs));
+        showScreen('home');
+    }
+
+    function adjCrawl(amt) {
+        let v = parseInt(document.getElementById('crawl-val').innerText) + amt;
+        document.getElementById('crawl-val').innerText = Math.max(0, v);
+    }
+
+    function openJournal() { 
+        loadJournal(); 
+        showScreen('journal'); 
+    }
+
+    function loadJournal() {
+        const list = document.getElementById('journal-list'); list.innerHTML = '';
+        let logs = JSON.parse(localStorage.getItem('archery_history') || '[]');
+        
+        logs.slice().reverse().forEach(log => {
+            const div = document.createElement('div'); div.className = 'end-card'; div.style.marginBottom = "10px";
+            div.innerHTML = `<div><div class="end-meta">${log.mode} • ${log.date}</div><div class="end-val">${log.total} PTS</div></div><div style="color:var(--gray); font-size:12px">${log.ends} ENDS</div>`;
+            list.appendChild(div);
+        });
+
+        drawChart(logs);
+    }
+
+    function drawChart(logs) {
+        const ctx = document.getElementById('progressChart').getContext('2d');
+        if (chartInstance) { chartInstance.destroy(); }
+        
+        if (logs.length === 0) return;
+
+        const labels = logs.map((_, i) => 'S' + (i + 1));
+        const dataPoints = logs.map(log => log.total);
+
+        chartInstance = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Session Score',
+                    data: dataPoints,
+                    borderColor: '#FFD700',
+                    backgroundColor: 'rgba(255, 215, 0, 0.1)',
+                    borderWidth: 3,
+                    pointBackgroundColor: '#fff',
+                    pointRadius: 4,
+                    fill: true,
+                    tension: 0.3
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { grid: { color: '#222' }, ticks: { color: '#888' } },
+                    y: { grid: { color: '#222' }, ticks: { color: '#888' }, beginAtZero: false }
+                }
+            }
+        });
+    }
+
+    function clearJournal() { 
+        if(confirm('Clear all?')) { 
+            localStorage.removeItem('archery_history'); 
+            loadJournal(); 
+        } 
+    }
+    
+    function saveVault() { 
+        localStorage.setItem('allin_user_name', document.getElementById('in-name').value); 
+        localStorage.setItem('allin_bow_make', document.getElementById('in-bow').value); 
+        localStorage.setItem('allin_arrow_make', document.getElementById('in-arrow-make').value); 
+        localStorage.setItem('allin_arrow_spine', document.getElementById('in-spine').value); 
+        showScreen('home'); 
+    }
+
+    window.onload = () => {
+        const uName = localStorage.getItem('allin_user_name');
+        const bMake = localStorage.getItem('allin_bow_make');
+        const aMake = localStorage.getItem('allin_arrow_make');
+        const aSpine = localStorage.getItem('allin_arrow_spine');
+        
+        if(uName) document.getElementById('in-name').value = uName;
+        if(bMake) document.getElementById('in-bow').value = bMake;
+        if(aMake) document.getElementById('in-arrow-make').value = aMake;
+        if(aSpine) document.getElementById('in-spine').value = aSpine;
+    };
 </script>
 </body>
 </html>
