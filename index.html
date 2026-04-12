@@ -27,16 +27,21 @@
         .tab-btn { flex: 1; padding: 10px; border-radius: 8px; border: 1px solid #333; background: #111; color: var(--gray); font-size: 11px; font-weight: 800; text-transform: uppercase; cursor: pointer; }
         .tab-active { background: var(--accent); color: #000; border-color: var(--accent); }
 
+        /* Session Cards & Stats */
+        #journal-list { overflow-y: auto; flex-grow: 1; }
+        .session-card { background: var(--card); padding: 15px; border-radius: 12px; border: 1px solid #222; margin-bottom: 10px; cursor: pointer; }
+        .session-details { display: none; margin-top: 12px; border-top: 1px solid #333; padding-top: 12px; }
+        .stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 15px; }
+        .stat-box { background: #222; padding: 10px; border-radius: 8px; text-align: center; }
+        .stat-label { font-size: 9px; color: var(--gray); text-transform: uppercase; margin-bottom: 4px; }
+        .stat-value { font-size: 16px; font-weight: 900; color: var(--accent); }
+        .history-text { font-size: 13px; color: #ccc; line-height: 1.6; font-family: monospace; }
+
         /* Vault Form */
         .vault-scroll { overflow-y: auto; flex-grow: 1; padding-bottom: 40px; }
         .input-group { margin-bottom: 15px; }
         .input-label { font-size: 10px; color: var(--gray); text-transform: uppercase; font-weight: 800; margin-bottom: 5px; margin-left: 5px; }
         .vault-input { background: #1c1c1e; border: 1px solid #3a3a3c; color: #fff; padding: 16px; border-radius: 12px; width: 100%; font-size: 16px; outline: none; }
-
-        /* Session Cards */
-        #journal-list { overflow-y: auto; flex-grow: 1; }
-        .session-card { background: var(--card); padding: 15px; border-radius: 12px; border: 1px solid #222; margin-bottom: 10px; cursor: pointer; }
-        .session-details { display: none; margin-top: 10px; border-top: 1px solid #333; padding-top: 10px; font-size: 14px; color: var(--gray); }
 
         /* Scoring Header */
         header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 15px; border-bottom: 1px solid #222; min-height: 60px; }
@@ -71,11 +76,7 @@
     </div>
 
     <div id="vault" class="screen">
-        <header>
-            <button onclick="showScreen('home')" style="background:none; border:none; color:var(--gray); font-size:18px">← Back</button>
-            <div style="font-weight:900">GEAR VAULT</div>
-            <button onclick="saveVault()" style="background:none; border:none; color:var(--accent); font-weight:bold;">SAVE</button>
-        </header>
+        <header><button onclick="showScreen('home')" style="background:none; border:none; color:var(--gray); font-size:18px">← Back</button><div style="font-weight:900">GEAR VAULT</div><button onclick="saveVault()" style="background:none; border:none; color:var(--accent); font-weight:bold;">SAVE</button></header>
         <div class="vault-scroll" style="margin-top:15px;">
             <div class="input-group"><div class="input-label">Archer Name</div><input id="v-name" class="vault-input" placeholder="Name"></div>
             <div class="input-group"><div class="input-label">Bow Make</div><input id="v-bow" class="vault-input" placeholder="e.g. Hoyt"></div>
@@ -112,7 +113,7 @@
     function showScreen(id) {
         document.querySelectorAll('.screen').forEach(s => s.classList.remove('active-screen'));
         document.getElementById(id).classList.add('active-screen');
-        if(id === 'journal') switchJournal('3D');
+        if(id === 'journal') switchJournal(state.journalTab);
         if(id === 'vault') loadVault();
     }
 
@@ -190,18 +191,9 @@
     }
 
     function saveVault() {
-        const gear = {
-            name: document.getElementById('v-name').value,
-            bow: document.getElementById('v-bow').value,
-            limbs: document.getElementById('v-limbs').value,
-            pounds: document.getElementById('v-pounds').value,
-            arrow: document.getElementById('v-arrow').value,
-            spine: document.getElementById('v-spine').value,
-            length: document.getElementById('v-length').value
-        };
+        const gear = { name: document.getElementById('v-name').value, bow: document.getElementById('v-bow').value, limbs: document.getElementById('v-limbs').value, pounds: document.getElementById('v-pounds').value, arrow: document.getElementById('v-arrow').value, spine: document.getElementById('v-spine').value, length: document.getElementById('v-length').value };
         localStorage.setItem('archery_gear', JSON.stringify(gear));
-        alert("Gear Saved!");
-        showScreen('home');
+        alert("Gear Saved!"); showScreen('home');
     }
 
     function loadVault() {
@@ -233,24 +225,42 @@
         if(myChart) myChart.destroy();
         myChart = new Chart(ctx, {
             type: 'line',
-            data: { labels: filtered.map(l => l.date), datasets: [{ label: 'Score', data: filtered.map(l => l.score), borderColor: '#FFD700', tension: 0.1 }] },
+            data: { labels: filtered.map(l => l.date), datasets: [{ label: 'Score', data: filtered.map(l => l.score), borderColor: '#FFD700', tension: 0.1, backgroundColor: 'rgba(255,215,0,0.1)', fill: true }] },
             options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: false, grid: { color: '#222' } }, x: { grid: { display: false } } } }
         });
 
         filtered.reverse().forEach((l, idx) => {
+            const allArrows = l.details.flatMap(d => d.scores);
+            const totalArrows = allArrows.length;
+            const avg = (l.score / totalArrows).toFixed(2);
+            const hits = allArrows.filter(s => s > 0).length;
+            const hitRate = ((hits / totalArrows) * 100).toFixed(0);
+            const bestEnd = Math.max(...l.details.map(d => d.total));
+
             const d = document.createElement('div'); d.className = 'session-card';
-            d.innerHTML = `<div style="display:flex; justify-content:space-between; align-items:center;"><div><div class="end-meta">${l.date}</div><div style="font-weight:bold;">${l.mode}</div></div><div class="end-total">${l.score}</div></div><div id="details-${idx}" class="session-details"></div>`;
+            d.innerHTML = `
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <div><div class="end-meta">${l.date}</div><div style="font-weight:bold;">${l.mode}</div></div>
+                    <div class="end-total">${l.score}</div>
+                </div>
+                <div id="details-${idx}" class="session-details">
+                    <div class="stats-grid">
+                        <div class="stat-box"><div class="stat-label">Avg/Arrow</div><div class="stat-value">${avg}</div></div>
+                        <div class="stat-box"><div class="stat-label">Hit Rate</div><div class="stat-value">${hitRate}%</div></div>
+                        <div class="stat-box"><div class="stat-label">Best End</div><div class="stat-value">${bestEnd}</div></div>
+                        <div class="stat-box"><div class="stat-label">Total Arrows</div><div class="stat-value">${totalArrows}</div></div>
+                    </div>
+                    <div class="history-text">${l.details.map((end, i) => `T${i+1}: [${end.scores.join(',')}] = ${end.total}`).join('<br>')}</div>
+                </div>`;
             d.onclick = () => {
                 const det = document.getElementById(`details-${idx}`);
                 det.style.display = det.style.display === 'block' ? 'none' : 'block';
-                det.innerHTML = l.details.map((end, i) => `T${i+1}: [${end.scores.join(',')}] = ${end.total}`).join('<br>');
             };
             list.appendChild(d);
         });
     }
 
     function clearLogs() { if(confirm('Clear logs?')) { localStorage.removeItem('archery_logs_v2'); loadJournal(); } }
-    
     window.onload = loadVault;
 </script>
 </body>
