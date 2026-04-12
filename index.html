@@ -6,40 +6,37 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <title>ALL IN Archery</title>
     <style>
-        :root { --bg: #000; --text: #fff; --accent: #FFD700; --card: #151515; --gray: #888; --miss: #2ecc71; --target-blue: #3498db; --target-red: #e74c3c; --target-yellow: #f1c40f; --target-black: #2c3e50; --target-white: #ffffff; }
+        :root { --bg: #000; --text: #fff; --accent: #FFD700; --card: #151515; --gray: #888; --miss: #2ecc71; --edit: #007aff; --target-blue: #3498db; --target-red: #e74c3c; --target-yellow: #f1c40f; --target-black: #2c3e50; --target-white: #ffffff; }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; }
         body { background: var(--bg); color: var(--text); font-family: -apple-system, sans-serif; height: 100vh; overflow: hidden; }
-        
         .app-container { width: 100%; max-width: 500px; height: 100%; margin: 0 auto; position: relative; }
         .screen { display: none; flex-direction: column; height: 100%; padding: 40px 20px 20px; background: var(--bg); position: absolute; width: 100%; top: 0; left: 0; }
         .active-screen { display: flex; z-index: 10; }
 
         /* Home */
         .logo-container { text-align: center; margin-bottom: 30px; margin-top: 20px; }
-        .logo-text { font-size: 32px; font-weight: 900; letter-spacing: 6px; color: var(--text); }
+        .logo-text { font-size: 32px; font-weight: 900; letter-spacing: 6px; }
         .menu-list { display: flex; flex-direction: column; gap: 12px; }
-        .menu-btn { background: #fff; color: #000; padding: 20px; border-radius: 15px; font-size: 16px; font-weight: 800; border: none; text-align: left; cursor: pointer; }
-        .vault-btn { background: var(--card); border: 1px solid #333; color: #fff; padding: 16px; border-radius: 15px; font-weight: bold; text-align: center; margin-top: 10px; cursor: pointer; }
+        .menu-btn { background: #fff; color: #000; padding: 20px; border-radius: 15px; font-size: 16px; font-weight: 800; border: none; text-align: left; }
+        .vault-btn { background: var(--card); border: 1px solid #333; color: #fff; padding: 16px; border-radius: 15px; font-weight: bold; text-align: center; margin-top: 10px; }
 
-        /* Scoring Header */
+        /* Scoring */
         header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 15px; border-bottom: 1px solid #222; }
-        #mode-title { font-size: 18px; font-weight: 900; }
-        
-        /* List: T1 at top, T2 below */
         #score-list { flex-grow: 1; overflow-y: auto; padding: 15px 0; display: flex; flex-direction: column; gap: 10px; }
-        .end-card { background: var(--card); padding: 12px 15px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #222; }
+        .end-card { background: var(--card); padding: 12px 15px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #222; transition: 0.2s; }
         .active-card { border: 2px solid var(--accent); background: #111; }
+        .editing-card { border: 2px solid var(--edit); background: #001a33; }
         .end-val { font-size: 18px; font-weight: 700; color: #fff; }
         .end-total { font-weight: 900; font-size: 20px; color: var(--accent); }
         .end-meta { font-size: 10px; color: var(--gray); text-transform: uppercase; margin-bottom: 2px; }
 
-        /* Controls */
         .controls { background: var(--bg); padding-top: 10px; padding-bottom: 30px; border-top: 1px solid #222; }
         .btn-grid { display: grid; gap: 8px; margin-top: 10px; }
-        .score-btn { height: 60px; border-radius: 10px; border: 1px solid #333; font-size: 22px; font-weight: 900; cursor: pointer; }
-        .next-btn { background: var(--accent); color: #000; width: 100%; padding: 18px; border-radius: 12px; font-size: 20px; font-weight: 900; border: none; cursor: pointer; }
+        .score-btn { height: 60px; border-radius: 10px; border: 1px solid #333; font-size: 22px; font-weight: 900; }
+        .next-btn { background: var(--accent); color: #000; width: 100%; padding: 18px; border-radius: 12px; font-size: 20px; font-weight: 900; border: none; }
+        .edit-mode-btn { background: var(--edit) !important; color: white !important; }
         
-        .vault-input { background: #1c1c1e; border: 1px solid #3a3a3c; color: #fff; padding: 16px; border-radius: 12px; width: 100%; font-size: 16px; margin-bottom: 10px; }
+        .vault-input { background: #1c1c1e; border: 1px solid #3a3a3c; color: #fff; padding: 16px; border-radius: 12px; width: 100%; font-size: 16px; }
     </style>
 </head>
 <body>
@@ -53,13 +50,7 @@
             <button class="menu-btn" onclick="startApp('TARGET INDOOR', 3, 20)">Target Indoor (20)</button>
             <button class="menu-btn" onclick="startApp('TARGET OUTDOOR', 6, 12)">Target Outdoor (12)</button>
             <button class="vault-btn" onclick="showScreen('journal')">📖 SESSION JOURNAL</button>
-            <button class="vault-btn" onclick="showScreen('vault')">⚙ GEAR VAULT</button>
         </div>
-    </div>
-
-    <div id="vault" class="screen">
-        <header><button onclick="showScreen('home')" style="background:none; border:none; color:var(--gray); font-size:18px">← Back</button><div>GEAR</div><button onclick="saveVault()" style="background:none; border:none; color:var(--accent); font-weight:bold;">SAVE</button></header>
-        <div style="margin-top:20px;"><input id="v-name" class="vault-input" placeholder="Archer Name"></div>
     </div>
 
     <div id="journal" class="screen">
@@ -82,22 +73,16 @@
 </div>
 
 <script>
-    let state = { current: [], history: [], arrows: 2, ends: 24, mode: '' };
+    let state = { current: [], history: [], arrows: 2, ends: 24, mode: '', editIdx: -1, tempScores: [] };
 
     function showScreen(id) {
-        const screens = document.querySelectorAll('.screen');
-        screens.forEach(s => s.classList.remove('active-screen'));
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active-screen'));
         document.getElementById(id).classList.add('active-screen');
         if(id === 'journal') loadJournal();
     }
 
     function startApp(mode, arrows, ends) {
-        state.current = [];
-        state.history = [];
-        state.mode = mode;
-        state.arrows = arrows;
-        state.ends = ends;
-        
+        state = { current: [], history: [], arrows: arrows, ends: ends, mode: mode, editIdx: -1, tempScores: [] };
         document.getElementById('mode-title').innerText = mode;
         renderButtons();
         renderUI();
@@ -129,10 +114,7 @@
     function renderButtons() {
         const grid = document.getElementById('button-grid');
         grid.innerHTML = '';
-        let scores = [11,10,8,5,0];
-        if(state.mode === 'FIELD') scores = [6,5,4,3,2,1,0];
-        if(state.mode.includes('TARGET')) scores = [10,9,8,7,6,5,4,3,2,1,0];
-        
+        let scores = state.mode === 'FIELD' ? [6,5,4,3,2,1,0] : (state.mode.includes('TARGET') ? [10,9,8,7,6,5,4,3,2,1,0] : [11,10,8,5,0]);
         grid.style.gridTemplateColumns = scores.length > 5 ? 'repeat(4, 1fr)' : 'repeat(3, 1fr)';
 
         scores.forEach(s => {
@@ -140,60 +122,83 @@
             const style = getBtnStyle(s, state.mode);
             b.className = 'score-btn';
             b.innerText = s === 0 ? 'M' : s;
-            b.style.background = style.bg;
-            b.style.color = style.text;
-            b.onclick = () => { if(state.current.length < state.arrows) { state.current.push(s); renderUI(); } };
+            b.style.background = style.bg; b.style.color = style.text;
+            b.onclick = () => {
+                let targetArr = state.editIdx > -1 ? state.tempScores : state.current;
+                if(targetArr.length < state.arrows) { targetArr.push(s); renderUI(); }
+            };
             grid.appendChild(b);
         });
 
         const del = document.createElement('button');
         del.className = 'score-btn'; del.innerText = '⌫'; del.style.background = '#333'; del.style.color = '#fff';
-        del.onclick = () => { state.current.pop(); renderUI(); };
+        del.onclick = () => {
+            let targetArr = state.editIdx > -1 ? state.tempScores : state.current;
+            targetArr.pop(); renderUI();
+        };
         grid.appendChild(del);
+    }
+
+    function enterEdit(idx) {
+        state.editIdx = idx;
+        state.tempScores = [...state.history[idx].scores];
+        renderUI();
     }
 
     function renderUI() {
         const list = document.getElementById('score-list');
         list.innerHTML = '';
-        
         document.getElementById('total-score').innerText = state.history.reduce((a, b) => a + b.total, 0);
 
-        // Render history in order (T1, T2...)
         state.history.forEach((end, i) => {
             const card = document.createElement('div');
-            card.className = 'end-card';
-            card.innerHTML = `<div><div class="end-meta">TARGET ${i + 1}</div><div class="end-val">${end.scores.join(' · ')}</div></div><div class="end-total">${end.total}</div>`;
+            const isEditing = state.editIdx === i;
+            card.className = 'end-card ' + (isEditing ? 'editing-card' : '');
+            const displayScores = isEditing ? state.tempScores : end.scores;
+            const displayTotal = displayScores.reduce((a,b)=>a+b, 0);
+            
+            card.innerHTML = `<div><div class="end-meta">TARGET ${i + 1} ${isEditing ? '(EDITING)' : ''}</div><div class="end-val">${displayScores.join(' · ') || '---'}</div></div><div class="end-total">${displayTotal}</div>`;
+            card.onclick = () => enterEdit(i);
             list.appendChild(card);
         });
 
-        // Current Active at bottom
-        if (state.history.length < state.ends) {
+        if (state.history.length < state.ends && state.editIdx === -1) {
             const active = document.createElement('div');
             active.className = 'end-card active-card';
-            const curSum = state.current.reduce((a,b)=>a+b,0);
-            active.innerHTML = `<div><div class="end-meta">TARGET ${state.history.length + 1}</div><div class="end-val">${state.current.join(' · ') || '---'}</div></div><div class="end-total">${curSum}</div>`;
+            active.innerHTML = `<div><div class="end-meta">TARGET ${state.history.length + 1}</div><div class="end-val">${state.current.join(' · ') || '---'}</div></div><div class="end-total">${state.current.reduce((a,b)=>a+b,0)}</div>`;
             list.appendChild(active);
         }
 
         const btn = document.getElementById('next-btn');
-        btn.disabled = state.current.length < state.arrows;
-        btn.innerText = (state.history.length >= state.ends - 1) ? "FINISH & SAVE" : "NEXT END";
-        
-        // Push scroll to bottom
-        setTimeout(() => { list.scrollTop = list.scrollHeight; }, 50);
+        if (state.editIdx > -1) {
+            btn.innerText = "SAVE EDIT";
+            btn.className = "next-btn edit-mode-btn";
+            btn.disabled = state.tempScores.length < state.arrows;
+        } else {
+            btn.className = "next-btn";
+            btn.innerText = (state.history.length >= state.ends - 1) ? "FINISH & SAVE" : "NEXT END";
+            btn.disabled = state.current.length < state.arrows;
+        }
     }
 
     function handleNext() {
-        if(state.current.length < state.arrows) return;
-        state.history.push({ scores: [...state.current], total: state.current.reduce((a,b)=>a+b,0) });
-        if(state.history.length >= state.ends) {
-            let logs = JSON.parse(localStorage.getItem('archery_logs') || '[]');
-            logs.push({ date: new Date().toLocaleDateString(), mode: state.mode, score: state.history.reduce((a,b)=>a+b.total,0) });
-            localStorage.setItem('archery_logs', JSON.stringify(logs));
-            showScreen('home');
-        } else {
-            state.current = [];
+        if (state.editIdx > -1) {
+            state.history[state.editIdx] = { scores: [...state.tempScores], total: state.tempScores.reduce((a,b)=>a+b,0) };
+            state.editIdx = -1;
             renderUI();
+        } else {
+            state.history.push({ scores: [...state.current], total: state.current.reduce((a,b)=>a+b,0) });
+            if(state.history.length >= state.ends) {
+                let logs = JSON.parse(localStorage.getItem('archery_logs') || '[]');
+                logs.push({ date: new Date().toLocaleDateString(), mode: state.mode, score: state.history.reduce((a,b)=>a+b.total,0) });
+                localStorage.setItem('archery_logs', JSON.stringify(logs));
+                showScreen('home');
+            } else {
+                state.current = [];
+                renderUI();
+                const list = document.getElementById('score-list');
+                setTimeout(() => { list.scrollTop = list.scrollHeight; }, 50);
+            }
         }
     }
 
@@ -208,9 +213,6 @@
     }
 
     function clearLogs() { if(confirm('Clear all?')) { localStorage.removeItem('archery_logs'); loadJournal(); } }
-    function saveVault() { localStorage.setItem('arch_name', document.getElementById('v-name').value); showScreen('home'); }
-    
-    window.onload = () => { document.getElementById('v-name').value = localStorage.getItem('arch_name') || ''; };
 </script>
 </body>
 </html>
