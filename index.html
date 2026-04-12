@@ -7,7 +7,7 @@
     <title>ALL IN Archery</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        :root { --bg: #000; --text: #fff; --accent: #FFD700; --card: #151515; --gray: #888; --miss: #2ecc71; --edit: #007aff; --target-blue: #3498db; --target-red: #e74c3c; --target-yellow: #f1c40f; --target-black: #2c3e50; --target-white: #ffffff; }
+        :root { --bg: #000; --text: #fff; --accent: #FFD700; --card: #151515; --gray: #888; --miss: #2ecc71; --edit: #007aff; --target-blue: #3498db; --target-red: #e74c3c; --target-yellow: #f1c40f; --target-black: #2c3e50; }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; }
         body { background: var(--bg); color: var(--text); font-family: -apple-system, sans-serif; height: 100vh; overflow: hidden; }
         
@@ -29,12 +29,12 @@
         .dist-row { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
         .dist-label { width: 25px; font-size: 12px; font-weight: 900; color: var(--gray); }
         .dist-bar-bg { flex-grow: 1; height: 8px; background: #222; border-radius: 4px; overflow: hidden; }
-        .dist-bar-fill { height: 100%; border-radius: 4px; transition: width 0.3s ease; }
+        .dist-bar-fill { height: 100%; border-radius: 4px; }
         .dist-count { width: 20px; font-size: 11px; text-align: right; font-weight: bold; }
 
         .stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 20px; }
         .stat-box { background: #222; padding: 10px; border-radius: 8px; text-align: center; }
-        .stat-label { font-size: 9px; color: var(--gray); text-transform: uppercase; margin-bottom: 4px; }
+        .stat-label { font-size: 9px; color: var(--gray); text-transform: uppercase; }
         .stat-value { font-size: 16px; font-weight: 900; color: var(--accent); }
 
         .menu-list { display: flex; flex-direction: column; gap: 12px; margin-top: 20px; }
@@ -72,7 +72,9 @@
             <button id="tab-INDOOR" class="tab-btn" onclick="switchJournal('TARGET INDOOR')">Indoor</button>
             <button id="tab-OUTDOOR" class="tab-btn" onclick="switchJournal('TARGET OUTDOOR')">Outdoor</button>
         </div>
-        <div style="height: 140px; margin-bottom: 10px;"><canvas id="progressChart"></canvas></div>
+        <div style="height: 140px; margin-bottom: 10px; position: relative;">
+            <canvas id="progressChart"></canvas>
+        </div>
         <div id="journal-list"></div>
     </div>
 
@@ -117,18 +119,18 @@
     }
 
     function getHexColor(s) {
-        if (s === 'X' || s >= 9) return '#f1c40f'; // Yellow
-        if (s >= 7) return '#e74c3c'; // Red
-        if (s >= 5) return '#3498db'; // Blue
-        if (s === 0) return '#2ecc71'; // Miss/Green
-        return '#2c3e50'; // Black/Dark
+        if (s === 'X' || s >= 9) return '#f1c40f';
+        if (s >= 7) return '#e74c3c';
+        if (s >= 5) return '#3498db';
+        if (s === 0) return '#2ecc71';
+        return '#2c3e50';
     }
 
     function renderButtons() {
         const grid = document.getElementById('button-grid'); grid.innerHTML = '';
-        let scores = state.mode === 'FIELD' ? [6,5,4,3,2,1,0] : (state.mode === 'TARGET OUTDOOR' ? ['X',10,9,8,7,6,5,4,3,2,1,0] : (state.mode.includes('TARGET') ? [10,9,8,7,6,5,4,3,2,1,0] : [11,10,8,5,0]));
-        grid.style.gridTemplateColumns = scores.length > 5 ? 'repeat(4, 1fr)' : 'repeat(3, 1fr)';
-        scores.forEach(s => {
+        let scs = state.mode === 'FIELD' ? [6,5,4,3,2,1,0] : (state.mode === 'TARGET OUTDOOR' ? ['X',10,9,8,7,6,5,4,3,2,1,0] : (state.mode.includes('TARGET') ? [10,9,8,7,6,5,4,3,2,1,0] : [11,10,8,5,0]));
+        grid.style.gridTemplateColumns = scs.length > 5 ? 'repeat(4, 1fr)' : 'repeat(3, 1fr)';
+        scs.forEach(s => {
             const b = document.createElement('button');
             b.className = 'score-btn'; b.innerText = s === 0 ? 'M' : s;
             b.style.background = getHexColor(s);
@@ -210,10 +212,10 @@
         let logs = JSON.parse(localStorage.getItem('archery_logs_v2') || '[]');
         let filtered = logs.filter(l => l.mode.includes(state.journalTab));
         
+        // DESTROY AND RECREATE CHART
+        if(myChart) { myChart.destroy(); myChart = null; }
         const ctx = document.getElementById('progressChart').getContext('2d');
-        if(myChart) myChart.destroy();
         
-        // BACK TO LINE GRAPH
         myChart = new Chart(ctx, {
             type: 'line',
             data: { 
@@ -222,16 +224,11 @@
                     data: filtered.map(l => l.score), 
                     borderColor: '#FFD700', 
                     backgroundColor: 'rgba(255,215,0,0.1)',
-                    borderWidth: 3,
-                    pointRadius: 4,
-                    pointBackgroundColor: '#FFD700',
-                    fill: true,
-                    tension: 0.1 
+                    borderWidth: 3, pointRadius: 5, fill: true, tension: 0.15 
                 }] 
             },
             options: { 
-                responsive: true, 
-                maintainAspectRatio: false, 
+                responsive: true, maintainAspectRatio: false, 
                 plugins: { legend: { display: false } }, 
                 scales: { 
                     y: { grid: { color: '#222' }, ticks: { color: '#888' } }, 
@@ -242,40 +239,26 @@
 
         filtered.reverse().forEach((l, idx) => {
             const allArrows = l.details.flatMap(d => d.scores);
-            const totalArrows = allArrows.length;
             const counts = {}; allArrows.forEach(val => counts[val] = (counts[val] || 0) + 1);
             const sortedKeys = Object.keys(counts).sort((a,b) => (a === 'X' ? -1 : b === 'X' ? 1 : b - a));
             
-            const distributionHtml = sortedKeys.map(k => {
-                const percent = (counts[k] / totalArrows) * 100;
-                return `
-                    <div class="dist-row">
-                        <div class="dist-label">${k === 0 ? 'M' : k}</div>
-                        <div class="dist-bar-bg">
-                            <div class="dist-bar-fill" style="width: ${percent}%; background: ${getHexColor(k)};"></div>
-                        </div>
-                        <div class="dist-count">${counts[k]}</div>
-                    </div>`;
-            }).join('');
+            const distributionHtml = sortedKeys.map(k => `
+                <div class="dist-row">
+                    <div class="dist-label">${k === 0 ? 'M' : k}</div>
+                    <div class="dist-bar-bg"><div class="dist-bar-fill" style="width: ${(counts[k] / allArrows.length) * 100}%; background: ${getHexColor(k)};"></div></div>
+                    <div class="dist-count">${counts[k]}</div>
+                </div>`).join('');
 
             const d = document.createElement('div'); d.className = 'session-card';
             d.innerHTML = `
-                <div class="card-main">
-                    <div><div style="font-size:10px; color:var(--gray);">${l.date}</div><div style="font-weight:bold;">${l.mode}</div></div>
-                    <div class="end-total">${l.score}</div>
-                </div>
+                <div class="card-main"><div><div style="font-size:10px; color:var(--gray);">${l.date}</div><div style="font-weight:bold;">${l.mode}</div></div><div class="end-total">${l.score}</div></div>
                 <div id="details-${idx}" class="session-details">
                     <div class="stats-grid">
-                        <div class="stat-box"><div class="stat-label">Avg/Arrow</div><div class="stat-value">${(l.score / totalArrows).toFixed(2)}</div></div>
-                        <div class="stat-box"><div class="stat-label">Hit Rate</div><div class="stat-value">${((allArrows.filter(s=>s!==0).length / totalArrows)*100).toFixed(0)}%</div></div>
+                        <div class="stat-box"><div class="stat-label">Avg/Arrow</div><div class="stat-value">${(l.score / allArrows.length).toFixed(2)}</div></div>
+                        <div class="stat-box"><div class="stat-label">Hit Rate</div><div class="stat-value">${((allArrows.filter(s=>s!==0).length / allArrows.length)*100).toFixed(0)}%</div></div>
                     </div>
-                    <div style="margin-bottom: 20px;">
-                        <div style="font-size: 10px; color: var(--gray); text-transform: uppercase; margin-bottom: 10px; font-weight: 800;">Hit Distribution</div>
-                        ${distributionHtml}
-                    </div>
-                    <div class="history-text" style="border-top: 1px solid #222; padding-top: 10px;">
-                        ${l.details.map((end, i) => `T${i+1}: [${end.scores.join(',')}] = ${end.total}`).join('<br>')}
-                    </div>
+                    ${distributionHtml}
+                    <div style="font-size:12px; color:#aaa; font-family:monospace; margin-top:10px; border-top:1px solid #222; padding-top:10px;">${l.details.map((end, i) => `T${i+1}: [${end.scores.join(',')}]`).join('<br>')}</div>
                 </div>`;
             d.onclick = () => { const det = document.getElementById(`details-${idx}`); det.style.display = det.style.display === 'block' ? 'none' : 'block'; };
             list.appendChild(d);
