@@ -8,8 +8,9 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="ALL IN">
     
-    <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/asif-meitav/Archery/main/image_7455e3.jpg?v=2">
-    <link rel="icon" type="image/jpeg" href="https://raw.githubusercontent.com/asif-meitav/Archery/main/image_7455e3.jpg?v=2">
+    <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/asif-meitav/Archery/main/image_7455e3.jpg">
+    <link rel="apple-touch-icon-precomposed" href="https://raw.githubusercontent.com/asif-meitav/Archery/main/image_7455e3.jpg">
+    <link rel="icon" type="image/jpeg" href="https://raw.githubusercontent.com/asif-meitav/Archery/main/image_7455e3.jpg">
 
     <title>ALL IN Archery</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -54,7 +55,7 @@
 <div class="app-container">
     <div id="home" class="screen active-screen">
         <div style="text-align:center; margin-top:20px;">
-            <img src="https://raw.githubusercontent.com/asif-meitav/Archery/main/image_7455e3.jpg" style="width: 100px; border-radius: 20px; margin-bottom: 10px; border: 2px solid #333;">
+            <img src="https://raw.githubusercontent.com/asif-meitav/Archery/main/image_7455e3.jpg" style="width: 100px; border-radius: 20px; margin-bottom: 10px; border: 1px solid #333;">
             <div style="font-size:32px; font-weight:900; letter-spacing:6px;">ALL IN</div>
         </div>
         <div class="menu-list">
@@ -66,7 +67,6 @@
             <button class="vault-btn" onclick="showScreen('vault')">⚙ GEAR VAULT</button>
         </div>
     </div>
-
     <div id="journal" class="screen">
         <header><button onclick="showScreen('home')" style="background:none; border:none; color:var(--gray); font-size:18px">←</button><div>JOURNAL</div><button onclick="clearLogs()" style="background:none; border:none; color:red; font-size:10px;">RESET</button></header>
         <div class="tab-bar" style="margin-top:15px;">
@@ -78,7 +78,6 @@
         <div style="height: 140px; margin-bottom: 10px;"><canvas id="progressChart"></canvas></div>
         <div id="journal-list"></div>
     </div>
-
     <div id="vault" class="screen">
         <header><button onclick="showScreen('home')" style="background:none; border:none; color:var(--gray); font-size:18px">←</button><div>GEAR</div><button onclick="saveVault()" style="background:none; border:none; color:var(--accent); font-weight:bold;">SAVE</button></header>
         <div style="overflow-y:auto; margin-top:15px; padding-bottom:30px;">
@@ -91,7 +90,6 @@
             <input id="v-length" class="vault-input" placeholder="Length">
         </div>
     </div>
-
     <div id="scoring" class="screen">
         <header><button onclick="if(confirm('Quit?')) showScreen('home')" style="background:none; border:none; color:var(--gray); font-size:24px">✕</button><div id="mode-title">SCORING</div><div id="total-score" style="font-size:22px; font-weight:900;">0</div></header>
         <div id="score-list"></div>
