@@ -1,1 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="ALL IN">
+    
+    <title>ALL IN Archery</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root { --bg: #000; --text: #fff; --accent: #FFD700; --card: #151515; --gray: #888; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; }
+        body { background: var(--bg); color: var(--text); font-family: -apple-system, sans-serif; height: 100vh; overflow: hidden; padding-top: env(safe-area-inset-top); }
+        .app-container { width: 100%; max-width: 500px; height: 100%; margin: 0 auto; position: relative; }
+        .screen { display: none; flex-direction: column; height: 100%; padding: 20px; background: var(--bg); position: absolute; width: 100%; top: 0; left: 0; bottom: 0; right: 0; }
+        .active-screen { display: flex; z-index: 10; }
+        
+        /* CSS LOGO (NO IMAGE FILE NEEDED) */
+        .logo-badge { width: 100px; height: 100px; background: var(--accent); color: #000; border-radius: 22px; margin: 0 auto 10px; display: flex; align-items: center; justify-content: center; font-size: 32px; font-weight: 900; }
+        
+        header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 15px; border-bottom: 1px solid #222; }
+        .menu-list { display: flex; flex-direction: column; gap: 12px; margin-top: 20px; }
+        .menu-btn { background: #fff; color: #000; padding: 20px; border-radius: 15px; font-size: 16px; font-weight: 800; border: none; text-align: left; }
+        .vault-btn { background: var(--card); border: 1px solid #333; color: #fff; padding: 16px; border-radius: 15px; font-weight: bold; text-align: center; margin-top: 10px; }
+        
+        #score-list { flex-grow: 1; overflow-y: auto; padding: 15px 0; display: flex; flex-direction: column; gap: 10px; }
+        .end-card { background: var(--card); padding: 12px 15px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #222; }
+        .end-total { font-weight: 900; font-size: 20px; color: var(--accent); }
+        .next-btn { background: var(--accent); color: #000; width: 100%; padding: 18px; border-radius: 12px; font-size: 20px; font-weight: 900; border: none; }
+        .btn-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 10px; }
+        .score-btn { height: 60px; border-radius: 10px; border: 1px solid #333; font-size: 22px; font-weight: 900; color: #fff; background: #222; }
+    </style>
+</head>
+<body>
 
+<div class="app-container">
+    <div id="home" class="screen active-screen">
+        <div style="text-align:center; margin-top:20px;">
+            <div class="logo-badge">AI</div>
+            <div style="font-size:32px; font-weight:900; letter-spacing:6px;">ALL IN</div>
+        </div>
+        <div class="menu-list">
+            <button class="menu-btn" onclick="startApp('3D', 2, 24)">3D Practice (24)</button>
+            <button class="menu-btn" onclick="startApp('FIELD', 3, 24)">Field Practice (24)</button>
+            <button class="menu-btn" onclick="startApp('TARGET INDOOR', 3, 20)">Target Indoor (20)</button>
+            <button class="menu-btn" onclick="startApp('TARGET OUTDOOR', 6, 12)">Target Outdoor (12)</button>
+            <button class="vault-btn" onclick="showScreen('vault')">⚙ GEAR VAULT</button>
+        </div>
+    </div>
+
+    <div id="vault" class="screen">
+        <header><button onclick="showScreen('home')" style="background:none; border:none; color:var(--gray); font-size:18px">←</button><div>GEAR VAULT</div></header>
+        <div style="margin-top:20px; text-align:center; color:var(--gray);">
+            <p>Gear settings are locked to your profile.</p>
+        </div>
+    </div>
+
+    <div id="scoring" class="screen">
+        <header>
+            <button onclick="if(confirm('Quit?')) showScreen('home')" style="background:none; border:none; color:var(--gray); font-size:24px">✕</button>
+            <div id="mode-title">SCORING</div>
+            <div id="total-score" style="font-size:22px; font-weight:900;">0</div>
+        </header>
+        <div id="score-list"></div>
+        <div style="padding-bottom:30px;">
+            <button id="next-btn" class="next-btn" onclick="handleMainAction()">NEXT END</button>
+            <div id="button-grid" class="btn-grid"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let state = { current: [], history: [], arrows: 2, ends: 24, mode: '' };
+
+    function showScreen(id) { 
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active-screen')); 
+        document.getElementById(id).classList.add('active-screen'); 
+    }
+
+    function startApp(mode, arrows, ends) { 
+        state = { current: [], history: [], arrows, ends, mode }; 
+        document.getElementById('mode-title').innerText = mode; 
+        renderButtons(); 
+        renderUI(); 
+        showScreen('scoring'); 
+    }
+
+    function renderButtons() {
+        const grid = document.getElementById('button-grid'); 
+        grid.innerHTML = '';
+        // 3D/Field/Target specialized scoring buttons
+        let scores = state.mode === '3D' ? [11,10,8,5,0] : [10,9,8,7,6,5,4,3,2,1,0];
+        grid.style.gridTemplateColumns = scores.length > 6 ? 'repeat(4, 1fr)' : 'repeat(3, 1fr)';
+        
+        scores.forEach(s => {
+            const b = document.createElement('button'); 
+            b.className = 'score-btn'; 
+            b.innerText = s === 0 ? 'M' : s;
+            b.onclick = () => { 
+                if(state.current.length < state.arrows) { 
+                    state.current.push(s); 
+                    renderUI(); 
+                } 
+            };
+            grid.appendChild(b);
+        });
+        
+        const del = document.createElement('button'); 
+        del.className = 'score-btn'; 
+        del.innerText = '⌫'; 
+        del.style.background = '#444';
+        del.onclick = () => { state.current.pop(); renderUI(); };
+        grid.appendChild(del);
+    }
+
+    function renderUI() {
+        const list = document.getElementById('score-list'); 
+        list.innerHTML = '';
+        const historyTotal = state.history.reduce((a, b) => a + b.total, 0);
+        const currentTotal = state.current.reduce((a,b) => a + (b === 'X' ? 10 : b), 0);
+        document.getElementById('total-score').innerText = historyTotal + currentTotal;
+        
+        state.history.forEach((end, i) => {
+            const card = document.createElement('div'); 
+            card.className = 'end-card';
+            card.innerHTML = `<div><div style="font-size:10px; color:var(--gray);">END ${i+1}</div><div>${end.scores.join(' · ')}</div></div><div class="end-total">${end.total}</div>`;
+            list.appendChild(card);
+        });
+        
+        const active = document.createElement('div'); 
+        active.className = 'end-card'; 
+        active.style.border = '1px solid var(--accent)';
+        active.innerHTML = `<div><div style="font-size:10px; color:var(--gray);">CURRENT</div><div>${state.current.join(' · ') || '---'}</div></div>`;
+        list.appendChild(active);
+        
+        const btn = document.getElementById('next-btn');
+        btn.disabled = state.current.length < state.arrows;
+    }
+
+    function handleMainAction() {
+        if(state.current.length === state.arrows) {
+            state.history.push({ 
+                scores: [...state.current], 
+                total: state.current.reduce((a,b) => a + (b === 'X' ? 10 : b), 0) 
+            });
+            state.current = [];
+            if(state.history.length >= state.ends) {
+                alert("Session Complete!");
+                showScreen('home');
+            } else {
+                renderUI();
+                const list = document.getElementById('score-list');
+                list.scrollTop = list.scrollHeight;
+            }
+        }
+    }
+</script>
+</body>
+</html>
