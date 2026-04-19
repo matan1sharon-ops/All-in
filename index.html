@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="ALL IN">
     <title>ALL IN Archery</title>
     <style>
         :root { --bg: #000; --text: #fff; --accent: #FFD700; --card: #151515; --gray: #888; }
@@ -18,20 +17,25 @@
         header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 10px; border-bottom: 1px solid #222; min-height: 60px; }
         .header-center { flex: 1; text-align: center; padding: 0 10px; }
         .header-right { display: flex; gap: 15px; align-items: baseline; text-align: right; }
-        
-        .stat-group { display: flex; flex-direction: column; }
         .stat-label { font-size: 9px; color: var(--gray); text-transform: uppercase; font-weight: 800; letter-spacing: 0.5px; }
         .stat-val { font-size: 20px; font-weight: 900; }
 
         .logo-badge { width: 80px; height: 80px; background: var(--accent); color: #000; border-radius: 20px; margin: 0 auto 10px; display: flex; align-items: center; justify-content: center; font-size: 28px; font-weight: 900; }
         .menu-list { display: flex; flex-direction: column; gap: 12px; margin-top: 20px; }
-        .menu-btn { background: #fff; color: #000; padding: 20px; border-radius: 15px; font-size: 16px; font-weight: 800; border: none; text-align: left; }
+        .menu-row { display: flex; gap: 10px; height: 75px; }
+        .menu-btn { flex: 1; background: #fff; color: #000; padding: 0 20px; border-radius: 15px; font-size: 15px; font-weight: 800; border: none; text-align: left; }
+        .history-btn { background: #1a1a1a; border-radius: 15px; width: 70px; display: flex; flex-direction: column; align-items: center; justify-content: center; border: 1px solid #333; }
         
-        #score-list { flex-grow: 1; overflow-y: auto; padding: 15px 0; display: flex; flex-direction: column; gap: 10px; }
-        .end-card { background: var(--card); padding: 12px 15px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #222; }
+        #score-list, #history-list { flex-grow: 1; overflow-y: auto; padding: 15px 0; display: flex; flex-direction: column; gap: 8px; }
+        .end-card, .history-card { background: var(--card); padding: 12px 15px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #222; }
         .next-btn { background: var(--accent); color: #000; width: 100%; padding: 18px; border-radius: 12px; font-size: 20px; font-weight: 900; border: none; margin-top: 15px; }
         .btn-grid { display: grid; gap: 8px; margin-top: 10px; }
         .score-btn { height: 60px; border-radius: 12px; border: 1px solid #333; font-size: 22px; font-weight: 900; color: #fff; background: #222; }
+        
+        .pb-badge { background: var(--accent); color: #000; font-size: 10px; font-weight: 900; padding: 2px 6px; border-radius: 4px; margin-left: 8px; }
+        .hist-date { font-size: 14px; font-weight: 700; color: var(--text); }
+        .hist-avg { font-size: 12px; color: var(--gray); margin-left: 10px; font-weight: 600; }
+        .hist-total { font-size: 18px; font-weight: 900; color: var(--accent); }
     </style>
 </head>
 <body>
@@ -44,37 +48,60 @@
             <p style="color:var(--gray); font-size:12px;">ARCHERY TRACKER</p>
         </div>
         <div class="menu-list">
-            <button class="menu-btn" onclick="startApp('3D PRACTICE', 2, 24)">3D PRACTICE (24 Targets)</button>
-            <button class="menu-btn" onclick="startApp('FIELD PRACTICE', 3, 24)">FIELD PRACTICE (24 Targets)</button>
-            <button class="menu-btn" onclick="startApp('TARGET INDOOR', 3, 20)">TARGET INDOOR (20 Ends)</button>
-            <button class="menu-btn" onclick="startApp('TARGET OUTDOOR', 6, 12)">TARGET OUTDOOR (12 Ends)</button>
+            <div class="menu-row">
+                <button class="menu-btn" onclick="startApp('3D PRACTICE', 2, 24)">3D PRACTICE</button>
+                <button class="history-btn" onclick="showHistory('3D PRACTICE')">
+                    <span style="font-size:18px;">📜</span>
+                    <span style="font-size:8px; font-weight:900; margin-top:4px;">HISTORY</span>
+                </button>
+            </div>
+            <div class="menu-row">
+                <button class="menu-btn" onclick="startApp('FIELD PRACTICE', 3, 24)">FIELD PRACTICE</button>
+                <button class="history-btn" onclick="showHistory('FIELD PRACTICE')">
+                    <span style="font-size:18px;">📜</span>
+                    <span style="font-size:8px; font-weight:900; margin-top:4px;">HISTORY</span>
+                </button>
+            </div>
+            <div class="menu-row">
+                <button class="menu-btn" onclick="startApp('TARGET INDOOR', 3, 20)">TARGET INDOOR</button>
+                <button class="history-btn" onclick="showHistory('TARGET INDOOR')">
+                    <span style="font-size:18px;">📜</span>
+                    <span style="font-size:8px; font-weight:900; margin-top:4px;">HISTORY</span>
+                </button>
+            </div>
+            <div class="menu-row">
+                <button class="menu-btn" onclick="startApp('TARGET OUTDOOR', 6, 12)">TARGET OUTDOOR</button>
+                <button class="history-btn" onclick="showHistory('TARGET OUTDOOR')">
+                    <span style="font-size:18px;">📜</span>
+                    <span style="font-size:8px; font-weight:900; margin-top:4px;">HISTORY</span>
+                </button>
+            </div>
         </div>
     </div>
 
     <div id="scoring" class="screen">
         <header>
-            <button onclick="if(confirm('Exit session?')) showScreen('home')" style="background:none; border:none; color:var(--gray); font-size:22px; width: 30px; text-align: left;">✕</button>
-            <div class="header-center">
-                <div id="mode-display" style="font-weight:900; font-size:12px; letter-spacing:0.5px; color: var(--text); text-transform: uppercase;">MODE (0/0)</div>
-            </div>
+            <button onclick="if(confirm('Exit?')) showScreen('home')" style="background:none; border:none; color:var(--gray); font-size:22px;">✕</button>
+            <div class="header-center"><div id="mode-display" class="stat-label" style="color:#fff; font-size:11px;">MODE</div></div>
             <div class="header-right">
-                <div class="stat-group">
-                    <span class="stat-label">AVG</span>
-                    <span id="avg-score" class="stat-val">0.0</span>
-                </div>
-                <div class="stat-group">
-                    <span class="stat-label">TOTAL</span>
-                    <span id="total-score" class="stat-val" style="color:var(--accent);">0</span>
-                </div>
+                <div style="display:flex; flex-direction:column;"><span class="stat-label">AVG</span><span id="avg-score" class="stat-val">0.0</span></div>
+                <div style="display:flex; flex-direction:column;"><span class="stat-label">TOTAL</span><span id="total-score" class="stat-val" style="color:var(--accent);">0</span></div>
             </div>
         </header>
-        
         <div id="score-list"></div>
-        
         <div style="padding-bottom:30px; border-top: 1px solid #222;">
             <button id="next-btn" class="next-btn" onclick="handleMainAction()">NEXT END</button>
             <div id="button-grid" class="btn-grid"></div>
         </div>
+    </div>
+
+    <div id="history-screen" class="screen">
+        <header>
+            <button onclick="showScreen('home')" style="background:none; border:none; color:var(--gray); font-size:22px;">✕</button>
+            <div class="header-center"><div id="history-title" class="stat-label" style="color:#fff; font-size:11px;">HISTORY</div></div>
+            <button onclick="clearHistory()" style="background:none; border:none; color:var(--gray); font-size:10px; font-weight:bold;">CLEAR</button>
+        </header>
+        <div id="history-list"></div>
     </div>
 </div>
 
@@ -98,43 +125,32 @@
             if (s === 'X' || s === 10 || s === 9) return { bg: '#FFD700', text: '#000' };
             if (s === 8 || s === 7) return { bg: '#FF3B30', text: '#fff' };
             if (s === 6 || s === 5) return { bg: '#007AFF', text: '#fff' };
-            if (s === 4 || s === 3) return { bg: '#2C2C2E', text: '#fff' };
-            if (s === 2 || s === 1) return { bg: '#FFFFFF', text: '#000' };
-            return { bg: '#34C759', text: '#fff' };
+            if (s === 2 || s === 1) return { bg: '#FFF', text: '#000' };
+            if (s === 4 || s === 3) return { bg: '#222', text: '#fff' };
         }
         if (state.mode.includes('3D')) {
             if (s === 11) return { bg: '#FFD700', text: '#000' };
             if (s === 10) return { bg: '#FFF176', text: '#000' };
             if (s === 8) return { bg: '#FF3B30', text: '#fff' };
             if (s === 5) return { bg: '#007AFF', text: '#fff' };
-            return { bg: '#34C759', text: '#fff' };
         }
-        return s === 0 ? { bg: '#34C759', text: '#fff' } : { bg: '#222', text: '#fff' };
+        return { bg: '#34C759', text: '#fff' };
     }
 
     function renderButtons() {
-        const grid = document.getElementById('button-grid'); 
-        grid.innerHTML = '';
+        const grid = document.getElementById('button-grid'); grid.innerHTML = '';
         let scores = state.mode.includes('3D') ? [11, 10, 8, 5, 0] : 
-                     state.mode.includes('TARGET') ? ['X', 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0] : 
-                     [6, 5, 4, 3, 2, 1, 0];
-
+                     state.mode.includes('TARGET') ? ['X', 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0] : [6,5,4,3,2,1,0];
         grid.style.gridTemplateColumns = scores.length > 5 ? 'repeat(4, 1fr)' : 'repeat(3, 1fr)';
-        
         scores.forEach(s => {
-            const b = document.createElement('button'); 
-            b.className = 'score-btn'; 
+            const b = document.createElement('button'); b.className = 'score-btn'; 
             const theme = getButtonTheme(s);
-            Object.assign(b.style, { backgroundColor: theme.bg, color: theme.text, borderColor: 'rgba(0,0,0,0.1)' });
+            Object.assign(b.style, { backgroundColor: theme.bg, color: theme.text });
             b.innerText = s === 0 ? 'M' : s;
             b.onclick = () => { if(state.current.length < state.arrows) { state.current.push(s); renderUI(); } };
             grid.appendChild(b);
         });
-        
-        const del = document.createElement('button'); 
-        del.className = 'score-btn'; 
-        del.innerText = '⌫'; 
-        del.style.background = '#444';
+        const del = document.createElement('button'); del.className = 'score-btn'; del.innerText = '⌫'; del.style.background = '#444';
         del.onclick = () => { state.current.pop(); renderUI(); };
         grid.appendChild(del);
     }
@@ -146,37 +162,16 @@
         const currentTotal = state.current.reduce((a, b) => a + getVal(b), 0);
         const grandTotal = historyTotal + currentTotal;
         const totalArrows = (state.history.length * state.arrows) + state.current.length;
-        
         document.getElementById('total-score').innerText = grandTotal;
         document.getElementById('avg-score').innerText = totalArrows > 0 ? (grandTotal / totalArrows).toFixed(1) : "0.0";
         document.getElementById('mode-display').innerText = `${state.mode} (${state.history.length}/${state.ends})`;
 
-        const list = document.getElementById('score-list');
-        list.innerHTML = '';
-        
-        // Render Previous Ends
+        const list = document.getElementById('score-list'); list.innerHTML = '';
         state.history.forEach((end, i) => {
-            const card = document.createElement('div');
-            card.className = 'end-card';
-            card.innerHTML = `<div><div class="stat-label">END ${i+1}</div><div style="font-weight:bold;">${end.displayScores.join(' · ')}</div></div><div style="color:var(--accent); font-weight:900; font-size:20px;">${end.total}</div>`;
-            list.appendChild(card);
+            list.insertAdjacentHTML('beforeend', `<div class="end-card"><div><div class="stat-label">END ${i+1}</div><b>${end.displayScores.join(' · ')}</b></div><div style="color:var(--accent); font-weight:900; font-size:20px;">${end.total}</div></div>`);
         });
-
-        // Render Active/Current End
-        const active = document.createElement('div');
-        active.className = 'end-card';
-        active.style.border = '1px solid var(--accent)';
-        const displayCurrent = state.current.map(s => s === 0 ? 'M' : s).join(' · ');
-        
-        // Show current total live in the end card
-        active.innerHTML = `
-            <div>
-                <div class="stat-label">CURRENT (${state.current.length}/${state.arrows})</div>
-                <div style="font-weight:bold;">${displayCurrent || '---'}</div>
-            </div>
-            <div style="color:var(--accent); font-weight:900; font-size:20px;">${currentTotal}</div>`;
-        
-        list.appendChild(active);
+        const activeDisplay = state.current.map(s => s === 0 ? 'M' : s).join(' · ') || '---';
+        list.insertAdjacentHTML('beforeend', `<div class="end-card" style="border:1px solid var(--accent)"><div><div class="stat-label">CURRENT</div><b>${activeDisplay}</b></div><div style="color:var(--accent); font-weight:900; font-size:20px;">${currentTotal}</div></div>`);
         
         const btn = document.getElementById('next-btn');
         btn.disabled = state.current.length < state.arrows;
@@ -185,20 +180,58 @@
 
     function handleMainAction() {
         if(state.current.length === state.arrows) {
-            state.history.push({ 
-                displayScores: [...state.current].map(s => s === 0 ? 'M' : s),
-                total: state.current.reduce((a, b) => a + getVal(b), 0) 
-            });
+            state.history.push({ displayScores: [...state.current].map(s => s === 0 ? 'M' : s), total: state.current.reduce((a, b) => a + getVal(b), 0) });
             state.current = [];
-            if(state.history.length >= state.ends) {
-                alert("Complete! Total: " + document.getElementById('total-score').innerText);
-                showScreen('home');
-            } else { 
-                renderUI();
+            if(state.history.length >= state.ends) { saveSession(); } else { 
+                renderUI(); 
                 const list = document.getElementById('score-list');
                 list.scrollTop = list.scrollHeight;
             }
         }
+    }
+
+    function saveSession() {
+        const total = parseInt(document.getElementById('total-score').innerText);
+        const avg = document.getElementById('avg-score').innerText;
+        const session = { date: new Date().toLocaleDateString('en-GB'), score: total, avg: avg, timestamp: Date.now() };
+        let allHistory = JSON.parse(localStorage.getItem(state.mode) || "[]");
+        allHistory.unshift(session);
+        localStorage.setItem(state.mode, JSON.stringify(allHistory));
+        alert(`Session Saved! Total: ${total}`);
+        showScreen('home');
+    }
+
+    function showHistory(mode) {
+        document.getElementById('history-title').innerText = mode + " HISTORY";
+        const list = document.getElementById('history-list');
+        list.innerHTML = '';
+        const data = JSON.parse(localStorage.getItem(mode) || "[]");
+        
+        if(data.length === 0) { 
+            list.innerHTML = `<p style="text-align:center; color:var(--gray); margin-top:20px;">No History found.</p>`; 
+        } else {
+            // Find Personal Best
+            const maxScore = Math.max(...data.map(s => s.score));
+            
+            data.forEach(s => {
+                const isPB = s.score === maxScore && maxScore > 0;
+                list.insertAdjacentHTML('beforeend', `
+                    <div class="history-card">
+                        <div style="display:flex; align-items:center;">
+                            <span class="hist-date">${s.date}</span>
+                            <span class="hist-avg">AVG: ${s.avg}</span>
+                            ${isPB ? '<span class="pb-badge">PB</span>' : ''}
+                        </div>
+                        <div class="hist-total">${s.score}</div>
+                    </div>`);
+            });
+        }
+        showScreen('history-screen');
+    }
+
+    function clearHistory() {
+        const mode = document.getElementById('history-title').innerText.replace(" HISTORY", "");
+        if(confirm(`Wipe all ${mode} History?`)) { localStorage.removeItem(mode); showHistory(mode); }
     }
 </script>
 </body>
