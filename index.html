@@ -29,6 +29,7 @@
         .next-btn { background: var(--accent); color: #000; width: 100%; padding: 18px; border-radius: 12px; font-size: 20px; font-weight: 900; border: none; }
         .btn-grid { display: grid; gap: 8px; margin-top: 10px; }
         .score-btn { height: 60px; border-radius: 12px; border: 1px solid #333; font-size: 22px; font-weight: 900; color: #fff; background: #222; }
+        .stat-label { font-size: 10px; color: var(--gray); text-transform: uppercase; margin-bottom: 2px; }
     </style>
 </head>
 <body>
@@ -51,8 +52,14 @@
     <div id="scoring" class="screen">
         <header>
             <button onclick="if(confirm('Exit session?')) showScreen('home')" style="background:none; border:none; color:var(--gray); font-size:24px">✕</button>
-            <div id="mode-title" style="font-weight:bold; font-size:14px; letter-spacing:1px;">SCORING</div>
-            <div id="total-score" style="font-size:22px; font-weight:900; color:var(--accent);">0</div>
+            <div style="text-align:center;">
+                <div id="mode-title" style="font-weight:bold; font-size:12px; letter-spacing:1px; margin-bottom:2px;">SCORING</div>
+                <div id="avg-score" style="font-size:14px; font-weight:bold; color:var(--gray);">AVG: 0.0</div>
+            </div>
+            <div style="text-align:right;">
+                <div class="stat-label">Total</div>
+                <div id="total-score" style="font-size:22px; font-weight:900; color:var(--accent);">0</div>
+            </div>
         </header>
         
         <div id="score-list"></div>
@@ -81,26 +88,21 @@
     }
 
     function getButtonTheme(s) {
-        // TARGET COLOR LOGIC
         if (state.mode.includes('TARGET')) {
             if (s === 'X' || s === 10 || s === 9) return { bg: '#FFD700', text: '#000' };
             if (s === 8 || s === 7) return { bg: '#FF3B30', text: '#fff' };
             if (s === 6 || s === 5) return { bg: '#007AFF', text: '#fff' };
             if (s === 4 || s === 3) return { bg: '#2C2C2E', text: '#fff' };
             if (s === 2 || s === 1) return { bg: '#FFFFFF', text: '#000' };
-            return { bg: '#34C759', text: '#fff' }; // Green for M (0)
+            return { bg: '#34C759', text: '#fff' };
         }
-        
-        // 3D COLOR LOGIC
         if (state.mode.includes('3D')) {
-            if (s === 11) return { bg: '#FFD700', text: '#000' }; // Yellow
-            if (s === 10) return { bg: '#FFF176', text: '#000' }; // Light Yellow
-            if (s === 8) return { bg: '#FF3B30', text: '#fff' };  // Red
-            if (s === 5) return { bg: '#007AFF', text: '#fff' };  // Blue
-            return { bg: '#34C759', text: '#fff' };              // Green for M (0)
+            if (s === 11) return { bg: '#FFD700', text: '#000' };
+            if (s === 10) return { bg: '#FFF176', text: '#000' };
+            if (s === 8) return { bg: '#FF3B30', text: '#fff' };
+            if (s === 5) return { bg: '#007AFF', text: '#fff' };
+            return { bg: '#34C759', text: '#fff' };
         }
-
-        // DEFAULT / FIELD LOGIC
         if (s === 0) return { bg: '#34C759', text: '#fff' };
         if (s >= 5) return { bg: '#FFD700', text: '#000' };
         return { bg: '#222', text: '#fff' };
@@ -109,29 +111,20 @@
     function renderButtons() {
         const grid = document.getElementById('button-grid'); 
         grid.innerHTML = '';
-        
-        let scores = [];
-        if (state.mode.includes('3D')) {
-            scores = [11, 10, 8, 5, 0];
-        } else if (state.mode.includes('TARGET')) {
-            scores = ['X', 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0];
-        } else {
-            scores = [6, 5, 4, 3, 2, 1, 0];
-        }
+        let scores = state.mode.includes('3D') ? [11, 10, 8, 5, 0] : 
+                     state.mode.includes('TARGET') ? ['X', 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0] : 
+                     [6, 5, 4, 3, 2, 1, 0];
 
         grid.style.gridTemplateColumns = scores.length > 5 ? 'repeat(4, 1fr)' : 'repeat(3, 1fr)';
         
         scores.forEach(s => {
             const b = document.createElement('button'); 
             b.className = 'score-btn'; 
-            
             const theme = getButtonTheme(s);
             b.style.backgroundColor = theme.bg;
             b.style.color = theme.text;
             b.style.borderColor = 'rgba(0,0,0,0.1)';
-            
             b.innerText = s === 0 ? 'M' : s;
-            
             b.onclick = () => { 
                 if(state.current.length < state.arrows) { 
                     state.current.push(s); 
@@ -161,7 +154,13 @@
         
         const historyTotal = state.history.reduce((a, b) => a + b.total, 0);
         const currentTotal = state.current.reduce((a, b) => a + getVal(b), 0);
-        document.getElementById('total-score').innerText = historyTotal + currentTotal;
+        const grandTotal = historyTotal + currentTotal;
+        document.getElementById('total-score').innerText = grandTotal;
+
+        // Calculate Average
+        const totalArrowsShot = (state.history.length * state.arrows) + state.current.length;
+        const avg = totalArrowsShot > 0 ? (grandTotal / totalArrowsShot).toFixed(1) : "0.0";
+        document.getElementById('avg-score').innerText = `AVG: ${avg}`;
         
         state.history.forEach((end, i) => {
             const card = document.createElement('div'); 
