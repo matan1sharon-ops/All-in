@@ -166,43 +166,103 @@
     }
 
     function showHistory(mode) {
-        state.mode = mode; document.getElementById('history-title').innerText = mode + " HISTORY";
-        const list = document.getElementById('history-list'); list.innerHTML = '';
-        const data = JSON.parse(localStorage.getItem(mode) || "[]");
-        data.forEach(s => {
-            list.insertAdjacentHTML('beforeend', `<div class="history-card" onclick="openDetail(${s.id})"><div><b>${s.date}</b> <span class="stat-label">AVG: ${s.avg}</span></div><div class="stat-val" style="color:var(--accent)">${s.score} ›</div></div>`);
-        });
+        // 1. Force the screen to switch immediately
         showScreen('history-screen');
+        
+        // 2. Update the state and UI elements
+        state.mode = mode; 
+        const titleEl = document.getElementById('history-title');
+        const listEl = document.getElementById('history-list');
+        
+        titleEl.innerText = mode + " HISTORY";
+        listEl.innerHTML = '<div style="text-align:center; padding:20px; color:var(--gray);">Loading...</div>';
+        
+        // 3. Try to get the data
+        try {
+            const rawData = localStorage.getItem(mode);
+            const data = rawData ? JSON.parse(rawData) : [];
+            
+            listEl.innerHTML = ''; // Clear loading message
+
+            if (data.length === 0) {
+                listEl.innerHTML = `
+                    <div style="text-align:center; margin-top:60px; color:var(--gray);">
+                        <p style="font-size:40px; margin-bottom:10px;">🎯</p>
+                        <p>No ${mode} sessions found.</p>
+                        <p style="font-size:10px; margin-top:10px;">Finish a session to see it here.</p>
+                    </div>`;
+                return;
+            }
+
+            // 4. Find Personal Best for badge logic
+            const maxScore = Math.max(...data.map(s => parseInt(s.score) || 0));
+
+            data.forEach(s => {
+                const isPB = (parseInt(s.score) === maxScore && maxScore > 0);
+                listEl.insertAdjacentHTML('beforeend', `
+                    <div class="history-card" onclick="openDetail(${s.id})" style="margin-bottom:8px; cursor:pointer;">
+                        <div>
+                            <div style="font-weight:bold; font-size:15px; color:#fff;">${s.date}</div>
+                            <div class="stat-label">AVG: ${s.avg} ${isPB ? '<span class="pb-badge">PB</span>' : ''}</div>
+                        </div>
+                        <div style="display:flex; align-items:center; gap:10px;">
+                            <div class="stat-val" style="color:var(--accent); font-size:22px;">${s.score}</div>
+                            <div style="color:var(--gray); font-size:20px;">›</div>
+                        </div>
+                    </div>`);
+            });
+        } catch (e) {
+            listEl.innerHTML = '<div style="color:red; text-align:center;">Error loading history.</div>';
+            console.error(e);
+        }
+    }
     }
 
     function openDetail(id) {
-        const session = JSON.parse(localStorage.getItem(state.mode)).find(s => s.id === id);
-        const list = document.getElementById('detail-list'); list.innerHTML = '';
-        
-        // 1. Stats
-        list.insertAdjacentHTML('beforeend', `<div class="stats-card"><div><div class="stat-label">SCORE</div><div class="stat-val" style="color:var(--accent)">${session.score}</div></div><div><div class="stat-label">AVG</div><div class="stat-val">${session.avg}</div></div><div><div class="stat-label">ENDS</div><div class="stat-val">${session.ends.length}</div></div></div>`);
+        try {
+            const historyData = JSON.parse(localStorage.getItem(state.mode) || "[]");
+            const session = historyData.find(s => s.id === id);
+            
+            if(!session) return;
 
-        // 2. Line Chart (Stamina)
-        const totals = session.ends.map(e => e.total);
-        const maxE = Math.max(...totals, 1);
-        const points = totals.map((t, i) => `${(i / (totals.length - 1)) * 100},${80 - (t / maxE) * 60}`).join(' ');
-        let dots = totals.map((t, i) => `<circle class="line-dot" cx="${(i / (totals.length - 1)) * 100}%" cy="${80 - (t / maxE) * 60}" r="3"/>`).join('');
-        list.insertAdjacentHTML('beforeend', `<div class="chart-box"><div class="chart-title">Scoring Trend</div><svg class="line-chart-svg" viewBox="0 0 100 80" preserveAspectRatio="none"><polyline class="line-path" points="${points}"/></svg><div style="position:relative; height:0; top:-85px; width:100%"><svg style="width:100%; height:80px; overflow:visible;">${dots}</svg></div></div>`);
+            const list = document.getElementById('detail-list');
+            list.innerHTML = '';
+            document.getElementById('detail-title').innerText = session.date + " - " + state.mode;
 
-        // 3. Color Bar Chart (Hits)
-        const hits = {}; session.ends.flatMap(e => e.raw).forEach(v => hits[v] = (hits[v] || 0) + 1);
-        const possible = state.mode.includes('3D') ? [11, 10, 8, 5, 0] : ['X', 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0];
-        const maxH = Math.max(...Object.values(hits), 1);
-        let bars = possible.map(p => {
-            const count = hits[p] || 0;
-            const h = (count / maxH) * 80;
-            return `<div class="hit-col"><div class="hit-num">${count}</div><div class="hit-bar" style="height:${h}px; background:${getScoreColor(p === 'X' ? 10 : p, state.mode)}"></div><div class="stat-label" style="margin-top:4px; color:#fff">${p === 0 ? 'M' : p}</div></div>`;
-        }).join('');
-        list.insertAdjacentHTML('beforeend', `<div class="chart-box"><div class="chart-title">Hits Breakdown</div><div class="hits-grid">${bars}</div></div>`);
+            // Stats
+            list.insertAdjacentHTML('beforeend', `
+                <div class="stats-card">
+                    <div><div class="stat-label">SCORE</div><div class="stat-val" style="color:var(--accent)">${session.score}</div></div>
+                    <div><div class="stat-label">AVG</div><div class="stat-val">${session.avg}</div></div>
+                    <div><div class="stat-label">ENDS</div><div class="stat-val">${session.ends.length}</div></div>
+                </div>`);
 
-        showScreen('detail-screen');
+            // Charts
+            const totals = session.ends.map(e => e.total);
+            if (totals.length > 1) {
+                const maxE = Math.max(...totals, 1);
+                const points = totals.map((t, i) => `${(i / (totals.length - 1)) * 100},${80 - (t / maxE) * 60}`).join(' ');
+                let dots = totals.map((t, i) => `<circle class="line-dot" cx="${(i / (totals.length - 1)) * 100}%" cy="${80 - (t / maxE) * 60}" r="3"/>`).join('');
+                list.insertAdjacentHTML('beforeend', `<div class="chart-box"><div class="chart-title">Scoring Trend</div><svg class="line-chart-svg" viewBox="0 0 100 80" preserveAspectRatio="none"><polyline class="line-path" points="${points}"/></svg><div style="position:relative; height:0; top:-85px; width:100%"><svg style="width:100%; height:80px; overflow:visible;">${dots}</svg></div></div>`);
+            }
+
+            const hits = {};
+            session.ends.flatMap(e => e.raw).forEach(v => hits[v] = (hits[v] || 0) + 1);
+            const possible = state.mode.includes('3D') ? [11, 10, 8, 5, 0] : ['X', 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0];
+            const maxH = Math.max(...Object.values(hits), 1);
+            
+            let bars = possible.map(p => {
+                const count = hits[p] || 0;
+                const h = (count / maxH) * 80;
+                return `<div class="hit-col"><div class="hit-num" style="color:${count > 0 ? '#fff' : '#444'}">${count}</div><div class="hit-bar" style="height:${h}px; background:${getScoreColor(p === 'X' ? 10 : p, state.mode)}"></div><div class="stat-label" style="margin-top:4px; color:#fff">${p === 0 ? 'M' : p}</div></div>`;
+            }).join('');
+            list.insertAdjacentHTML('beforeend', `<div class="chart-box"><div class="chart-title">Hits Breakdown</div><div class="hits-grid">${bars}</div></div>`);
+
+            showScreen('detail-screen');
+        } catch (err) {
+            console.error("Detail Error:", err);
+        }
     }
-
     function clearHistory() { if(confirm('Clear all?')) { localStorage.removeItem(state.mode); showHistory(state.mode); } }
 </script>
 </body>
