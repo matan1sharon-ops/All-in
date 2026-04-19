@@ -1,242 +1,107 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>ALL IN Archery</title>
-    <style>
-        :root { --bg: #000; --text: #fff; --accent: #FFD700; --card: #151515; --gray: #888; }
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; }
-        body { background: var(--bg); color: var(--text); font-family: -apple-system, sans-serif; height: 100vh; overflow: hidden; padding-top: env(safe-area-inset-top); }
-        .app-container { width: 100%; max-width: 500px; height: 100%; margin: 0 auto; position: relative; }
+function showHistory(mode) {
+        // Set the active mode so the app knows what we are looking at
+        state.mode = mode; 
         
-        /* Navigation */
-        .screen { display: none; flex-direction: column; height: 100%; padding: 20px; background: var(--bg); position: absolute; width: 100%; top: 0; left: 0; }
-        .active-screen { display: flex !important; z-index: 10; }
+        const titleEl = document.getElementById('history-title');
+        const listEl = document.getElementById('history-list');
         
-        /* Headers */
-        header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 10px; border-bottom: 1px solid #222; min-height: 60px; margin-bottom: 10px; }
-        .stat-label { font-size: 9px; color: var(--gray); text-transform: uppercase; font-weight: 800; letter-spacing: 0.5px; }
-        .stat-val { font-size: 22px; font-weight: 900; }
+        if (!titleEl || !listEl) return; // Safety check
 
-        /* Home Menu */
-        .logo-badge { width: 80px; height: 80px; background: var(--accent); color: #000; border-radius: 20px; margin: 40px auto 10px; display: flex; align-items: center; justify-content: center; font-size: 28px; font-weight: 900; }
-        .menu-list { display: flex; flex-direction: column; gap: 12px; margin-top: 20px; }
-        .menu-row { display: flex; gap: 10px; height: 75px; }
-        .menu-btn { flex: 1; background: #fff; color: #000; padding: 0 20px; border-radius: 15px; font-size: 15px; font-weight: 800; border: none; text-align: left; }
-        .history-btn { background: #1a1a1a; border-radius: 15px; width: 70px; display: flex; align-items: center; justify-content: center; border: 1px solid #333; font-size: 24px; cursor: pointer; }
+        titleEl.innerText = mode + " HISTORY";
+        listEl.innerHTML = '';
         
-        /* Lists & Cards */
-        #score-list, #history-list, #detail-list { flex-grow: 1; overflow-y: auto; padding: 10px 0; display: flex; flex-direction: column; gap: 8px; }
-        .end-card, .history-card { background: var(--card); padding: 12px 15px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #222; }
-        .pb-badge { background: var(--accent); color: #000; font-size: 9px; font-weight: 900; padding: 2px 5px; border-radius: 4px; margin-left: 5px; vertical-align: middle; }
-
-        /* Scoring Controls */
-        .next-btn { background: var(--accent); color: #000; width: 100%; padding: 18px; border-radius: 15px; font-size: 18px; font-weight: 900; border: none; margin-bottom: 10px; }
-        .btn-grid { display: grid; gap: 8px; }
-        .score-btn { height: 55px; border-radius: 10px; border: none; font-size: 20px; font-weight: 900; color: #fff; background: #222; }
-
-        /* Charts */
-        .stats-card { background: var(--card); border-radius: 12px; padding: 15px; border: 1px solid #222; display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; text-align: center; }
-        .chart-box { background: var(--card); border-radius: 12px; padding: 15px; border: 1px solid #222; margin-top: 10px; }
-        .line-chart-svg { width: 100%; height: 80px; overflow: visible; margin-top: 10px; }
-        .hits-grid { display: grid; grid-auto-columns: 1fr; grid-auto-flow: column; gap: 4px; height: 100px; align-items: flex-end; margin-top: 10px; }
-        .hit-col { display: flex; flex-direction: column; align-items: center; height: 100%; justify-content: flex-end; }
-        .hit-bar { width: 100%; border-radius: 2px 2px 0 0; min-height: 2px; }
-    </style>
-</head>
-<body>
-
-<div class="app-container">
-    <div id="home" class="screen active-screen">
-        <div class="logo-badge">AI</div>
-        <h1 style="text-align:center; letter-spacing:4px; font-weight:900;">ALL IN</h1>
-        <div class="menu-list">
-            <div class="menu-row">
-                <button class="menu-btn" onclick="setupSession('3D PRACTICE', 2, 24)">3D PRACTICE</button>
-                <button class="history-btn" onclick="openHistory('3D PRACTICE')">📜</button>
-            </div>
-            <div class="menu-row">
-                <button class="menu-btn" onclick="setupSession('FIELD PRACTICE', 3, 24)">FIELD PRACTICE</button>
-                <button class="history-btn" onclick="openHistory('FIELD PRACTICE')">📜</button>
-            </div>
-            <div class="menu-row">
-                <button class="menu-btn" onclick="setupSession('TARGET INDOOR', 3, 20)">TARGET INDOOR</button>
-                <button class="history-btn" onclick="openHistory('TARGET INDOOR')">📜</button>
-            </div>
-            <div class="menu-row">
-                <button class="menu-btn" onclick="setupSession('TARGET OUTDOOR', 6, 12)">TARGET OUTDOOR</button>
-                <button class="history-btn" onclick="openHistory('TARGET OUTDOOR')">📜</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="scoring" class="screen">
-        <header>
-            <button onclick="nav('home')" style="background:none; border:none; color:var(--gray); font-size:24px;">✕</button>
-            <div id="cur-total" class="stat-val" style="color:var(--accent)">0</div>
-            <div style="text-align:right"><div class="stat-label">AVG</div><div id="cur-avg" class="stat-val">0.0</div></div>
-        </header>
-        <div id="score-list"></div>
-        <div style="padding-bottom:20px;">
-            <button id="next-end-btn" class="next-btn" onclick="commitEnd()">NEXT END</button>
-            <div id="pad" class="btn-grid"></div>
-        </div>
-    </div>
-
-    <div id="history-screen" class="screen">
-        <header>
-            <button onclick="nav('home')" style="background:none; border:none; color:var(--gray); font-size:24px;">✕</button>
-            <div id="hist-title" class="stat-label" style="color:#fff">HISTORY</div>
-            <button onclick="wipe()" style="background:none; border:none; color:var(--gray); font-size:10px;">CLEAR</button>
-        </header>
-        <div id="history-list"></div>
-    </div>
-
-    <div id="detail-screen" class="screen">
-        <header>
-            <button onclick="nav('history-screen')" style="background:none; border:none; color:var(--gray); font-size:24px;">✕</button>
-            <div id="det-title" class="stat-label" style="color:#fff">SESSION</div>
-            <div style="width:30px"></div>
-        </header>
-        <div id="detail-list"></div>
-    </div>
-</div>
-
-<script>
-    let app = { current: [], ends: [], arrows: 2, limit: 24, mode: '' };
-
-    function nav(id) {
-        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active-screen'));
-        document.getElementById(id).classList.add('active-screen');
-    }
-
-    function setupSession(mode, arrows, limit) {
-        app = { current: [], ends: [], arrows: arrows, limit: limit, mode: mode };
-        renderPad();
-        refreshScoring();
-        nav('scoring');
-    }
-
-    function getVal(s) { return s === 'X' ? 10 : (parseInt(s) || 0); }
-
-    function getColor(s) {
-        if (app.mode.includes('TARGET')) {
-            if (s === 'X' || s >= 9) return '#FFD700';
-            if (s >= 7) return '#FF3B30';
-            if (s >= 5) return '#007AFF';
-            if (s >= 3) return '#222';
-            if (s >= 1) return '#FFF';
-        } else if (app.mode.includes('3D')) {
-            if (s >= 10) return '#FFD700';
-            if (s === 8) return '#FF3B30';
-            if (s === 5) return '#007AFF';
-        }
-        return '#34C759';
-    }
-
-    function renderPad() {
-        const pad = document.getElementById('pad'); pad.innerHTML = '';
-        const scores = app.mode.includes('3D') ? [11, 10, 8, 5, 0] : app.mode.includes('TARGET') ? ['X', 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0] : [6,5,4,3,2,1,0];
-        pad.style.gridTemplateColumns = scores.length > 6 ? 'repeat(4, 1fr)' : 'repeat(3, 1fr)';
-        scores.forEach(s => {
-            const b = document.createElement('button'); b.className = 'score-btn';
-            b.style.backgroundColor = getColor(s === 'X' ? 10 : s);
-            b.style.color = (b.style.backgroundColor === 'rgb(255, 255, 255)' || b.style.backgroundColor === 'rgb(255, 215, 0)') ? '#000' : '#fff';
-            b.innerText = s === 0 ? 'M' : s;
-            b.onclick = () => { if(app.current.length < app.arrows) { app.current.push(s); refreshScoring(); } };
-            pad.appendChild(b);
-        });
-        const del = document.createElement('button'); del.className = 'score-btn'; del.innerText = '⌫'; del.style.background = '#444';
-        del.onclick = () => { app.current.pop(); refreshScoring(); };
-        pad.appendChild(del);
-    }
-
-    function refreshScoring() {
-        const total = app.ends.reduce((a, b) => a + b.sum, 0) + app.current.reduce((a, b) => a + getVal(b), 0);
-        const count = (app.ends.length * app.arrows) + app.current.length;
-        document.getElementById('cur-total').innerText = total;
-        document.getElementById('cur-avg').innerText = count > 0 ? (total / count).toFixed(1) : '0.0';
+        const data = JSON.parse(localStorage.getItem(mode) || "[]");
         
-        const list = document.getElementById('score-list'); list.innerHTML = '';
-        app.ends.forEach((e, i) => {
-            list.insertAdjacentHTML('beforeend', `<div class="end-card"><div><div class="stat-label">END ${i+1}</div><b>${e.shot.join(' · ')}</b></div><div style="color:var(--accent); font-weight:900; font-size:20px;">${e.sum}</div></div>`);
-        });
-        const curDisp = app.current.map(s => s === 0 ? 'M' : s).join(' · ') || '---';
-        list.insertAdjacentHTML('beforeend', `<div class="end-card" style="border:1px solid var(--accent)"><div><div class="stat-label">CURRENT</div><b>${curDisp}</b></div></div>`);
-        
-        const btn = document.getElementById('next-end-btn');
-        btn.disabled = app.current.length < app.arrows;
-        btn.innerText = app.ends.length === app.limit - 1 ? 'FINISH SESSION' : 'NEXT END';
-        list.scrollTop = list.scrollHeight;
-    }
+        // Show the screen FIRST
+        showScreen('history-screen');
 
-    function commitEnd() {
-        app.ends.push({ shot: app.current.map(s => s === 0 ? 'M' : s), raw: [...app.current], sum: app.current.reduce((a, b) => a + getVal(b), 0) });
-        app.current = [];
-        if (app.ends.length >= app.limit) {
-            const session = { id: Date.now(), date: new Date().toLocaleDateString('en-GB'), total: document.getElementById('cur-total').innerText, avg: document.getElementById('cur-avg').innerText, data: [...app.ends], mode: app.mode };
-            let logs = JSON.parse(localStorage.getItem(app.mode) || "[]");
-            logs.unshift(session);
-            localStorage.setItem(app.mode, JSON.stringify(logs));
-            nav('home');
-        } else { refreshScoring(); }
-    }
-
-    function openHistory(mode) {
-        app.mode = mode;
-        document.getElementById('hist-title').innerText = mode + " HISTORY";
-        const list = document.getElementById('history-list'); list.innerHTML = '';
-        const logs = JSON.parse(localStorage.getItem(mode) || "[]");
-        
-        nav('history-screen');
-
-        if (logs.length === 0) {
-            list.innerHTML = `<div style="text-align:center; padding:50px; color:var(--gray);">No sessions saved.</div>`;
+        if (data.length === 0) {
+            listEl.innerHTML = `
+                <div style="text-align:center; margin-top:40px; color:var(--gray);">
+                    <p style="font-size:40px; margin-bottom:10px;">🎯</p>
+                    <p>No ${mode} sessions saved yet.</p>
+                    <p style="font-size:10px; margin-top:10px;">Complete a full round to see stats.</p>
+                </div>`;
             return;
         }
 
-        const top = Math.max(...logs.map(l => parseInt(l.total)));
-        logs.forEach(l => {
-            const isPb = parseInt(l.total) === top;
-            list.insertAdjacentHTML('beforeend', `
-                <div class="history-card" onclick="viewDetail(${l.id})">
-                    <div><b>${l.date}</b><br><span class="stat-label">AVG: ${l.avg} ${isPb ? '<span class="pb-badge">PB</span>' : ''}</span></div>
-                    <div style="color:var(--accent); font-weight:900; font-size:22px;">${l.total} ›</div>
+        data.forEach(s => {
+            listEl.insertAdjacentHTML('beforeend', `
+                <div class="history-card" onclick="openDetail(${s.id})">
+                    <div>
+                        <div style="font-weight:bold; font-size:15px;">${s.date}</div>
+                        <div class="stat-label">AVG: ${s.avg}</div>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <div class="stat-val" style="color:var(--accent)">${s.score}</div>
+                        <div style="color:var(--gray); font-size:20px;">›</div>
+                    </div>
                 </div>`);
         });
     }
 
-    function viewDetail(id) {
-        const logs = JSON.parse(localStorage.getItem(app.mode));
-        const s = logs.find(x => x.id === id);
-        const list = document.getElementById('detail-list'); list.innerHTML = '';
-        document.getElementById('det-title').innerText = s.date;
+    // Make sure openDetail is robust
+    function openDetail(id) {
+        const historyData = JSON.parse(localStorage.getItem(state.mode) || "[]");
+        const session = historyData.find(s => s.id === id);
+        
+        if(!session) {
+            alert("Session data not found.");
+            return;
+        }
 
-        // Stats Card
-        list.insertAdjacentHTML('beforeend', `<div class="stats-card"><div><div class="stat-label">TOTAL</div><div class="stat-val" style="color:var(--accent)">${s.total}</div></div><div><div class="stat-label">AVG</div><div class="stat-val">${s.avg}</div></div><div><div class="stat-label">ENDS</div><div class="stat-val">${s.data.length}</div></div></div>`);
+        const list = document.getElementById('detail-list');
+        if (!list) return;
+        list.innerHTML = '';
+        
+        // Change title to show date
+        document.getElementById('detail-title').innerText = session.date + " - " + state.mode;
 
-        // Line Chart
-        const pts = s.data.map((e, i) => `${(i / (s.data.length - 1)) * 100},${80 - (e.sum / (app.arrows * 11)) * 60}`).join(' ');
-        const dots = s.data.map((e, i) => `<circle fill="var(--accent)" cx="${(i / (s.data.length - 1)) * 100}%" cy="${80 - (e.sum / (app.arrows * 11)) * 60}" r="2.5"/>`).join('');
-        list.insertAdjacentHTML('beforeend', `<div class="chart-box"><div class="chart-title">Stamina Trend</div><svg class="line-chart-svg" viewBox="0 0 100 80" preserveAspectRatio="none"><polyline fill="none" stroke="var(--accent)" stroke-width="2" points="${pts}"/></svg><div style="position:relative; height:0; top:-87px;"><svg style="width:100%; height:80px; overflow:visible;">${dots}</svg></div></div>`);
+        // 1. Stats Card
+        list.insertAdjacentHTML('beforeend', `
+            <div class="stats-card">
+                <div><div class="stat-label">SCORE</div><div class="stat-val" style="color:var(--accent)">${session.score}</div></div>
+                <div><div class="stat-label">AVG</div><div class="stat-val">${session.avg}</div></div>
+                <div><div class="stat-label">ENDS</div><div class="stat-val">${session.ends.length}</div></div>
+            </div>`);
 
-        // Hits Bar Chart
-        const hits = {}; s.data.flatMap(e => e.raw).forEach(v => hits[v] = (hits[v] || 0) + 1);
-        const labels = app.mode.includes('3D') ? [11, 10, 8, 5, 0] : ['X', 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0];
+        // 2. Line Chart (Stamina)
+        const totals = session.ends.map(e => e.total);
+        if (totals.length > 1) {
+            const maxE = Math.max(...totals, 1);
+            const points = totals.map((t, i) => `${(i / (totals.length - 1)) * 100},${80 - (t / maxE) * 60}`).join(' ');
+            let dots = totals.map((t, i) => `<circle class="line-dot" cx="${(i / (totals.length - 1)) * 100}%" cy="${80 - (t / maxE) * 60}" r="3"/>`).join('');
+            
+            list.insertAdjacentHTML('beforeend', `
+                <div class="chart-box">
+                    <div class="chart-title">Scoring Trend</div>
+                    <svg class="line-chart-svg" viewBox="0 0 100 80" preserveAspectRatio="none">
+                        <polyline class="line-path" points="${points}"/>
+                    </svg>
+                    <div style="position:relative; height:0; top:-85px; width:100%">
+                        <svg style="width:100%; height:80px; overflow:visible;">${dots}</svg>
+                    </div>
+                </div>`);
+        }
+
+        // 3. Hits Chart
+        const hits = {};
+        session.ends.flatMap(e => e.raw).forEach(v => hits[v] = (hits[v] || 0) + 1);
+        const possible = state.mode.includes('3D') ? [11, 10, 8, 5, 0] : ['X', 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0];
         const maxH = Math.max(...Object.values(hits), 1);
-        let bars = labels.map(l => {
-            const h = ((hits[l] || 0) / maxH) * 80;
-            return `<div class="hit-col"><div style="font-size:8px; margin-bottom:2px;">${hits[l] || 0}</div><div class="hit-bar" style="height:${h}px; background:${getColor(l === 'X' ? 10 : l)}"></div><div class="stat-label" style="margin-top:4px; color:#fff">${l === 0 ? 'M' : l}</div></div>`;
+        
+        let bars = possible.map(p => {
+            const count = hits[p] || 0;
+            const h = (count / maxH) * 80;
+            return `
+                <div class="hit-col">
+                    <div class="hit-num" style="color:${count > 0 ? '#fff' : '#444'}">${count}</div>
+                    <div class="hit-bar" style="height:${h}px; background:${getScoreColor(p === 'X' ? 10 : p, state.mode)}"></div>
+                    <div class="stat-label" style="margin-top:4px; color:#fff">${p === 0 ? 'M' : p}</div>
+                </div>`;
         }).join('');
+        
         list.insertAdjacentHTML('beforeend', `<div class="chart-box"><div class="chart-title">Hits Breakdown</div><div class="hits-grid">${bars}</div></div>`);
 
-        nav('detail-screen');
+        showScreen('detail-screen');
     }
-
-    function wipe() { if(confirm('Wipe History?')) { localStorage.removeItem(app.mode); openHistory(app.mode); } }
-</script>
-</body>
-</html>
