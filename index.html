@@ -88,6 +88,8 @@
         let scores = [];
         if (state.mode.includes('3D')) {
             scores = [11, 10, 8, 5, 0];
+        } else if (state.mode.includes('TARGET INDOOR')) {
+            scores = [10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0];
         } else if (state.mode.includes('TARGET OUTDOOR')) {
             // Added X for Target modes
             scores = ['X', 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0];
