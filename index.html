@@ -26,8 +26,10 @@
         .menu-btn { flex: 1; background: #fff; color: #000; padding: 0 20px; border-radius: 15px; font-size: 15px; font-weight: 800; border: none; text-align: left; }
         .history-btn { background: #1a1a1a; border-radius: 15px; width: 70px; display: flex; flex-direction: column; align-items: center; justify-content: center; border: 1px solid #333; }
         
-        #score-list, #history-list { flex-grow: 1; overflow-y: auto; padding: 15px 0; display: flex; flex-direction: column; gap: 8px; }
+        #score-list, #history-list, #detail-list { flex-grow: 1; overflow-y: auto; padding: 15px 0; display: flex; flex-direction: column; gap: 8px; }
         .end-card, .history-card { background: var(--card); padding: 12px 15px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #222; }
+        .history-card:active { background: #222; }
+
         .next-btn { background: var(--accent); color: #000; width: 100%; padding: 18px; border-radius: 12px; font-size: 20px; font-weight: 900; border: none; margin-top: 15px; }
         .btn-grid { display: grid; gap: 8px; margin-top: 10px; }
         .score-btn { height: 60px; border-radius: 12px; border: 1px solid #333; font-size: 22px; font-weight: 900; color: #fff; background: #222; }
@@ -36,6 +38,20 @@
         .hist-date { font-size: 14px; font-weight: 700; color: var(--text); }
         .hist-avg { font-size: 12px; color: var(--gray); margin-left: 10px; font-weight: 600; }
         .hist-total { font-size: 18px; font-weight: 900; color: var(--accent); }
+
+        /* Stats & Charts */
+        .stats-card { background: var(--card); border-radius: 12px; padding: 20px; border: 1px solid #222; display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; text-align: center; }
+        .chart-box { background: var(--card); border-radius: 12px; padding: 15px; border: 1px solid #222; margin-top: 8px; }
+        .chart-title { font-size: 10px; font-weight: bold; color: var(--gray); text-transform: uppercase; margin-bottom: 10px; letter-spacing: 0.5px;}
+        
+        .end-chart { display: flex; align-items: flex-bottom; gap: 3px; height: 70px; }
+        .end-bar-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; }
+        .end-bar { width: 100%; background: #444; border-radius: 2px 2px 0 0; position: relative; }
+        .end-bar-val { font-size: 8px; font-weight: bold; color: var(--gray); margin-bottom: 2px; }
+        
+        .hits-chart { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; text-align: center; margin-top: 8px;}
+        .hit-bar { width: 100%; background: #222; border-radius: 4px; height: 80px; position: relative; overflow: hidden;}
+        .hit-fill { position: absolute; bottom: 0; left: 0; right: 0; background: var(--accent); }
     </style>
 </head>
 <body>
@@ -50,31 +66,19 @@
         <div class="menu-list">
             <div class="menu-row">
                 <button class="menu-btn" onclick="startApp('3D PRACTICE', 2, 24)">3D PRACTICE</button>
-                <button class="history-btn" onclick="showHistory('3D PRACTICE')">
-                    <span style="font-size:18px;">📜</span>
-                    <span style="font-size:8px; font-weight:900; margin-top:4px;">HISTORY</span>
-                </button>
+                <button class="history-btn" onclick="showHistory('3D PRACTICE')"><span style="font-size:18px;">📜</span><span style="font-size:8px; font-weight:900; margin-top:4px;">HISTORY</span></button>
             </div>
             <div class="menu-row">
                 <button class="menu-btn" onclick="startApp('FIELD PRACTICE', 3, 24)">FIELD PRACTICE</button>
-                <button class="history-btn" onclick="showHistory('FIELD PRACTICE')">
-                    <span style="font-size:18px;">📜</span>
-                    <span style="font-size:8px; font-weight:900; margin-top:4px;">HISTORY</span>
-                </button>
+                <button class="history-btn" onclick="showHistory('FIELD PRACTICE')"><span style="font-size:18px;">📜</span><span style="font-size:8px; font-weight:900; margin-top:4px;">HISTORY</span></button>
             </div>
             <div class="menu-row">
                 <button class="menu-btn" onclick="startApp('TARGET INDOOR', 3, 20)">TARGET INDOOR</button>
-                <button class="history-btn" onclick="showHistory('TARGET INDOOR')">
-                    <span style="font-size:18px;">📜</span>
-                    <span style="font-size:8px; font-weight:900; margin-top:4px;">HISTORY</span>
-                </button>
+                <button class="history-btn" onclick="showHistory('TARGET INDOOR')"><span style="font-size:18px;">📜</span><span style="font-size:8px; font-weight:900; margin-top:4px;">HISTORY</span></button>
             </div>
             <div class="menu-row">
                 <button class="menu-btn" onclick="startApp('TARGET OUTDOOR', 6, 12)">TARGET OUTDOOR</button>
-                <button class="history-btn" onclick="showHistory('TARGET OUTDOOR')">
-                    <span style="font-size:18px;">📜</span>
-                    <span style="font-size:8px; font-weight:900; margin-top:4px;">HISTORY</span>
-                </button>
+                <button class="history-btn" onclick="showHistory('TARGET OUTDOOR')"><span style="font-size:18px;">📜</span><span style="font-size:8px; font-weight:900; margin-top:4px;">HISTORY</span></button>
             </div>
         </div>
     </div>
@@ -103,6 +107,15 @@
         </header>
         <div id="history-list"></div>
     </div>
+
+    <div id="detail-screen" class="screen">
+        <header>
+            <button onclick="showScreen('history-screen')" style="background:none; border:none; color:var(--gray); font-size:22px;">✕</button>
+            <div class="header-center"><div id="detail-title" class="stat-label" style="color:#fff; font-size:11px;">12/12/2026</div></div>
+            <div style="width: 30px;"></div></header>
+        <div id="detail-list">
+            </div>
+    </div>
 </div>
 
 <script>
@@ -120,6 +133,7 @@
         showScreen('scoring'); 
     }
 
+    // scoring logic (same as before)
     function getButtonTheme(s) {
         if (state.mode.includes('TARGET')) {
             if (s === 'X' || s === 10 || s === 9) return { bg: '#FFD700', text: '#000' };
@@ -136,11 +150,9 @@
         }
         return { bg: '#34C759', text: '#fff' };
     }
-
     function renderButtons() {
         const grid = document.getElementById('button-grid'); grid.innerHTML = '';
-        let scores = state.mode.includes('3D') ? [11, 10, 8, 5, 0] : 
-                     state.mode.includes('TARGET') ? ['X', 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0] : [6,5,4,3,2,1,0];
+        let scores = state.mode.includes('3D') ? [11, 10, 8, 5, 0] : state.mode.includes('TARGET') ? ['X', 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0] : [6,5,4,3,2,1,0];
         grid.style.gridTemplateColumns = scores.length > 5 ? 'repeat(4, 1fr)' : 'repeat(3, 1fr)';
         scores.forEach(s => {
             const b = document.createElement('button'); b.className = 'score-btn'; 
@@ -154,9 +166,7 @@
         del.onclick = () => { state.current.pop(); renderUI(); };
         grid.appendChild(del);
     }
-
     function getVal(s) { return s === 'X' ? 10 : (parseInt(s) || 0); }
-
     function renderUI() {
         const historyTotal = state.history.reduce((a, b) => a + b.total, 0);
         const currentTotal = state.current.reduce((a, b) => a + getVal(b), 0);
@@ -165,22 +175,23 @@
         document.getElementById('total-score').innerText = grandTotal;
         document.getElementById('avg-score').innerText = totalArrows > 0 ? (grandTotal / totalArrows).toFixed(1) : "0.0";
         document.getElementById('mode-display').innerText = `${state.mode} (${state.history.length}/${state.ends})`;
-
         const list = document.getElementById('score-list'); list.innerHTML = '';
         state.history.forEach((end, i) => {
             list.insertAdjacentHTML('beforeend', `<div class="end-card"><div><div class="stat-label">END ${i+1}</div><b>${end.displayScores.join(' · ')}</b></div><div style="color:var(--accent); font-weight:900; font-size:20px;">${end.total}</div></div>`);
         });
         const activeDisplay = state.current.map(s => s === 0 ? 'M' : s).join(' · ') || '---';
         list.insertAdjacentHTML('beforeend', `<div class="end-card" style="border:1px solid var(--accent)"><div><div class="stat-label">CURRENT</div><b>${activeDisplay}</b></div><div style="color:var(--accent); font-weight:900; font-size:20px;">${currentTotal}</div></div>`);
-        
         const btn = document.getElementById('next-btn');
         btn.disabled = state.current.length < state.arrows;
         btn.innerText = (state.history.length === state.ends - 1) ? "FINISH" : "NEXT END";
     }
-
     function handleMainAction() {
         if(state.current.length === state.arrows) {
-            state.history.push({ displayScores: [...state.current].map(s => s === 0 ? 'M' : s), total: state.current.reduce((a, b) => a + getVal(b), 0) });
+            state.history.push({ 
+                rawScores: [...state.current], // Save actual numbers
+                displayScores: [...state.current].map(s => s === 0 ? 'M' : s), 
+                total: state.current.reduce((a, b) => a + getVal(b), 0) 
+            });
             state.current = [];
             if(state.history.length >= state.ends) { saveSession(); } else { 
                 renderUI(); 
@@ -190,18 +201,27 @@
         }
     }
 
+    // Save/History logic (NEW DETAILS)
     function saveSession() {
         const total = parseInt(document.getElementById('total-score').innerText);
         const avg = document.getElementById('avg-score').innerText;
-        const session = { date: new Date().toLocaleDateString('en-GB'), score: total, avg: avg, timestamp: Date.now() };
+        // Save entire end history array
+        const session = { 
+            id: Date.now(),
+            date: new Date().toLocaleDateString('en-GB'), 
+            score: total, 
+            avg: avg, 
+            ends: [...state.history] 
+        };
         let allHistory = JSON.parse(localStorage.getItem(state.mode) || "[]");
         allHistory.unshift(session);
         localStorage.setItem(state.mode, JSON.stringify(allHistory));
-        alert(`Session Saved! Total: ${total}`);
+        alert(`Complete! Saved Total: ${total}`);
         showScreen('home');
     }
 
     function showHistory(mode) {
+        state.mode = mode; // Keep track for clearing
         document.getElementById('history-title').innerText = mode + " HISTORY";
         const list = document.getElementById('history-list');
         list.innerHTML = '';
@@ -210,27 +230,99 @@
         if(data.length === 0) { 
             list.innerHTML = `<p style="text-align:center; color:var(--gray); margin-top:20px;">No History found.</p>`; 
         } else {
-            // Find Personal Best
             const maxScore = Math.max(...data.map(s => s.score));
-            
             data.forEach(s => {
                 const isPB = s.score === maxScore && maxScore > 0;
                 list.insertAdjacentHTML('beforeend', `
-                    <div class="history-card">
+                    <div class="history-card" onclick="openSessionDetail(${s.id}, '${mode}')">
                         <div style="display:flex; align-items:center;">
                             <span class="hist-date">${s.date}</span>
                             <span class="hist-avg">AVG: ${s.avg}</span>
                             ${isPB ? '<span class="pb-badge">PB</span>' : ''}
                         </div>
-                        <div class="hist-total">${s.score}</div>
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            <div class="hist-total">${s.score}</div>
+                            <span style="color: var(--gray); font-size:18px;">›</span>
+                        </div>
                     </div>`);
             });
         }
         showScreen('history-screen');
     }
 
+    function openSessionDetail(sessionId, mode) {
+        const data = JSON.parse(localStorage.getItem(mode) || "[]");
+        const session = data.find(s => s.id === sessionId);
+        if(!session) return;
+
+        document.getElementById('detail-title').innerText = `${mode} - ${session.date}`;
+        const list = document.getElementById('detail-list');
+        list.innerHTML = '';
+
+        // 1. Stats Card
+        const totalArrows = session.ends.length * (session.ends[0]?.rawScores.length || 0);
+        const stats = `<div class="stats-card">
+            <div><div class="stat-label">TOTAL</div><div class="stat-val" style="color:var(--accent); font-size:24px;">${session.score}</div></div>
+            <div><div class="stat-label">AVERAGE</div><div class="stat-val" style="font-size:24px;">${session.avg}</div></div>
+            <div><div class="stat-label">ARROWS</div><div class="stat-val" style="font-size:24px;">${totalArrows}</div></div>
+        </div>`;
+        list.insertAdjacentHTML('beforeend', stats);
+
+        // 2. End-by-End Chart
+        let endBars = '';
+        const maxEndVal = mode.includes('TARGET') ? session.ends[0]?.rawScores.length * 10 : session.ends[0]?.rawScores.length * 11;
+        session.ends.forEach((end, i) => {
+            const height = (end.total / maxEndVal) * 100;
+            endBars += `<div class="end-bar-wrap"><div class="end-bar-val">${end.total}</div><div class="end-bar" style="height:${height}%"></div><div class="stat-label" style="font-size:8px; margin-top:2px;">E${i+1}</div></div>`;
+        });
+        const endChart = `<div class="chart-box"><div class="chart-title">Score per End</div><div class="end-chart">${endBars}</div></div>`;
+        list.insertAdjacentHTML('beforeend', endChart);
+
+        // 3. Hit Breakdown Chart (Dynamic based on Mode)
+        const hitCounts = {};
+        const allArrows = session.ends.flatMap(end => end.rawScores);
+        let possibleScores = [];
+
+        if (mode.includes('3D')) {
+            possibleScores = [11, 10, 8, 5, 0];
+        } else if (mode.includes('TARGET')) {
+            possibleScores = ['X', 10, 9, 8, 7, 0]; // Group rest
+            allArrows.forEach(s => { 
+                const key = (s === 'X' || s >= 7) ? s : '<7'; 
+                hitCounts[key] = (hitCounts[key] || 0) + 1; 
+            });
+            possibleScores = ['X', 10, 9, 8, 7, '<7'];
+        } else {
+            possibleScores = [6, 5, 4, 3, 2, 0];
+        }
+
+        if(!mode.includes('TARGET')) {
+             allArrows.forEach(s => hitCounts[s] = (hitCounts[s] || 0) + 1);
+        }
+
+        const totalShot = allArrows.length;
+        let hitBars = '';
+        possibleScores.forEach(scoreKey => {
+            const count = hitCounts[scoreKey] || 0;
+            const percent = totalShot > 0 ? (count / totalShot) * 100 : 0;
+            const label = scoreKey === 0 ? 'M' : scoreKey;
+            hitBars += `<div><div class="stat-label" style="font-weight:900; color:var(--text);">${label}</div><div class="hit-bar"><div class="hit-fill" style="height:${percent}%;"></div><div class="stat-val" style="position:absolute; bottom:2px; left:0; right:0; font-size:11px; text-shadow:0 0 3px #000;">${count}</div></div></div>`;
+        });
+        const hitsChart = `<div class="chart-box"><div class="chart-title">Hits breakdown</div><div class="hits-chart" style="grid-template-columns: repeat(${possibleScores.length}, 1fr);">${hitBars}</div></div>`;
+        list.insertAdjacentHTML('beforeend', hitsChart);
+
+        // 4. Scrollable Ends List
+        const endsHeader = `<div class="chart-title" style="margin-top:15px; padding-left:5px;">End-by-End</div>`;
+        list.insertAdjacentHTML('beforeend', endsHeader);
+        session.ends.forEach((end, i) => {
+            list.insertAdjacentHTML('beforeend', `<div class="end-card" style="margin-bottom:0px;"><div><div class="stat-label">END ${i+1}</div><b>${end.displayScores.join(' · ')}</b></div><div style="color:var(--accent); font-weight:900; font-size:20px;">${end.total}</div></div>`);
+        });
+
+        showScreen('detail-screen');
+    }
+
     function clearHistory() {
-        const mode = document.getElementById('history-title').innerText.replace(" HISTORY", "");
+        const mode = state.mode;
         if(confirm(`Wipe all ${mode} History?`)) { localStorage.removeItem(mode); showHistory(mode); }
     }
 </script>
