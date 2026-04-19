@@ -42,12 +42,11 @@
         .chart-box { background: var(--card); border-radius: 12px; padding: 15px; border: 1px solid #222; margin-top: 8px; }
         .chart-title { font-size: 10px; font-weight: bold; color: var(--gray); text-transform: uppercase; margin-bottom: 12px; letter-spacing: 0.5px;}
         
-        /* Bar Chart Styles */
-        .hit-bar { width: 100%; background: #222; border-radius: 2px; height: 60px; position: relative; overflow: hidden;}
-        .hit-fill { position: absolute; bottom: 0; left: 0; right: 0; background: var(--accent); }
-        .hits-chart { display: grid; gap: 5px; text-align: center; margin-top: 8px; }
-        .hit-label { font-size: 8px; font-weight: 900; margin-bottom: 2px; }
-        .hit-count { font-size: 8px; margin-top: 2px; color: var(--gray); }
+        .hit-bar { width: 100%; background: #222; border-radius: 2px; height: 75px; position: relative; overflow: hidden;}
+        .hit-fill { position: absolute; bottom: 0; left: 0; right: 0; }
+        .hits-chart { display: grid; gap: 4px; text-align: center; margin-top: 5px; height: 110px; align-items: end; }
+        .hit-label { font-size: 8px; font-weight: 900; margin-top: 4px; }
+        .hit-count { font-size: 9px; margin-bottom: 4px; color: var(--text); font-weight: bold; }
     </style>
 </head>
 <body>
@@ -129,21 +128,20 @@
         showScreen('scoring'); 
     }
 
-    // Official Target Color Logic
     function getArrowColor(s) {
         if (state.mode.includes('TARGET')) {
-            if (s === 'X' || s >= 9) return '#FFD700'; // Gold
-            if (s >= 7) return '#FF3B30'; // Red
-            if (s >= 5) return '#007AFF'; // Blue
-            if (s >= 3) return '#333';    // Black
-            if (s >= 1) return '#FFF';    // White
+            if (s === 'X' || s >= 9) return '#FFD700'; 
+            if (s >= 7) return '#FF3B30'; 
+            if (s >= 5) return '#007AFF'; 
+            if (s >= 3) return '#333';    
+            if (s >= 1) return '#FFF';    
         } else if (state.mode.includes('3D')) {
             if (s === 11) return '#FFD700';
             if (s === 10) return '#FFF176';
             if (s === 8) return '#FF3B30';
             if (s === 5) return '#007AFF';
         }
-        return '#34C759'; // Green for M/0
+        return '#34C759'; 
     }
 
     function renderButtons() {
@@ -243,7 +241,6 @@
         const list = document.getElementById('detail-list');
         list.innerHTML = '';
 
-        // 1. Stats Card
         list.insertAdjacentHTML('beforeend', `
             <div class="stats-card">
                 <div><div class="stat-label">TOTAL</div><div class="stat-val" style="color:var(--accent);">${session.score}</div></div>
@@ -251,25 +248,24 @@
                 <div><div class="stat-label">ARROWS</div><div class="stat-val">${session.ends.length * session.ends[0].rawScores.length}</div></div>
             </div>`);
 
-        // 2. STAMINA LINE CHART (Updated with Axes and Scales)
         const maxEndVal = state.mode.includes('TARGET') ? (session.ends[0].rawScores.length * 10) : (session.ends[0].rawScores.length * 11);
-        const points = session.ends.map((end, i) => `${(i / (session.ends.length - 1)) * 100},${80 - (end.total / maxEndVal) * 70}`).join(' ');
-        const dots = session.ends.map((end, i) => `<circle cx="${(i / (session.ends.length - 1)) * 100}%" cy="${80 - (end.total / maxEndVal) * 70}" r="1.5" fill="var(--accent)" />`).join('');
+        const points = session.ends.map((end, i) => `${(i / (session.ends.length - 1)) * 100},${75 - (end.total / maxEndVal) * 65}`).join(' ');
+        const dots = session.ends.map((end, i) => `<circle cx="${(i / (session.ends.length - 1)) * 100}%" cy="${75 - (end.total / maxEndVal) * 65}" r="1.5" fill="var(--accent)" />`).join('');
 
         list.insertAdjacentHTML('beforeend', `
             <div class="chart-box">
                 <div class="chart-title">Stamina Trend (Score per End)</div>
-                <div style="display:flex; height:120px; padding:10px 0;">
-                    <div style="display:flex; flex-direction:column; justify-content:space-between; height:80px; padding-right:8px; text-align:right; border-right:1px solid #333;">
+                <div style="display:flex; height:110px; padding:5px 0;">
+                    <div style="display:flex; flex-direction:column; justify-content:space-between; height:75px; padding-right:8px; text-align:right; border-right:1px solid #333;">
                         <span style="font-size:8px; color:var(--gray);">${maxEndVal}</span>
                         <span style="font-size:8px; color:var(--gray);">${Math.round(maxEndVal/2)}</span>
                         <span style="font-size:8px; color:var(--gray);">0</span>
                     </div>
                     <div style="flex:1; position:relative; margin-left:5px;">
-                        <svg viewBox="0 0 100 80" preserveAspectRatio="none" style="width:100%; height:80px; overflow:visible;">
-                            <polyline fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="0.5" points="0,10 100,10" />
-                            <polyline fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="0.5" points="0,45 100,45" />
-                            <polyline fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="0.5" points="0,80 100,80" />
+                        <svg viewBox="0 0 100 75" preserveAspectRatio="none" style="width:100%; height:75px; overflow:visible;">
+                            <polyline fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="0.5" points="0,0 100,0" />
+                            <polyline fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="0.5" points="0,37 100,37" />
+                            <polyline fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="0.5" points="0,75 100,75" />
                             <polyline fill="none" stroke="var(--accent)" stroke-width="0.8" points="${points}" />
                             ${dots}
                         </svg>
@@ -282,20 +278,21 @@
                 </div>
             </div>`);
 
-        // 3. HITS BREAKDOWN (All values, Color Coded)
         const hitCounts = {};
         const allArrows = session.ends.flatMap(end => end.rawScores);
         allArrows.forEach(s => hitCounts[s] = (hitCounts[s] || 0) + 1);
 
         let possibleScores = state.mode.includes('3D') ? [11, 10, 8, 5, 0] : ['X', 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0];
+        let maxHits = Math.max(...Object.values(hitCounts), 1);
+        
         let hitBars = possibleScores.map(scoreKey => {
             const count = hitCounts[scoreKey] || 0;
-            const percent = (count / allArrows.length) * 100;
+            const percent = (count / maxHits) * 100;
             const barColor = getArrowColor(scoreKey === 'X' ? 10 : scoreKey);
             return `<div>
-                <div class="hit-label" style="color:${barColor === '#333' ? '#888' : barColor}">${scoreKey === 0 ? 'M' : scoreKey}</div>
-                <div class="hit-bar"><div class="hit-fill" style="height:${percent}%; background:${barColor}"></div></div>
                 <div class="hit-count">${count}</div>
+                <div class="hit-bar"><div class="hit-fill" style="height:${percent}%; background:${barColor}"></div></div>
+                <div class="hit-label" style="color:${barColor === '#333' ? '#888' : barColor}">${scoreKey === 0 ? 'M' : scoreKey}</div>
             </div>`;
         }).join('');
 
@@ -305,7 +302,6 @@
                 <div class="hits-chart" style="grid-template-columns: repeat(${possibleScores.length}, 1fr);">${hitBars}</div>
             </div>`);
 
-        // 4. Detailed End History
         list.insertAdjacentHTML('beforeend', `<div class="chart-title" style="margin-top:20px;">Detailed History</div>`);
         session.ends.forEach((end, i) => {
             list.insertAdjacentHTML('beforeend', `<div class="end-card"><div><div class="stat-label">END ${i+1}</div><b>${end.displayScores.join(' · ')}</b></div><div style="color:var(--accent); font-weight:900;">${end.total}</div></div>`);
