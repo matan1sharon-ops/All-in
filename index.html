@@ -29,7 +29,6 @@
         .next-btn { background: var(--accent); color: #000; width: 100%; padding: 18px; border-radius: 12px; font-size: 20px; font-weight: 900; border: none; }
         .btn-grid { display: grid; gap: 8px; margin-top: 10px; }
         .score-btn { height: 60px; border-radius: 12px; border: 1px solid #333; font-size: 22px; font-weight: 900; color: #fff; background: #222; }
-        .btn-gold { background: #FFD700; color: #000; border-color: #FFD700; }
     </style>
 </head>
 <body>
@@ -81,19 +80,28 @@
         showScreen('scoring'); 
     }
 
+    function getTargetColor(s) {
+        if (s === 'X' || s === 10 || s === 9) return { bg: '#FFD700', text: '#000' }; // Gold
+        if (s === 8 || s === 7) return { bg: '#FF3B30', text: '#fff' }; // Red
+        if (s === 6 || s === 5) return { bg: '#007AFF', text: '#fff' }; // Blue
+        if (s === 4 || s === 3) return { bg: '#2C2C2E', text: '#fff' }; // Black
+        if (s === 2 || s === 1) return { bg: '#FFFFFF', text: '#000' }; // White
+        return { bg: '#34C759', text: '#fff' }; // Green for Miss (0)
+    }
+
     function renderButtons() {
         const grid = document.getElementById('button-grid'); 
         grid.innerHTML = '';
         
         let scores = [];
+        const isTarget = state.mode.includes('TARGET');
+
         if (state.mode.includes('3D')) {
             scores = [11, 10, 8, 5, 0];
-        } else if (state.mode.includes('TARGET INDOOR')) {
-            scores = [10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0];
-        } else if (state.mode.includes('TARGET OUTDOOR')) {
-            // Added X for Target modes
+        } else if (isTarget) {
             scores = ['X', 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0];
         } else {
+            // Field scoring
             scores = [6, 5, 4, 3, 2, 1, 0];
         }
 
@@ -102,7 +110,19 @@
         scores.forEach(s => {
             const b = document.createElement('button'); 
             b.className = 'score-btn'; 
-            if (s === 'X' || s === 11) b.classList.add('btn-gold');
+            
+            if (isTarget) {
+                const colors = getTargetColor(s);
+                b.style.backgroundColor = colors.bg;
+                b.style.color = colors.text;
+                b.style.borderColor = 'rgba(0,0,0,0.1)';
+            } else {
+                // Non-target specific colors
+                if (s === 11 || (state.mode === 'FIELD PRACTICE' && s >= 5)) {
+                    b.style.backgroundColor = '#FFD700';
+                    b.style.color = '#000';
+                }
+            }
             
             b.innerText = s === 0 ? 'M' : s;
             
@@ -119,6 +139,7 @@
         del.className = 'score-btn'; 
         del.innerText = '⌫'; 
         del.style.background = '#444';
+        del.style.color = '#fff';
         del.onclick = () => { state.current.pop(); renderUI(); };
         grid.appendChild(del);
     }
