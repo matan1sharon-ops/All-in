@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="ALL IN">
     <title>ALL IN Archery</title>
     <style>
         :root { --bg: #000; --text: #fff; --accent: #FFD700; --card: #151515; --gray: #888; }
@@ -15,11 +16,11 @@
         .active-screen { display: flex; z-index: 10; }
         
         header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 10px; border-bottom: 1px solid #222; min-height: 60px; }
-        .header-center { flex: 1; text-align: center; padding: 0 5px; }
-        .header-right { display: flex; gap: 12px; align-items: baseline; text-align: right; }
+        .header-center { flex: 1; text-align: center; padding: 0 10px; }
+        .header-right { display: flex; gap: 15px; align-items: baseline; text-align: right; }
         
         .stat-group { display: flex; flex-direction: column; }
-        .stat-label { font-size: 9px; color: var(--gray); text-transform: uppercase; font-weight: 800; }
+        .stat-label { font-size: 9px; color: var(--gray); text-transform: uppercase; font-weight: 800; letter-spacing: 0.5px; }
         .stat-val { font-size: 20px; font-weight: 900; }
 
         .logo-badge { width: 80px; height: 80px; background: var(--accent); color: #000; border-radius: 20px; margin: 0 auto 10px; display: flex; align-items: center; justify-content: center; font-size: 28px; font-weight: 900; }
@@ -52,11 +53,10 @@
 
     <div id="scoring" class="screen">
         <header>
-            <button onclick="if(confirm('Exit?')) showScreen('home')" style="background:none; border:none; color:var(--gray); font-size:22px; width: 30px;">✕</button>
+            <button onclick="if(confirm('Exit session?')) showScreen('home')" style="background:none; border:none; color:var(--gray); font-size:22px; width: 30px; text-align: left;">✕</button>
             
             <div class="header-center">
                 <div id="mode-display" style="font-weight:900; font-size:12px; letter-spacing:0.5px; color: var(--text); text-transform: uppercase;">MODE (0/0)</div>
-                <div id="arrow-count" style="font-size:10px; color:var(--gray); font-weight: bold;">0 ARROWS</div>
             </div>
 
             <div class="header-right">
@@ -151,9 +151,6 @@
         
         document.getElementById('total-score').innerText = grandTotal;
         document.getElementById('avg-score').innerText = totalArrows > 0 ? (grandTotal / totalArrows).toFixed(1) : "0.0";
-        document.getElementById('arrow-count').innerText = `${totalArrows} ARROWS`;
-        
-        // Update Title with Progress (End / Total Ends)
         document.getElementById('mode-display').innerText = `${state.mode} (${state.history.length}/${state.ends})`;
 
         const list = document.getElementById('score-list');
