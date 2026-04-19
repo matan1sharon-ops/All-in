@@ -80,13 +80,30 @@
         showScreen('scoring'); 
     }
 
-    function getTargetColor(s) {
-        if (s === 'X' || s === 10 || s === 9) return { bg: '#FFD700', text: '#000' }; // Gold
-        if (s === 8 || s === 7) return { bg: '#FF3B30', text: '#fff' }; // Red
-        if (s === 6 || s === 5) return { bg: '#007AFF', text: '#fff' }; // Blue
-        if (s === 4 || s === 3) return { bg: '#2C2C2E', text: '#fff' }; // Black
-        if (s === 2 || s === 1) return { bg: '#FFFFFF', text: '#000' }; // White
-        return { bg: '#34C759', text: '#fff' }; // Green for Miss (0)
+    function getButtonTheme(s) {
+        // TARGET COLOR LOGIC
+        if (state.mode.includes('TARGET')) {
+            if (s === 'X' || s === 10 || s === 9) return { bg: '#FFD700', text: '#000' };
+            if (s === 8 || s === 7) return { bg: '#FF3B30', text: '#fff' };
+            if (s === 6 || s === 5) return { bg: '#007AFF', text: '#fff' };
+            if (s === 4 || s === 3) return { bg: '#2C2C2E', text: '#fff' };
+            if (s === 2 || s === 1) return { bg: '#FFFFFF', text: '#000' };
+            return { bg: '#34C759', text: '#fff' }; // Green for M (0)
+        }
+        
+        // 3D COLOR LOGIC
+        if (state.mode.includes('3D')) {
+            if (s === 11) return { bg: '#FFD700', text: '#000' }; // Yellow
+            if (s === 10) return { bg: '#FFF176', text: '#000' }; // Light Yellow
+            if (s === 8) return { bg: '#FF3B30', text: '#fff' };  // Red
+            if (s === 5) return { bg: '#007AFF', text: '#fff' };  // Blue
+            return { bg: '#34C759', text: '#fff' };              // Green for M (0)
+        }
+
+        // DEFAULT / FIELD LOGIC
+        if (s === 0) return { bg: '#34C759', text: '#fff' };
+        if (s >= 5) return { bg: '#FFD700', text: '#000' };
+        return { bg: '#222', text: '#fff' };
     }
 
     function renderButtons() {
@@ -94,14 +111,11 @@
         grid.innerHTML = '';
         
         let scores = [];
-        const isTarget = state.mode.includes('TARGET');
-
         if (state.mode.includes('3D')) {
             scores = [11, 10, 8, 5, 0];
-        } else if (isTarget) {
+        } else if (state.mode.includes('TARGET')) {
             scores = ['X', 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0];
         } else {
-            // Field scoring
             scores = [6, 5, 4, 3, 2, 1, 0];
         }
 
@@ -111,18 +125,10 @@
             const b = document.createElement('button'); 
             b.className = 'score-btn'; 
             
-            if (isTarget) {
-                const colors = getTargetColor(s);
-                b.style.backgroundColor = colors.bg;
-                b.style.color = colors.text;
-                b.style.borderColor = 'rgba(0,0,0,0.1)';
-            } else {
-                // Non-target specific colors
-                if (s === 11 || (state.mode === 'FIELD PRACTICE' && s >= 5)) {
-                    b.style.backgroundColor = '#FFD700';
-                    b.style.color = '#000';
-                }
-            }
+            const theme = getButtonTheme(s);
+            b.style.backgroundColor = theme.bg;
+            b.style.color = theme.text;
+            b.style.borderColor = 'rgba(0,0,0,0.1)';
             
             b.innerText = s === 0 ? 'M' : s;
             
