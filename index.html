@@ -54,11 +54,9 @@
     <div id="scoring" class="screen">
         <header>
             <button onclick="if(confirm('Exit session?')) showScreen('home')" style="background:none; border:none; color:var(--gray); font-size:22px; width: 30px; text-align: left;">✕</button>
-            
             <div class="header-center">
                 <div id="mode-display" style="font-weight:900; font-size:12px; letter-spacing:0.5px; color: var(--text); text-transform: uppercase;">MODE (0/0)</div>
             </div>
-
             <div class="header-right">
                 <div class="stat-group">
                     <span class="stat-label">AVG</span>
@@ -155,17 +153,29 @@
 
         const list = document.getElementById('score-list');
         list.innerHTML = '';
+        
+        // Render Previous Ends
         state.history.forEach((end, i) => {
             const card = document.createElement('div');
             card.className = 'end-card';
-            card.innerHTML = `<div><div class="stat-label">END ${i+1}</div><div style="font-weight:bold;">${end.displayScores.join(' · ')}</div></div><div style="color:var(--accent); font-weight:900;">${end.total}</div>`;
+            card.innerHTML = `<div><div class="stat-label">END ${i+1}</div><div style="font-weight:bold;">${end.displayScores.join(' · ')}</div></div><div style="color:var(--accent); font-weight:900; font-size:20px;">${end.total}</div>`;
             list.appendChild(card);
         });
 
+        // Render Active/Current End
         const active = document.createElement('div');
         active.className = 'end-card';
         active.style.border = '1px solid var(--accent)';
-        active.innerHTML = `<div><div class="stat-label">CURRENT</div><div style="font-weight:bold;">${state.current.map(s => s === 0 ? 'M' : s).join(' · ') || '---'}</div></div>`;
+        const displayCurrent = state.current.map(s => s === 0 ? 'M' : s).join(' · ');
+        
+        // Show current total live in the end card
+        active.innerHTML = `
+            <div>
+                <div class="stat-label">CURRENT (${state.current.length}/${state.arrows})</div>
+                <div style="font-weight:bold;">${displayCurrent || '---'}</div>
+            </div>
+            <div style="color:var(--accent); font-weight:900; font-size:20px;">${currentTotal}</div>`;
+        
         list.appendChild(active);
         
         const btn = document.getElementById('next-btn');
