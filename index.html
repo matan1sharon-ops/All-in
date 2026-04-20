@@ -170,13 +170,14 @@
         state.editingIndex = index;
         state.current = [...state.history[index].rawScores];
         renderUI();
-        window.scrollTo(0, document.body.scrollHeight);
     }
 
     function renderUI() {
-        const historyTotal = state.history.reduce((a, b) => a + b.total, 0);
+        const historyTotalExcludingEdit = state.history.reduce((acc, end, idx) => acc + (idx === state.editingIndex ? 0 : end.total), 0);
         const currentTotal = state.current.reduce((a, b) => a + getVal(b), 0);
-        const grandTotal = historyTotal + currentTotal;
+        const grandTotal = historyTotalExcludingEdit + currentTotal;
+        
+        // Total arrows shot: all previous ends + current entries (if not editing a previous end)
         const totalArrows = (state.history.length * state.arrows) + (state.editingIndex === -1 ? state.current.length : 0);
         
         document.getElementById('total-score').innerText = grandTotal;
@@ -184,23 +185,36 @@
         document.getElementById('mode-display').innerText = `${state.mode} (${state.history.length}/${state.ends})`;
         
         const list = document.getElementById('score-list'); list.innerHTML = '';
+        
+        // Render history
         state.history.forEach((end, i) => {
-            const isEditing = state.editingIndex === i;
-            list.insertAdjacentHTML('beforeend', `
-                <div class="end-card clickable-end" onclick="editEnd(${i})" style="${isEditing ? 'opacity:0.3; border-left:3px solid var(--accent);' : ''}">
-                    <div><div class="stat-label">END ${i+1}</div><b>${end.displayScores.join(' · ')}</b></div>
-                    <div style="color:var(--accent); font-weight:900; font-size:20px;">${end.total}</div>
-                </div>`);
+            if (state.editingIndex === i) {
+                // This is the end being edited, show active style in its place
+                const activeDisplay = state.current.map(s => s === 0 ? 'M' : s).join(' · ') || '---';
+                list.insertAdjacentHTML('beforeend', `
+                    <div id="active-card" class="end-card" style="border:1px solid var(--accent); background: #1a1500;">
+                        <div><div class="stat-label">END ${i+1} (EDITING)</div><b>${activeDisplay}</b></div>
+                        <div style="color:var(--accent); font-weight:900; font-size:20px;">${currentTotal}</div>
+                    </div>`);
+            } else {
+                // Standard historical end card
+                list.insertAdjacentHTML('beforeend', `
+                    <div class="end-card clickable-end" onclick="editEnd(${i})">
+                        <div><div class="stat-label">END ${i+1}</div><b>${end.displayScores.join(' · ')}</b></div>
+                        <div style="color:var(--accent); font-weight:900; font-size:20px;">${end.total}</div>
+                    </div>`);
+            }
         });
 
-        const activeDisplay = state.current.map(s => s === 0 ? 'M' : s).join(' · ') || '---';
-        const currentEndNum = state.editingIndex !== -1 ? state.editingIndex + 1 : state.history.length + 1;
-        
-        list.insertAdjacentHTML('beforeend', `
-            <div id="active-card" class="end-card" style="border:1px solid var(--accent); background: #1a1500;">
-                <div><div class="stat-label">END ${currentEndNum} ${state.editingIndex !== -1 ? '(EDITING)' : ''}</div><b>${activeDisplay}</b></div>
-                <div style="color:var(--accent); font-weight:900; font-size:20px;">${currentTotal}</div>
-            </div>`);
+        // Show "Next End" input card only if we aren't editing a previous one
+        if (state.editingIndex === -1 && state.history.length < state.ends) {
+            const activeDisplay = state.current.map(s => s === 0 ? 'M' : s).join(' · ') || '---';
+            list.insertAdjacentHTML('beforeend', `
+                <div id="active-card" class="end-card" style="border:1px solid var(--accent); background: #1a1500;">
+                    <div><div class="stat-label">END ${state.history.length + 1}</div><b>${activeDisplay}</b></div>
+                    <div style="color:var(--accent); font-weight:900; font-size:20px;">${currentTotal}</div>
+                </div>`);
+        }
 
         const btn = document.getElementById('next-btn');
         btn.disabled = state.current.length < state.arrows;
