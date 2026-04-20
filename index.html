@@ -84,7 +84,9 @@
     <div id="scoring" class="screen">
         <header>
             <button onclick="if(confirm('Exit?')) showScreen('home')" style="background:none; border:none; color:var(--gray); font-size:22px;">✕</button>
-            <div class="header-center"><div id="mode-display" style="color:#fff; font-size:14px; font-weight:800; text-transform:uppercase;">MODE (0/0)</div></div>
+            <div class="header-center">
+                <div id="mode-display" style="color:#fff; font-size:14px; font-weight:800; text-transform:uppercase;">MODE (0/0)</div>
+            </div>
             <div class="header-right">
                 <div style="display:flex; flex-direction:column;"><span class="stat-label">AVG</span><span id="avg-score" class="stat-val">0.0</span></div>
                 <div style="display:flex; flex-direction:column;"><span class="stat-label">TOTAL</span><span id="total-score" class="stat-val" style="color:var(--accent);">0</span></div>
@@ -144,10 +146,10 @@
             if (s === 8) return '#FF3B30';
             if (s === 5) return '#007AFF';
         } else if (state.mode.includes('FIELD')) {
-            if (s >= 5) return '#FFD700'; 
-            if (s >= 1) return '#333';    
+            if (s >= 5) return '#FFD700'; // 6, 5 Yellow
+            if (s >= 1) return '#333';    // 4-1 Black
         }
-        return '#34C759'; 
+        return '#34C759'; // M (0) Green
     }
 
     function renderButtons() {
@@ -273,17 +275,40 @@
 
         const arrowPerEnd = session.arrowsPerEnd;
         const maxEndVal = state.mode.includes('TARGET') ? (arrowPerEnd * 10) : (arrowPerEnd * 11);
-        
-        // FIXED COORDINATES FOR CIRCLE STABILITY
         const points = session.ends.map((end, i) => `${(i / (session.ends.length - 1)) * 100},${75 - (end.total / maxEndVal) * 65}`).join(' ');
-        const dots = session.ends.map((end, i) => `<circle cx="${(i / (session.ends.length - 1)) * 100}" cy="${75 - (end.total / maxEndVal) * 65}" r="1.5" fill="var(--accent)" />`).join('');
+        
+        // Dots as rounded rectangles to maintain shape in stretched SVG
+        const dots = session.ends.map((end, i) => {
+            const x = (i / (session.ends.length - 1)) * 100;
+            const y = 75 - (end.total / maxEndVal) * 65;
+            return `<rect x="${x - 0.75}" y="${y - 1}" width="1.5" height="2" rx="0.75" fill="var(--accent)" />`;
+        }).join('');
 
-        list.insertAdjacentHTML('beforeend', `<div class="chart-box"><div class="chart-title">Stamina Trend (Score per End)</div><div style="display:flex; height:110px; padding:5px 0;"><div style="display:flex; flex-direction:column; justify-content:space-between; height:75px; padding-right:8px; text-align:right; border-right:1px solid #333;"><span style="font-size:8px; color:var(--gray);">${maxEndVal}</span><span style="font-size:8px; color:var(--gray);">${Math.round(maxEndVal/2)}</span><span style="font-size:8px; color:var(--gray);">0</span></div><div style="flex:1; position:relative; margin-left:5px;">
-            <svg viewBox="0 0 100 75" style="width:100%; height:75px; overflow:visible;">
-                <polyline fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="0.5" points="0,0 100,0 0,37 100,37 0,75 100,75" />
-                <polyline fill="none" stroke="var(--accent)" stroke-width="0.8" points="${points}" />
-                ${dots}
-            </svg><div style="display:flex; justify-content:space-between; margin-top:8px; border-top:1px solid #333; padding-top:4px;"><span style="font-size:8px; color:var(--gray);">E1</span><span style="font-size:8px; color:var(--gray);">E${Math.round(session.ends.length/2)}</span><span style="font-size:8px; color:var(--gray);">E${session.ends.length}</span></div></div></div></div>`);
+        list.insertAdjacentHTML('beforeend', `
+            <div class="chart-box">
+                <div class="chart-title">Stamina Trend (Score per End)</div>
+                <div style="display:flex; height:110px; padding:5px 0;">
+                    <div style="display:flex; flex-direction:column; justify-content:space-between; height:75px; padding-right:8px; text-align:right; border-right:1px solid #333;">
+                        <span style="font-size:8px; color:var(--gray);">${maxEndVal}</span>
+                        <span style="font-size:8px; color:var(--gray);">${Math.round(maxEndVal/2)}</span>
+                        <span style="font-size:8px; color:var(--gray);">0</span>
+                    </div>
+                    <div style="flex:1; position:relative; margin-left:5px;">
+                        <svg viewBox="0 0 100 75" preserveAspectRatio="none" style="width:100%; height:75px; overflow:visible;">
+                            <line x1="0" y1="0" x2="100" y2="0" stroke="rgba(255,255,255,0.05)" stroke-width="0.5" />
+                            <line x1="0" y1="37.5" x2="100" y2="37.5" stroke="rgba(255,255,255,0.05)" stroke-width="0.5" />
+                            <line x1="0" y1="75" x2="100" y2="75" stroke="rgba(255,255,255,0.05)" stroke-width="0.5" />
+                            <polyline fill="none" stroke="var(--accent)" stroke-width="0.8" points="${points}" />
+                            ${dots}
+                        </svg>
+                        <div style="display:flex; justify-content:space-between; margin-top:8px; border-top:1px solid #333; padding-top:4px;">
+                            <span style="font-size:8px; color:var(--gray);">E1</span>
+                            <span style="font-size:8px; color:var(--gray);">E${Math.round(session.ends.length/2)}</span>
+                            <span style="font-size:8px; color:var(--gray);">E${session.ends.length}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>`);
 
         const hitCounts = {};
         session.ends.flatMap(end => end.rawScores).forEach(s => hitCounts[s] = (hitCounts[s] || 0) + 1);
