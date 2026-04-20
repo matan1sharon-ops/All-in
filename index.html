@@ -26,18 +26,23 @@
         .menu-btn { flex: 1; background: #fff; color: #000; padding: 0 20px; border-radius: 15px; font-size: 15px; font-weight: 800; border: none; text-align: left; }
         .history-btn { background: #1a1a1a; border-radius: 15px; width: 70px; display: flex; flex-direction: column; align-items: center; justify-content: center; border: 1px solid #333; color: #fff; cursor: pointer; }
         
-        /* Gear Button Styles */
         .home-footer { position: absolute; bottom: 40px; left: 0; right: 0; display: flex; justify-content: center; }
-        .gear-link { display: flex; align-items: center; gap: 10px; color: var(--gray); text-decoration: none; background: #111; padding: 12px 25px; border-radius: 30px; border: 1px solid #222; cursor: pointer; }
-        .gear-link:active { background: #222; }
-        .gear-icon { font-size: 20px; }
+        .gear-link { display: flex; align-items: center; gap: 10px; color: var(--gray); background: #111; padding: 12px 25px; border-radius: 30px; border: 1px solid #222; cursor: pointer; }
         .gear-text { font-size: 10px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; }
 
-        /* Input Styles */
-        .gear-input-group { margin-bottom: 20px; }
-        .gear-label { display: block; font-size: 10px; font-weight: 800; color: var(--gray); margin-bottom: 8px; text-transform: uppercase; }
-        .gear-input { width: 100%; background: #111; border: 1px solid #333; color: #fff; padding: 15px; border-radius: 10px; font-size: 16px; outline: none; }
+        /* Gear Screen Styles */
+        .gear-section-title { font-size: 12px; font-weight: 900; color: var(--accent); margin: 20px 0 10px; text-transform: uppercase; border-left: 3px solid var(--accent); padding-left: 10px; }
+        .gear-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
+        .gear-input-group { display: flex; flex-direction: column; }
+        .gear-label { font-size: 8px; font-weight: 800; color: var(--gray); margin-bottom: 4px; text-transform: uppercase; }
+        .gear-input { background: #111; border: 1px solid #222; color: #fff; padding: 10px; border-radius: 8px; font-size: 14px; outline: none; width: 100%; }
         .gear-input:focus { border-color: var(--accent); }
+
+        /* Crawl Grid */
+        .crawl-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; background: #0a0a0a; padding: 12px; border-radius: 12px; border: 1px solid #1a1a1a; }
+        .crawl-item { text-align: center; }
+        .crawl-dist { font-size: 9px; font-weight: 800; color: var(--gray); margin-bottom: 4px; }
+        .crawl-val { background: #1a1a1a; border: 1px solid #333; color: var(--accent); width: 100%; text-align: center; padding: 5px 0; border-radius: 5px; font-size: 12px; font-weight: bold; }
 
         #score-list, #history-list, #detail-list, #gear-list { flex-grow: 1; overflow-y: auto; padding: 15px 0; display: flex; flex-direction: column; gap: 8px; }
         .end-card, .history-card { background: var(--card); padding: 12px 15px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #222; }
@@ -92,10 +97,9 @@
                 <button class="history-btn" onclick="showHistory('TARGET OUTDOOR')"><span style="font-size:18px;">📜</span><span style="font-size:8px; font-weight:900; margin-top:4px;">HISTORY</span></button>
             </div>
         </div>
-        
         <div class="home-footer">
             <div class="gear-link" onclick="showGearScreen()">
-                <span class="gear-icon">⚙️</span>
+                <span style="font-size:18px;">⚙️</span>
                 <span class="gear-text">Gear / Setup</span>
             </div>
         </div>
@@ -107,23 +111,33 @@
             <div class="header-center"><div class="stat-label" style="color:#fff; font-size:11px;">MY SETUP</div></div>
             <button onclick="saveGear()" style="background:none; border:none; color:var(--accent); font-size:11px; font-weight:bold;">SAVE</button>
         </header>
-        <div id="gear-list">
-            <div class="gear-input-group">
-                <label class="gear-label">Riser / Bow</label>
-                <input type="text" id="gear-riser" class="gear-input" placeholder="e.g. Hoyt Xceed">
+        <div id="gear-list" style="padding-bottom: 40px;">
+            <div class="gear-section-title">Bow Part</div>
+            <div class="gear-grid">
+                <div class="gear-input-group"><label class="gear-label">Riser Make</label><input type="text" id="g-r-make" class="gear-input"></div>
+                <div class="gear-input-group"><label class="gear-label">Riser Length</label><input type="text" id="g-r-len" class="gear-input"></div>
             </div>
-            <div class="gear-input-group">
-                <label class="gear-label">Limbs / Weight</label>
-                <input type="text" id="gear-limbs" class="gear-input" placeholder="e.g. 36# Carbon">
+
+            <div class="gear-section-title">Limb Part</div>
+            <div class="gear-grid">
+                <div class="gear-input-group"><label class="gear-label">Limb Make</label><input type="text" id="g-l-make" class="gear-input"></div>
+                <div class="gear-input-group"><label class="gear-label">Limb Length</label><input type="text" id="g-l-len" class="gear-input"></div>
+                <div class="gear-input-group"><label class="gear-label">Limb Weight</label><input type="text" id="g-l-weight" class="gear-input"></div>
             </div>
-            <div class="gear-input-group">
-                <label class="gear-label">Arrows</label>
-                <input type="text" id="gear-arrows" class="gear-input" placeholder="e.g. Easton X10">
+
+            <div class="gear-section-title">Arrow Part</div>
+            <div class="gear-grid">
+                <div class="gear-input-group"><label class="gear-label">Arrow Make</label><input type="text" id="g-a-make" class="gear-input"></div>
+                <div class="gear-input-group"><label class="gear-label">Arrow Spine</label><input type="text" id="g-a-spine" class="gear-input"></div>
+                <div class="gear-input-group"><label class="gear-label">Arrow Length</label><input type="text" id="g-a-len" class="gear-input"></div>
+                <div class="gear-input-group"><label class="gear-label">Point Weight</label><input type="text" id="g-a-point" class="gear-input"></div>
+                <div class="gear-input-group"><label class="gear-label">Nock Type</label><input type="text" id="g-a-nock" class="gear-input"></div>
+                <div class="gear-input-group"><label class="gear-label">Vanes Type</label><input type="text" id="g-a-vanes" class="gear-input"></div>
             </div>
-            <div class="gear-input-group">
-                <label class="gear-label">Notes (Plunger/String)</label>
-                <textarea id="gear-notes" class="gear-input" style="height:100px; resize:none;" placeholder="String type, plunger turns, etc."></textarea>
-            </div>
+
+            <div class="gear-section-title">Barebow Crawls</div>
+            <div class="crawl-grid" id="crawl-inputs">
+                </div>
         </div>
     </div>
 
@@ -165,6 +179,12 @@
 <script>
     let state = { current: [], history: [], arrows: 2, ends: 24, mode: '', editingIndex: -1 };
 
+    // Initial Crawl Grid Generation
+    const crawlContainer = document.getElementById('crawl-inputs');
+    for(let d=5; d<=50; d+=5) {
+        crawlContainer.innerHTML += `<div class="crawl-item"><div class="crawl-dist">${d}m</div><input type="text" id="c-${d}" class="crawl-val"></div>`;
+    }
+
     function showScreen(id) { 
         document.querySelectorAll('.screen').forEach(s => s.classList.remove('active-screen')); 
         document.getElementById(id).classList.add('active-screen'); 
@@ -179,20 +199,42 @@
 
     // GEAR LOGIC
     function showGearScreen() {
-        const gear = JSON.parse(localStorage.getItem('archer_gear') || "{}");
-        document.getElementById('gear-riser').value = gear.riser || "";
-        document.getElementById('gear-limbs').value = gear.limbs || "";
-        document.getElementById('gear-arrows').value = gear.arrows || "";
-        document.getElementById('gear-notes').value = gear.notes || "";
+        const g = JSON.parse(localStorage.getItem('archer_gear') || "{}");
+        document.getElementById('g-r-make').value = g.r_make || "";
+        document.getElementById('g-r-len').value = g.r_len || "";
+        document.getElementById('g-l-make').value = g.l_make || "";
+        document.getElementById('g-l-len').value = g.l_len || "";
+        document.getElementById('g-l-weight').value = g.l_weight || "";
+        document.getElementById('g-a-make').value = g.a_make || "";
+        document.getElementById('g-a-spine').value = g.a_spine || "";
+        document.getElementById('g-a-len').value = g.a_len || "";
+        document.getElementById('g-a-point').value = g.a_point || "";
+        document.getElementById('g-a-nock').value = g.a_nock || "";
+        document.getElementById('g-a-vanes').value = g.a_vanes || "";
+        
+        for(let d=5; d<=50; d+=5) {
+            document.getElementById(`c-${d}`).value = (g.crawls && g.crawls[d]) ? g.crawls[d] : "";
+        }
         showScreen('gear-screen');
     }
 
     function saveGear() {
+        const crawls = {};
+        for(let d=5; d<=50; d+=5) { crawls[d] = document.getElementById(`c-${d}`).value; }
+        
         const gear = {
-            riser: document.getElementById('gear-riser').value,
-            limbs: document.getElementById('gear-limbs').value,
-            arrows: document.getElementById('gear-arrows').value,
-            notes: document.getElementById('gear-notes').value
+            r_make: document.getElementById('g-r-make').value,
+            r_len: document.getElementById('g-r-len').value,
+            l_make: document.getElementById('g-l-make').value,
+            l_len: document.getElementById('g-l-len').value,
+            l_weight: document.getElementById('g-l-weight').value,
+            a_make: document.getElementById('g-a-make').value,
+            a_spine: document.getElementById('g-a-spine').value,
+            a_len: document.getElementById('g-a-len').value,
+            a_point: document.getElementById('g-a-point').value,
+            a_nock: document.getElementById('g-a-nock').value,
+            a_vanes: document.getElementById('g-a-vanes').value,
+            crawls: crawls
         };
         localStorage.setItem('archer_gear', JSON.stringify(gear));
         showScreen('home');
@@ -303,8 +345,6 @@
     function saveSession() {
         const historyTotal = state.history.reduce((a, b) => a + b.total, 0);
         const avg = (historyTotal / (state.history.length * state.arrows)).toFixed(1);
-        
-        // Grab current gear to tag the session
         const currentGear = JSON.parse(localStorage.getItem('archer_gear') || "{}");
 
         const session = { 
@@ -315,7 +355,7 @@
             ends: [...state.history], 
             arrowsPerEnd: state.arrows, 
             totalEndsPlanned: state.ends,
-            setup: currentGear // Save gear with session
+            setup: currentGear 
         };
         let allHistory = JSON.parse(localStorage.getItem(state.mode) || "[]");
         allHistory.unshift(session);
@@ -351,13 +391,20 @@
         const arrowsShot = session.ends.length * session.arrowsPerEnd;
         list.insertAdjacentHTML('beforeend', `<div class="stats-card"><div><div class="stat-label">TOTAL</div><div class="stat-val" style="color:var(--accent);">${session.score}</div></div><div><div class="stat-label">AVERAGE</div><div class="stat-val">${session.avg}</div></div><div><div class="stat-label">ARROWS</div><div class="stat-val" style="font-size: 16px;">${arrowsShot}/${arrowsShot}</div></div></div>`);
 
-        // GEAR TAG IN DETAILS
-        if(session.setup && (session.setup.riser || session.setup.notes)) {
+        // SETUP DETAILS
+        if(session.setup && session.setup.r_make) {
+            let crawlHTML = "";
+            if(session.setup.crawls) {
+                crawlHTML = `<div style="display:grid; grid-template-columns: repeat(5, 1fr); gap:5px; margin-top:10px;">` + 
+                    Object.entries(session.setup.crawls).map(([d,v]) => v ? `<div style="text-align:center; background:#111; padding:4px; border-radius:4px;"><div style="font-size:7px; color:var(--gray);">${d}m</div><div style="font-size:10px; color:var(--accent);">${v}</div></div>` : '').join('') + 
+                    `</div>`;
+            }
             list.insertAdjacentHTML('beforeend', `
                 <div class="chart-box" style="border-color: #333;">
-                    <div class="chart-title">Setup Used</div>
-                    <div style="font-size: 13px; font-weight: bold; color: var(--text);">${session.setup.riser || 'No Name'} | ${session.setup.limbs || ''}</div>
-                    <div style="font-size: 11px; color: var(--gray); margin-top:4px;">${session.setup.notes || ''}</div>
+                    <div class="chart-title">Setup Summary</div>
+                    <div style="font-size: 13px; font-weight: bold; color: var(--text);">${session.setup.r_make} ${session.setup.r_len} | ${session.setup.l_weight}</div>
+                    <div style="font-size: 11px; color: var(--gray); margin-top:4px;">${session.setup.a_make} (${session.setup.a_spine})</div>
+                    ${crawlHTML}
                 </div>`);
         }
 
