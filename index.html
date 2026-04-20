@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>ALL IN Archery</title>
     <style>
         :root { --bg: #000; --text: #fff; --accent: #FFD700; --card: #151515; --gray: #888; --red: #FF3B30; --green: #4CD964; --yellow: #FFCC00; }
@@ -18,7 +20,7 @@
         .stat-label { font-size: 9px; color: var(--gray); text-transform: uppercase; font-weight: 800; letter-spacing: 0.5px; }
         .stat-val { font-size: 20px; font-weight: 900; }
 
-        /* --- TIMER UI --- */
+        /* TIMER UI */
         .t-bar-container { width: 100%; height: 3px; background: #222; display: none; }
         .t-fill { height: 100%; width: 100%; transition: width 1s linear; background: var(--accent); }
         #t-display { font-size: 11px; font-weight: 900; color: var(--gray); margin-top: 2px; }
@@ -27,12 +29,30 @@
         .menu-list { display: flex; flex-direction: column; gap: 12px; margin-top: 20px; }
         .menu-row { display: flex; gap: 10px; height: 75px; }
         .menu-btn { flex: 1; background: #fff; color: #000; padding: 0 20px; border-radius: 15px; font-size: 15px; font-weight: 800; border: none; text-align: left; }
+        .history-btn { background: #1a1a1a; border-radius: 15px; width: 70px; display: flex; flex-direction: column; align-items: center; justify-content: center; border: 1px solid #333; color: #fff; cursor: pointer; }
         
-        #score-list { flex-grow: 1; overflow-y: auto; padding: 15px 0; display: flex; flex-direction: column; gap: 8px; }
-        .end-card { background: var(--card); padding: 12px 15px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #222; }
+        .home-footer { position: absolute; bottom: 40px; left: 0; right: 0; display: flex; justify-content: center; }
+        .gear-link { display: flex; align-items: center; gap: 10px; color: var(--gray); background: #111; padding: 12px 25px; border-radius: 30px; border: 1px solid #222; cursor: pointer; }
+        .gear-text { font-size: 10px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; }
+
+        .gear-section-title { font-size: 12px; font-weight: 900; color: var(--accent); margin: 20px 0 10px; text-transform: uppercase; border-left: 3px solid var(--accent); padding-left: 10px; }
+        .gear-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
+        .gear-label { font-size: 9px; font-weight: 900; color: #bbb; margin-bottom: 4px; text-transform: uppercase; }
+        .gear-input { background: #111; border: 1px solid #222; color: #fff; padding: 10px; border-radius: 8px; font-size: 14px; outline: none; width: 100%; }
+
+        .crawl-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; background: #0a0a0a; padding: 12px; border-radius: 12px; border: 1px solid #1a1a1a; }
+        .crawl-item { text-align: center; }
+        .crawl-dist { font-size: 9px; font-weight: 900; color: #bbb; margin-bottom: 4px; }
+        .crawl-val { background: #1a1a1a; border: 1px solid #333; color: var(--accent); width: 100%; text-align: center; padding: 5px 0; border-radius: 5px; font-size: 12px; font-weight: bold; }
+
+        #score-list, #history-list, #detail-list, #gear-list { flex-grow: 1; overflow-y: auto; padding: 15px 0; display: flex; flex-direction: column; gap: 8px; }
+        .end-card, .history-card { background: var(--card); padding: 12px 15px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #222; }
+        
         .next-btn { background: var(--accent); color: #000; width: 100%; padding: 18px; border-radius: 12px; font-size: 20px; font-weight: 900; border: none; margin-top: 15px; }
         .btn-grid { display: grid; gap: 8px; margin-top: 10px; }
         .score-btn { height: 60px; border-radius: 12px; border: 1px solid #333; font-size: 22px; font-weight: 900; color: #fff; background: #222; }
+        
+        .hist-total { font-size: 18px; font-weight: 900; color: var(--accent); }
     </style>
 </head>
 <body>
@@ -44,11 +64,12 @@
             <div style="font-size:32px; font-weight:900; letter-spacing:6px;">ALL IN</div>
         </div>
         <div class="menu-list">
-            <div class="menu-row"><button class="menu-btn" onclick="startApp('3D PRACTICE', 2, 24)">3D PRACTICE</button></div>
-            <div class="menu-row"><button class="menu-btn" onclick="startApp('FIELD PRACTICE', 3, 24)">FIELD PRACTICE</button></div>
-            <div class="menu-row"><button class="menu-btn" onclick="startApp('TARGET INDOOR', 3, 20)">TARGET INDOOR</button></div>
-            <div class="menu-row"><button class="menu-btn" onclick="startApp('TARGET OUTDOOR', 6, 12)">TARGET OUTDOOR</button></div>
+            <div class="menu-row"><button class="menu-btn" onclick="startApp('3D PRACTICE', 2, 24)">3D PRACTICE</button><button class="history-btn" onclick="showHistory('3D PRACTICE')">📜</button></div>
+            <div class="menu-row"><button class="menu-btn" onclick="startApp('FIELD PRACTICE', 3, 24)">FIELD PRACTICE</button><button class="history-btn" onclick="showHistory('FIELD PRACTICE')">📜</button></div>
+            <div class="menu-row"><button class="menu-btn" onclick="startApp('TARGET INDOOR', 3, 20)">TARGET INDOOR</button><button class="history-btn" onclick="showHistory('TARGET INDOOR')">📜</button></div>
+            <div class="menu-row"><button class="menu-btn" onclick="startApp('TARGET OUTDOOR', 6, 12)">TARGET OUTDOOR</button><button class="history-btn" onclick="showHistory('TARGET OUTDOOR')">📜</button></div>
         </div>
+        <div class="home-footer"><div class="gear-link" onclick="showScreen('gear-screen')"><span>⚙️</span><span class="gear-text">Gear / Setup</span></div></div>
     </div>
 
     <div id="scoring" class="screen">
@@ -71,15 +92,31 @@
             <div id="button-grid" class="btn-grid"></div>
         </div>
     </div>
+
+    <div id="gear-screen" class="screen">
+        <header><button onclick="showScreen('home')" style="background:none; border:none; color:var(--gray); font-size:22px;">✕</button><div class="header-center"><div class="stat-label" style="color:#fff;">MY SETUP</div></div><button onclick="showScreen('home')" style="background:none; border:none; color:var(--accent); font-weight:bold;">SAVE</button></header>
+        <div id="gear-list">
+            <div class="gear-section-title">Riser & Limbs</div>
+            <div class="gear-grid">
+                <div class="gear-input-group"><label class="gear-label">Riser</label><input type="text" class="gear-input"></div>
+                <div class="gear-input-group"><label class="gear-label">Limb</label><input type="text" class="gear-input"></div>
+            </div>
+            <div class="gear-section-title">Barebow Crawls</div>
+            <div class="crawl-grid" id="crawl-inputs"></div>
+        </div>
+    </div>
+
+    <div id="history-screen" class="screen">
+        <header><button onclick="showScreen('home')" style="background:none; border:none; color:var(--gray); font-size:22px;">✕</button><div class="header-center"><div id="history-title" class="stat-label" style="color:#fff;">HISTORY</div></div><div style="width:30px;"></div></header>
+        <div id="history-list"></div>
+    </div>
 </div>
 
 <script>
     let state = { current: [], history: [], arrows: 2, ends: 24, mode: '' };
     
-    // --- TIMER LOGIC (SEPARATE) ---
-    let t_ref = null;
-    let t_sec = 0;
-    let t_max = 0;
+    // TIMER LOGIC
+    let t_ref = null; let t_sec = 0; let t_max = 0;
 
     function btnTimer() {
         if (t_ref) { killTimer(); } 
@@ -90,11 +127,8 @@
     }
 
     function startPhase(phase, secs) {
-        killTimer();
-        t_sec = secs;
-        t_max = secs;
+        killTimer(); t_sec = secs; t_max = secs;
         document.getElementById('t-bar-ui').style.display = 'block';
-        
         t_ref = setInterval(() => {
             t_sec--;
             if (t_sec < 0) {
@@ -106,31 +140,22 @@
     }
 
     function killTimer() {
-        clearInterval(t_ref);
-        t_ref = null;
+        clearInterval(t_ref); t_ref = null;
         document.getElementById('t-bar-ui').style.display = 'none';
         document.getElementById('t-display').innerText = "READY";
         document.getElementById('t-display').style.color = "var(--gray)";
     }
 
     function updateTimerUI(phase) {
-        const txt = document.getElementById('t-display');
-        const fill = document.getElementById('t-fill-ui');
-        const m = Math.floor(t_sec / 60);
-        const s = t_sec % 60;
-        
+        const txt = document.getElementById('t-display'); const fill = document.getElementById('t-fill-ui');
+        const m = Math.floor(t_sec / 60); const s = t_sec % 60;
         txt.innerText = phase === 'PREP' ? `PREP: ${t_sec}s` : `${m}:${s < 10 ? '0' : ''}${s}`;
         fill.style.width = (t_sec / t_max * 100) + "%";
-        
-        let color = 'var(--green)';
-        if (phase === 'PREP') color = 'var(--red)';
-        else if (t_sec <= 30) color = 'var(--yellow)';
-        
-        fill.style.backgroundColor = color;
-        txt.style.color = color;
+        let color = phase === 'PREP' ? 'var(--red)' : (t_sec <= 30 ? 'var(--yellow)' : 'var(--green)');
+        fill.style.backgroundColor = color; txt.style.color = color;
     }
 
-    // --- APP LOGIC ---
+    // APP LOGIC
     function showScreen(id) { document.querySelectorAll('.screen').forEach(s => s.classList.remove('active-screen')); document.getElementById(id).classList.add('active-screen'); }
     
     function startApp(mode, arrows, ends) { 
@@ -143,10 +168,28 @@
         if(state.current.length === state.arrows) {
             state.history.push({ total: state.current.reduce((a, b) => a + (b === 'X' ? 10 : parseInt(b) || 0), 0), display: [...state.current].map(s => s === 0 ? 'M' : s) });
             state.current = [];
-            killTimer(); // Safety reset on next end
-            if(state.history.length >= state.ends) { showScreen('home'); } else { renderUI(); }
+            killTimer();
+            if(state.history.length >= state.ends) { saveSession(); showScreen('home'); } else { renderUI(); }
         }
     }
+
+    function saveSession() {
+        const total = state.history.reduce((a, b) => a + b.total, 0);
+        const session = { date: new Date().toLocaleDateString(), score: total, mode: state.mode };
+        let all = JSON.parse(localStorage.getItem(state.mode) || "[]");
+        all.unshift(session);
+        localStorage.setItem(state.mode, JSON.stringify(all));
+    }
+
+    function showHistory(m) {
+        state.mode = m; showScreen('history-screen');
+        const list = document.getElementById('history-list'); list.innerHTML = '';
+        const data = JSON.parse(localStorage.getItem(m) || "[]");
+        data.forEach(s => list.insertAdjacentHTML('beforeend', `<div class="history-card"><div>${s.date}</div><div class="hist-total">${s.score}</div></div>`));
+    }
+
+    const crawlContainer = document.getElementById('crawl-inputs');
+    for(let d=5; d<=50; d+=5) { crawlContainer.innerHTML += `<div class="crawl-item"><div class="crawl-dist">${d}m</div><input type="text" class="crawl-val"></div>`; }
 
     function renderButtons() {
         const grid = document.getElementById('button-grid'); grid.innerHTML = '';
@@ -164,11 +207,10 @@
         const curTot = state.current.reduce((a, b) => a + (b === 'X' ? 10 : parseInt(b) || 0), 0);
         const histTot = state.history.reduce((acc, end) => acc + end.total, 0);
         document.getElementById('total-score').innerText = histTot + curTot;
+        document.getElementById('avg-score').innerText = ((histTot + curTot) / (state.history.length * state.arrows + state.current.length || 1)).toFixed(1);
         document.getElementById('mode-display').innerText = `${state.mode} (${state.history.length}/${state.ends})`;
         const list = document.getElementById('score-list'); list.innerHTML = '';
-        state.history.forEach((end, i) => {
-            list.insertAdjacentHTML('beforeend', `<div class="end-card"><div>END ${i+1}: ${end.display.join(' · ')}</div><div>${end.total}</div></div>`);
-        });
+        state.history.forEach((end, i) => list.insertAdjacentHTML('beforeend', `<div class="end-card"><div>END ${i+1}: ${end.display.join(' · ')}</div><div>${end.total}</div></div>`));
         document.getElementById('next-btn').disabled = state.current.length < state.arrows;
     }
 </script>
