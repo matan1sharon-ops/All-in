@@ -143,8 +143,11 @@
             if (s === 10) return '#FFF176';
             if (s === 8) return '#FF3B30';
             if (s === 5) return '#007AFF';
+        } else if (state.mode.includes('FIELD')) {
+            if (s >= 5) return '#FFD700'; // 6, 5 are Yellow
+            if (s >= 1) return '#333';    // 4, 3, 2, 1 are Black
         }
-        return '#34C759'; 
+        return '#34C759'; // M (0) is Green
     }
 
     function renderButtons() {
@@ -181,8 +184,6 @@
         
         document.getElementById('total-score').innerText = grandTotal;
         document.getElementById('avg-score').innerText = totalArrows > 0 ? (grandTotal / totalArrows).toFixed(1) : "0.0";
-        
-        // UPDATED: Font size bumped for mode and ends count
         document.getElementById('mode-display').innerText = `${state.mode} (${state.history.length}/${state.ends})`;
         
         const list = document.getElementById('score-list'); list.innerHTML = '';
