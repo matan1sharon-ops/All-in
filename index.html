@@ -7,7 +7,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>ALL IN Archery</title>
     <style>
-        :root { --bg: #000; --text: #fff; --accent: #FFD700; --card: #151515; --gray: #888; }
+        :root { --bg: #000; --text: #fff; --accent: #FFD700; --card: #151515; --gray: #888; --red: #FF3B30; --green: #4CD964; --yellow: #FFCC00; }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; }
         body { background: var(--bg); color: var(--text); font-family: -apple-system, sans-serif; height: 100vh; overflow: hidden; padding-top: env(safe-area-inset-top); }
         .app-container { width: 100%; max-width: 500px; height: 100%; margin: 0 auto; position: relative; }
@@ -20,6 +20,11 @@
         .stat-label { font-size: 9px; color: var(--gray); text-transform: uppercase; font-weight: 800; letter-spacing: 0.5px; }
         .stat-val { font-size: 20px; font-weight: 900; }
 
+        .timer-bar-container { width: 100%; height: 4px; background: #222; position: relative; margin-top: -1px; display: none; overflow: hidden; }
+        .timer-bar-fill { height: 100%; background: var(--accent); width: 100%; transition: width 1s linear, background-color 0.3s; }
+        #timer-text { font-size: 11px; font-weight: 900; letter-spacing: 1px; color: var(--gray); margin-top: 2px; text-transform: uppercase; }
+        .timer-active { color: var(--accent) !important; }
+
         .logo-badge { width: 80px; height: 80px; background: var(--accent); color: #000; border-radius: 20px; margin: 0 auto 10px; display: flex; align-items: center; justify-content: center; font-size: 28px; font-weight: 900; }
         .menu-list { display: flex; flex-direction: column; gap: 12px; margin-top: 20px; }
         .menu-row { display: flex; gap: 10px; height: 75px; }
@@ -30,13 +35,11 @@
         .gear-link { display: flex; align-items: center; gap: 10px; color: var(--gray); background: #111; padding: 12px 25px; border-radius: 30px; border: 1px solid #222; cursor: pointer; }
         .gear-text { font-size: 10px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; }
 
-        /* Gear Screen Styles */
         .gear-section-title { font-size: 12px; font-weight: 900; color: var(--accent); margin: 20px 0 10px; text-transform: uppercase; border-left: 3px solid var(--accent); padding-left: 10px; }
         .gear-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
         .gear-input-group { display: flex; flex-direction: column; }
         .gear-label { font-size: 9px; font-weight: 900; color: #bbb; margin-bottom: 4px; text-transform: uppercase; }
         .gear-input { background: #111; border: 1px solid #222; color: #fff; padding: 10px; border-radius: 8px; font-size: 14px; outline: none; width: 100%; }
-        .gear-input:focus { border-color: var(--accent); }
 
         .crawl-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; background: #0a0a0a; padding: 12px; border-radius: 12px; border: 1px solid #1a1a1a; }
         .crawl-item { text-align: center; }
@@ -46,7 +49,6 @@
         #score-list, #history-list, #detail-list, #gear-list { flex-grow: 1; overflow-y: auto; padding: 15px 0; display: flex; flex-direction: column; gap: 8px; }
         .end-card, .history-card { background: var(--card); padding: 12px 15px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #222; }
         .clickable-end { cursor: pointer; border-left: 3px solid transparent; transition: 0.2s; }
-        .clickable-end:active { background: #252525; }
         
         .next-btn { background: var(--accent); color: #000; width: 100%; padding: 18px; border-radius: 12px; font-size: 20px; font-weight: 900; border: none; margin-top: 15px; }
         .next-btn:disabled { background: #333; color: #666; }
@@ -61,7 +63,6 @@
         .stats-card { background: var(--card); border-radius: 12px; padding: 12px 15px; border: 1px solid #222; display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; text-align: center; }
         .chart-box { background: var(--card); border-radius: 12px; padding: 15px; border: 1px solid #222; margin-top: 8px; }
         .chart-title { font-size: 10px; font-weight: bold; color: var(--gray); text-transform: uppercase; margin-bottom: 12px; letter-spacing: 0.5px;}
-        
         .hit-bar { width: 100%; background: #222; border-radius: 2px; height: 75px; position: relative; overflow: hidden;}
         .hit-fill { position: absolute; bottom: 0; left: 0; right: 0; }
         .hits-chart { display: grid; gap: 4px; text-align: center; margin-top: 5px; height: 110px; align-items: end; }
@@ -79,28 +80,12 @@
             <p style="color:var(--gray); font-size:12px;">ARCHERY TRACKER</p>
         </div>
         <div class="menu-list">
-            <div class="menu-row">
-                <button class="menu-btn" onclick="startApp('3D PRACTICE', 2, 24)">3D PRACTICE</button>
-                <button class="history-btn" onclick="showHistory('3D PRACTICE')">📜<span style="font-size:8px; font-weight:900;">HISTORY</span></button>
-            </div>
-            <div class="menu-row">
-                <button class="menu-btn" onclick="startApp('FIELD PRACTICE', 3, 24)">FIELD PRACTICE</button>
-                <button class="history-btn" onclick="showHistory('FIELD PRACTICE')">📜<span style="font-size:8px; font-weight:900;">HISTORY</span></button>
-            </div>
-            <div class="menu-row">
-                <button class="menu-btn" onclick="startApp('TARGET INDOOR', 3, 20)">TARGET INDOOR</button>
-                <button class="history-btn" onclick="showHistory('TARGET INDOOR')">📜<span style="font-size:8px; font-weight:900;">HISTORY</span></button>
-            </div>
-            <div class="menu-row">
-                <button class="menu-btn" onclick="startApp('TARGET OUTDOOR', 6, 12)">TARGET OUTDOOR</button>
-                <button class="history-btn" onclick="showHistory('TARGET OUTDOOR')">📜<span style="font-size:8px; font-weight:900;">HISTORY</span></button>
-            </div>
+            <div class="menu-row"><button class="menu-btn" onclick="startApp('3D PRACTICE', 2, 24)">3D PRACTICE</button><button class="history-btn" onclick="showHistory('3D PRACTICE')">📜<span style="font-size:8px; font-weight:900;">HISTORY</span></button></div>
+            <div class="menu-row"><button class="menu-btn" onclick="startApp('FIELD PRACTICE', 3, 24)">FIELD PRACTICE</button><button class="history-btn" onclick="showHistory('FIELD PRACTICE')">📜<span style="font-size:8px; font-weight:900;">HISTORY</span></button></div>
+            <div class="menu-row"><button class="menu-btn" onclick="startApp('TARGET INDOOR', 3, 20)">TARGET INDOOR</button><button class="history-btn" onclick="showHistory('TARGET INDOOR')">📜<span style="font-size:8px; font-weight:900;">HISTORY</span></button></div>
+            <div class="menu-row"><button class="menu-btn" onclick="startApp('TARGET OUTDOOR', 6, 12)">TARGET OUTDOOR</button><button class="history-btn" onclick="showHistory('TARGET OUTDOOR')">📜<span style="font-size:8px; font-weight:900;">HISTORY</span></button></div>
         </div>
-        <div class="home-footer">
-            <div class="gear-link" onclick="showGearScreen()">
-                <span>⚙️</span><span class="gear-text">Gear / Setup</span>
-            </div>
-        </div>
+        <div class="home-footer"><div class="gear-link" onclick="showGearScreen()"><span>⚙️</span><span class="gear-text">Gear / Setup</span></div></div>
     </div>
 
     <div id="gear-screen" class="screen">
@@ -137,13 +122,18 @@
 
     <div id="scoring" class="screen">
         <header>
-            <button onclick="if(confirm('Exit?')) showScreen('home')" style="background:none; border:none; color:var(--gray); font-size:22px;">✕</button>
-            <div class="header-center"><div id="mode-display" style="color:#fff; font-weight:800; text-transform:uppercase;">MODE (0/0)</div></div>
+            <button onclick="if(confirm('Exit?')) { stopTimer(); showScreen('home'); }" style="background:none; border:none; color:var(--gray); font-size:22px;">✕</button>
+            <div class="header-center">
+                <div id="mode-display" style="color:#fff; font-weight:800; text-transform:uppercase; font-size: 11px;">MODE (0/0)</div>
+                <div id="timer-text">READY</div>
+            </div>
             <div class="header-right">
+                <button id="t-toggle" onclick="toggleTimer()" style="background:none; border:none; color:var(--gray); font-size:20px; padding: 0 5px;">⏰</button>
                 <div style="display:flex; flex-direction:column;"><span class="stat-label">AVG</span><span id="avg-score" class="stat-val">0.0</span></div>
                 <div style="display:flex; flex-direction:column;"><span class="stat-label">TOTAL</span><span id="total-score" class="stat-val" style="color:var(--accent);">0</span></div>
             </div>
         </header>
+        <div class="timer-bar-container" id="t-container"><div class="timer-bar-fill" id="t-fill"></div></div>
         <div id="score-list"></div>
         <div style="padding-bottom:30px; border-top: 1px solid #222;">
             <button id="next-btn" class="next-btn" onclick="handleMainAction()">NEXT END</button>
@@ -163,13 +153,104 @@
 
 <script>
     let state = { current: [], history: [], arrows: 2, ends: 24, mode: '', editingIndex: -1 };
+    let timer = { interval: null, timeLeft: 0, phase: 'READY', active: false, total: 0 };
+    const audio = new (window.AudioContext || window.webkitAudioContext)();
 
     const crawlContainer = document.getElementById('crawl-inputs');
     for(let d=5; d<=50; d+=5) { crawlContainer.innerHTML += `<div class="crawl-item"><div class="crawl-dist">${d}m</div><input type="text" id="c-${d}" class="crawl-val"></div>`; }
 
     function showScreen(id) { document.querySelectorAll('.screen').forEach(s => s.classList.remove('active-screen')); document.getElementById(id).classList.add('active-screen'); }
 
-    function startApp(mode, arrows, ends) { state = { current: [], history: [], arrows: arrows, ends: ends, mode: mode, editingIndex: -1 }; renderButtons(); renderUI(); showScreen('scoring'); }
+    function bip(count) {
+        if (state.mode.includes('3D') || state.mode.includes('FIELD')) return;
+        for(let i=0; i<count; i++) {
+            setTimeout(() => {
+                const osc = audio.createOscillator();
+                const gain = audio.createGain();
+                osc.type = "square";
+                osc.frequency.setValueAtTime(800, audio.currentTime);
+                gain.gain.setValueAtTime(0.1, audio.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.0001, audio.currentTime + 0.2);
+                osc.connect(gain); gain.connect(audio.destination);
+                osc.start(); osc.stop(audio.currentTime + 0.2);
+            }, i * 200);
+        }
+    }
+
+    function toggleTimer() { 
+        if (timer.active) { stopTimer(); } 
+        else {
+            if (state.mode.includes('3D') || state.mode.includes('FIELD')) startShooting();
+            else startPrep();
+        }
+    }
+
+    function startPrep() {
+        stopTimer();
+        timer.active = true;
+        timer.phase = 'PREP';
+        timer.timeLeft = 10;
+        document.getElementById('t-container').style.display = 'block';
+        document.getElementById('t-toggle').classList.add('timer-active');
+        bip(2);
+        updateTimerUI();
+        timer.interval = setInterval(() => {
+            timer.timeLeft--;
+            if (timer.timeLeft <= 0) { clearInterval(timer.interval); startShooting(); }
+            else updateTimerUI();
+        }, 1000);
+    }
+
+    function startShooting() {
+        timer.active = true;
+        timer.phase = 'SHOOT';
+        document.getElementById('t-container').style.display = 'block';
+        document.getElementById('t-toggle').classList.add('timer-active');
+        
+        if (state.mode.includes('OUTDOOR')) timer.total = 180;
+        else if (state.mode.includes('INDOOR')) timer.total = 90;
+        else timer.total = 120;
+        
+        timer.timeLeft = timer.total;
+        bip(1);
+        updateTimerUI();
+        timer.interval = setInterval(() => {
+            timer.timeLeft--;
+            updateTimerUI();
+            if (timer.timeLeft <= 0) { bip(3); stopTimer(); }
+        }, 1000);
+    }
+
+    function stopTimer() {
+        clearInterval(timer.interval);
+        timer.active = false;
+        timer.phase = 'READY';
+        document.getElementById('t-container').style.display = 'none';
+        document.getElementById('t-toggle').classList.remove('timer-active');
+        document.getElementById('timer-text').innerText = "READY";
+        document.getElementById('timer-text').style.color = "var(--gray)";
+    }
+
+    function updateTimerUI() {
+        const text = document.getElementById('timer-text');
+        const bar = document.getElementById('t-fill');
+        if (timer.phase === 'PREP') {
+            text.innerText = `PREP: ${timer.timeLeft}s`;
+            text.style.color = 'var(--red)';
+            bar.style.backgroundColor = 'var(--red)';
+            bar.style.width = (timer.timeLeft / 10 * 100) + "%";
+        } else {
+            const m = Math.floor(timer.timeLeft / 60);
+            const s = timer.timeLeft % 60;
+            text.innerText = `${m}:${s < 10 ? '0' : ''}${s}`;
+            if (timer.timeLeft <= 30 && timer.timeLeft > 0) { text.style.color = 'var(--yellow)'; bar.style.backgroundColor = 'var(--yellow)'; }
+            else if (timer.timeLeft <= 0) { text.style.color = 'var(--red)'; bar.style.backgroundColor = 'var(--red)'; }
+            else { text.style.color = 'var(--green)'; bar.style.backgroundColor = 'var(--green)'; }
+            bar.style.width = (timer.timeLeft / timer.total * 100) + "%";
+        }
+    }
+
+    function startApp(mode, arrows, ends) { stopTimer(); state = { current: [], history: [], arrows: arrows, ends: ends, mode: mode, editingIndex: -1 }; renderButtons(); renderUI(); showScreen('scoring'); }
 
     function showGearScreen() {
         const g = JSON.parse(localStorage.getItem('archer_gear') || "{}");
@@ -242,7 +323,8 @@
         if(state.current.length === state.arrows) {
             const newEnd = { rawScores: [...state.current], displayScores: [...state.current].map(s => s === 0 ? 'M' : s), total: state.current.reduce((a, b) => a + getVal(b), 0) };
             if (state.editingIndex !== -1) { state.history[state.editingIndex] = newEnd; state.editingIndex = -1; } else { state.history.push(newEnd); }
-            state.current = []; if(state.history.length >= state.ends && state.editingIndex === -1) { saveSession(); } else { renderUI(); document.getElementById('score-list').scrollTop = document.getElementById('score-list').scrollHeight; }
+            state.current = []; stopTimer();
+            if(state.history.length >= state.ends && state.editingIndex === -1) { saveSession(); } else { renderUI(); document.getElementById('score-list').scrollTop = document.getElementById('score-list').scrollHeight; }
         }
     }
 
@@ -283,14 +365,4 @@
         const hits = {}; session.ends.flatMap(end => end.rawScores).forEach(s => hits[s] = (hits[s] || 0) + 1);
         let poss = state.mode.includes('3D') ? [11, 10, 8, 5, 0] : state.mode.includes('TARGET') ? ['X', 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0] : [6,5,4,3,2,1,0];
         let maxH = Math.max(...Object.values(hits), 1);
-        let hBars = poss.map(sk => { const c = hits[sk] || 0; const bc = getArrowColor(sk === 'X' ? 10 : sk); return `<div><div class="hit-count">${c}</div><div class="hit-bar"><div class="hit-fill" style="height:${(c/maxH)*100}%; background:${bc}"></div></div><div class="hit-label" style="color:${bc}">${sk === 0 ? 'M' : sk}</div></div>`; }).join('');
-        list.insertAdjacentHTML('beforeend', `<div class="chart-box"><div class="chart-title">Hits Breakdown</div><div class="hits-chart" style="grid-template-columns: repeat(${poss.length}, 1fr);">${hBars}</div></div>`);
-        
-        list.insertAdjacentHTML('beforeend', `<div class="chart-title" style="margin-top:20px;">Detailed History</div>`);
-        session.ends.forEach((end, i) => { list.insertAdjacentHTML('beforeend', `<div class="end-card"><div><div class="stat-label">END ${i+1}</div><b>${end.displayScores.join(' · ')}</b></div><div style="color:var(--accent); font-weight:900;">${end.total}</div></div>`); });
-    }
-
-    function clearHistory() { if(confirm(`Wipe all ${state.mode} History?`)) { localStorage.removeItem(state.mode); showHistory(state.mode); } }
-</script>
-</body>
-</html>
+        let hBars = poss.map(sk => { const c = hits[sk] || 0; const bc = getArrowColor(sk === 'X' ? 10 : sk); return `<div><div class="hit-count">${c}</div><div class
