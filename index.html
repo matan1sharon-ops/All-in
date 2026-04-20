@@ -26,7 +26,20 @@
         .menu-btn { flex: 1; background: #fff; color: #000; padding: 0 20px; border-radius: 15px; font-size: 15px; font-weight: 800; border: none; text-align: left; }
         .history-btn { background: #1a1a1a; border-radius: 15px; width: 70px; display: flex; flex-direction: column; align-items: center; justify-content: center; border: 1px solid #333; color: #fff; cursor: pointer; }
         
-        #score-list, #history-list, #detail-list { flex-grow: 1; overflow-y: auto; padding: 15px 0; display: flex; flex-direction: column; gap: 8px; }
+        /* Gear Button Styles */
+        .home-footer { position: absolute; bottom: 40px; left: 0; right: 0; display: flex; justify-content: center; }
+        .gear-link { display: flex; align-items: center; gap: 10px; color: var(--gray); text-decoration: none; background: #111; padding: 12px 25px; border-radius: 30px; border: 1px solid #222; cursor: pointer; }
+        .gear-link:active { background: #222; }
+        .gear-icon { font-size: 20px; }
+        .gear-text { font-size: 10px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; }
+
+        /* Input Styles */
+        .gear-input-group { margin-bottom: 20px; }
+        .gear-label { display: block; font-size: 10px; font-weight: 800; color: var(--gray); margin-bottom: 8px; text-transform: uppercase; }
+        .gear-input { width: 100%; background: #111; border: 1px solid #333; color: #fff; padding: 15px; border-radius: 10px; font-size: 16px; outline: none; }
+        .gear-input:focus { border-color: var(--accent); }
+
+        #score-list, #history-list, #detail-list, #gear-list { flex-grow: 1; overflow-y: auto; padding: 15px 0; display: flex; flex-direction: column; gap: 8px; }
         .end-card, .history-card { background: var(--card); padding: 12px 15px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #222; }
         .clickable-end { cursor: pointer; border-left: 3px solid transparent; transition: 0.2s; }
         .clickable-end:active { background: #252525; }
@@ -79,14 +92,45 @@
                 <button class="history-btn" onclick="showHistory('TARGET OUTDOOR')"><span style="font-size:18px;">📜</span><span style="font-size:8px; font-weight:900; margin-top:4px;">HISTORY</span></button>
             </div>
         </div>
+        
+        <div class="home-footer">
+            <div class="gear-link" onclick="showGearScreen()">
+                <span class="gear-icon">⚙️</span>
+                <span class="gear-text">Gear / Setup</span>
+            </div>
+        </div>
+    </div>
+
+    <div id="gear-screen" class="screen">
+        <header>
+            <button onclick="showScreen('home')" style="background:none; border:none; color:var(--gray); font-size:22px;">✕</button>
+            <div class="header-center"><div class="stat-label" style="color:#fff; font-size:11px;">MY SETUP</div></div>
+            <button onclick="saveGear()" style="background:none; border:none; color:var(--accent); font-size:11px; font-weight:bold;">SAVE</button>
+        </header>
+        <div id="gear-list">
+            <div class="gear-input-group">
+                <label class="gear-label">Riser / Bow</label>
+                <input type="text" id="gear-riser" class="gear-input" placeholder="e.g. Hoyt Xceed">
+            </div>
+            <div class="gear-input-group">
+                <label class="gear-label">Limbs / Weight</label>
+                <input type="text" id="gear-limbs" class="gear-input" placeholder="e.g. 36# Carbon">
+            </div>
+            <div class="gear-input-group">
+                <label class="gear-label">Arrows</label>
+                <input type="text" id="gear-arrows" class="gear-input" placeholder="e.g. Easton X10">
+            </div>
+            <div class="gear-input-group">
+                <label class="gear-label">Notes (Plunger/String)</label>
+                <textarea id="gear-notes" class="gear-input" style="height:100px; resize:none;" placeholder="String type, plunger turns, etc."></textarea>
+            </div>
+        </div>
     </div>
 
     <div id="scoring" class="screen">
         <header>
             <button onclick="if(confirm('Exit?')) showScreen('home')" style="background:none; border:none; color:var(--gray); font-size:22px;">✕</button>
-            <div class="header-center">
-                <div id="mode-display" style="color:#fff; font-size:14px; font-weight:800; text-transform:uppercase;">MODE (0/0)</div>
-            </div>
+            <div class="header-center"><div id="mode-display" style="color:#fff; font-size:14px; font-weight:800; text-transform:uppercase;">MODE (0/0)</div></div>
             <div class="header-right">
                 <div style="display:flex; flex-direction:column;"><span class="stat-label">AVG</span><span id="avg-score" class="stat-val">0.0</span></div>
                 <div style="display:flex; flex-direction:column;"><span class="stat-label">TOTAL</span><span id="total-score" class="stat-val" style="color:var(--accent);">0</span></div>
@@ -133,6 +177,27 @@
         showScreen('scoring'); 
     }
 
+    // GEAR LOGIC
+    function showGearScreen() {
+        const gear = JSON.parse(localStorage.getItem('archer_gear') || "{}");
+        document.getElementById('gear-riser').value = gear.riser || "";
+        document.getElementById('gear-limbs').value = gear.limbs || "";
+        document.getElementById('gear-arrows').value = gear.arrows || "";
+        document.getElementById('gear-notes').value = gear.notes || "";
+        showScreen('gear-screen');
+    }
+
+    function saveGear() {
+        const gear = {
+            riser: document.getElementById('gear-riser').value,
+            limbs: document.getElementById('gear-limbs').value,
+            arrows: document.getElementById('gear-arrows').value,
+            notes: document.getElementById('gear-notes').value
+        };
+        localStorage.setItem('archer_gear', JSON.stringify(gear));
+        showScreen('home');
+    }
+
     function getArrowColor(s) {
         if (state.mode.includes('TARGET')) {
             if (s === 'X' || s >= 9) return '#FFD700'; 
@@ -146,10 +211,10 @@
             if (s === 8) return '#FF3B30';
             if (s === 5) return '#007AFF';
         } else if (state.mode.includes('FIELD')) {
-            if (s >= 5) return '#FFD700'; // 6, 5 Yellow
-            if (s >= 1) return '#333';    // 4-1 Black
+            if (s >= 5) return '#FFD700';
+            if (s >= 1) return '#333';
         }
-        return '#34C759'; // M (0) Green
+        return '#34C759';
     }
 
     function renderButtons() {
@@ -238,7 +303,20 @@
     function saveSession() {
         const historyTotal = state.history.reduce((a, b) => a + b.total, 0);
         const avg = (historyTotal / (state.history.length * state.arrows)).toFixed(1);
-        const session = { id: Date.now(), date: new Date().toLocaleDateString('en-GB'), score: historyTotal, avg: avg, ends: [...state.history], arrowsPerEnd: state.arrows, totalEndsPlanned: state.ends };
+        
+        // Grab current gear to tag the session
+        const currentGear = JSON.parse(localStorage.getItem('archer_gear') || "{}");
+
+        const session = { 
+            id: Date.now(), 
+            date: new Date().toLocaleDateString('en-GB'), 
+            score: historyTotal, 
+            avg: avg, 
+            ends: [...state.history], 
+            arrowsPerEnd: state.arrows, 
+            totalEndsPlanned: state.ends,
+            setup: currentGear // Save gear with session
+        };
         let allHistory = JSON.parse(localStorage.getItem(state.mode) || "[]");
         allHistory.unshift(session);
         localStorage.setItem(state.mode, JSON.stringify(allHistory));
@@ -273,11 +351,19 @@
         const arrowsShot = session.ends.length * session.arrowsPerEnd;
         list.insertAdjacentHTML('beforeend', `<div class="stats-card"><div><div class="stat-label">TOTAL</div><div class="stat-val" style="color:var(--accent);">${session.score}</div></div><div><div class="stat-label">AVERAGE</div><div class="stat-val">${session.avg}</div></div><div><div class="stat-label">ARROWS</div><div class="stat-val" style="font-size: 16px;">${arrowsShot}/${arrowsShot}</div></div></div>`);
 
+        // GEAR TAG IN DETAILS
+        if(session.setup && (session.setup.riser || session.setup.notes)) {
+            list.insertAdjacentHTML('beforeend', `
+                <div class="chart-box" style="border-color: #333;">
+                    <div class="chart-title">Setup Used</div>
+                    <div style="font-size: 13px; font-weight: bold; color: var(--text);">${session.setup.riser || 'No Name'} | ${session.setup.limbs || ''}</div>
+                    <div style="font-size: 11px; color: var(--gray); margin-top:4px;">${session.setup.notes || ''}</div>
+                </div>`);
+        }
+
         const arrowPerEnd = session.arrowsPerEnd;
         const maxEndVal = state.mode.includes('TARGET') ? (arrowPerEnd * 10) : (arrowPerEnd * 11);
         const points = session.ends.map((end, i) => `${(i / (session.ends.length - 1)) * 100},${75 - (end.total / maxEndVal) * 65}`).join(' ');
-        
-        // Dots as rounded rectangles to maintain shape in stretched SVG
         const dots = session.ends.map((end, i) => {
             const x = (i / (session.ends.length - 1)) * 100;
             const y = 75 - (end.total / maxEndVal) * 65;
@@ -301,11 +387,6 @@
                             <polyline fill="none" stroke="var(--accent)" stroke-width="0.8" points="${points}" />
                             ${dots}
                         </svg>
-                        <div style="display:flex; justify-content:space-between; margin-top:8px; border-top:1px solid #333; padding-top:4px;">
-                            <span style="font-size:8px; color:var(--gray);">E1</span>
-                            <span style="font-size:8px; color:var(--gray);">E${Math.round(session.ends.length/2)}</span>
-                            <span style="font-size:8px; color:var(--gray);">E${session.ends.length}</span>
-                        </div>
                     </div>
                 </div>
             </div>`);
