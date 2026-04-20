@@ -7,7 +7,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>ALL IN Archery</title>
     <style>
-        :root { --bg: #000; --text: #fff; --accent: #FFD700; --card: #151515; --gray: #888; }
+        :root { --bg: #000; --text: #fff; --accent: #FFD700; --card: #151515; --gray: #888; --red: #FF3B30; }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; }
         body { background: var(--bg); color: var(--text); font-family: -apple-system, sans-serif; height: 100vh; overflow: hidden; padding-top: env(safe-area-inset-top); }
         .app-container { width: 100%; max-width: 500px; height: 100%; margin: 0 auto; position: relative; }
@@ -16,57 +16,23 @@
         
         header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 10px; border-bottom: 1px solid #222; min-height: 60px; }
         .header-center { flex: 2; text-align: center; padding: 0 5px; }
-        .header-right { display: flex; gap: 15px; align-items: baseline; text-align: right; }
         .stat-label { font-size: 9px; color: var(--gray); text-transform: uppercase; font-weight: 800; letter-spacing: 0.5px; }
         .stat-val { font-size: 20px; font-weight: 900; }
 
-        .logo-badge { width: 80px; height: 80px; background: var(--accent); color: #000; border-radius: 20px; margin: 0 auto 10px; display: flex; align-items: center; justify-content: center; font-size: 28px; font-weight: 900; }
+        .timer-bar-container { width: 100%; height: 4px; background: #222; position: relative; margin-top: -1px; display: none; }
+        .timer-bar-fill { height: 100%; background: var(--accent); width: 100%; transition: width 1s linear; }
+        .timer-active { color: var(--accent) !important; filter: drop-shadow(0 0 5px var(--accent)); }
+
         .menu-list { display: flex; flex-direction: column; gap: 12px; margin-top: 20px; }
         .menu-row { display: flex; gap: 10px; height: 75px; }
         .menu-btn { flex: 1; background: #fff; color: #000; padding: 0 20px; border-radius: 15px; font-size: 15px; font-weight: 800; border: none; text-align: left; }
         .history-btn { background: #1a1a1a; border-radius: 15px; width: 70px; display: flex; flex-direction: column; align-items: center; justify-content: center; border: 1px solid #333; color: #fff; cursor: pointer; }
         
-        .home-footer { position: absolute; bottom: 40px; left: 0; right: 0; display: flex; justify-content: center; }
-        .gear-link { display: flex; align-items: center; gap: 10px; color: var(--gray); background: #111; padding: 12px 25px; border-radius: 30px; border: 1px solid #222; cursor: pointer; }
-        .gear-text { font-size: 10px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; }
-
-        /* Gear Screen Styles */
-        .gear-section-title { font-size: 12px; font-weight: 900; color: var(--accent); margin: 20px 0 10px; text-transform: uppercase; border-left: 3px solid var(--accent); padding-left: 10px; }
-        .gear-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
-        .gear-input-group { display: flex; flex-direction: column; }
-        .gear-label { font-size: 9px; font-weight: 900; color: #bbb; margin-bottom: 4px; text-transform: uppercase; }
-        .gear-input { background: #111; border: 1px solid #222; color: #fff; padding: 10px; border-radius: 8px; font-size: 14px; outline: none; width: 100%; }
-        .gear-input:focus { border-color: var(--accent); }
-
-        .crawl-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; background: #0a0a0a; padding: 12px; border-radius: 12px; border: 1px solid #1a1a1a; }
-        .crawl-item { text-align: center; }
-        .crawl-dist { font-size: 9px; font-weight: 900; color: #bbb; margin-bottom: 4px; }
-        .crawl-val { background: #1a1a1a; border: 1px solid #333; color: var(--accent); width: 100%; text-align: center; padding: 5px 0; border-radius: 5px; font-size: 12px; font-weight: bold; }
-
-        #score-list, #history-list, #detail-list, #gear-list { flex-grow: 1; overflow-y: auto; padding: 15px 0; display: flex; flex-direction: column; gap: 8px; }
-        .end-card, .history-card { background: var(--card); padding: 12px 15px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #222; }
-        .clickable-end { cursor: pointer; border-left: 3px solid transparent; transition: 0.2s; }
-        .clickable-end:active { background: #252525; }
-        
+        #score-list { flex-grow: 1; overflow-y: auto; padding: 15px 0; display: flex; flex-direction: column; gap: 8px; }
+        .end-card { background: var(--card); padding: 12px 15px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #222; }
         .next-btn { background: var(--accent); color: #000; width: 100%; padding: 18px; border-radius: 12px; font-size: 20px; font-weight: 900; border: none; margin-top: 15px; }
-        .next-btn:disabled { background: #333; color: #666; }
-        .btn-grid { display: grid; gap: 8px; margin-top: 10px; }
+        .btn-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 10px; }
         .score-btn { height: 60px; border-radius: 12px; border: 1px solid #333; font-size: 22px; font-weight: 900; color: #fff; background: #222; }
-        
-        .pb-badge { background: var(--accent); color: #000; font-size: 10px; font-weight: 900; padding: 2px 6px; border-radius: 4px; margin-left: 8px; }
-        .hist-date { font-size: 14px; font-weight: 700; color: var(--text); }
-        .hist-avg { font-size: 12px; color: var(--gray); margin-left: 10px; font-weight: 600; }
-        .hist-total { font-size: 18px; font-weight: 900; color: var(--accent); }
-
-        .stats-card { background: var(--card); border-radius: 12px; padding: 12px 15px; border: 1px solid #222; display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; text-align: center; }
-        .chart-box { background: var(--card); border-radius: 12px; padding: 15px; border: 1px solid #222; margin-top: 8px; }
-        .chart-title { font-size: 10px; font-weight: bold; color: var(--gray); text-transform: uppercase; margin-bottom: 12px; letter-spacing: 0.5px;}
-        
-        .hit-bar { width: 100%; background: #222; border-radius: 2px; height: 75px; position: relative; overflow: hidden;}
-        .hit-fill { position: absolute; bottom: 0; left: 0; right: 0; }
-        .hits-chart { display: grid; gap: 4px; text-align: center; margin-top: 5px; height: 110px; align-items: end; }
-        .hit-label { font-size: 8px; font-weight: 900; margin-top: 4px; }
-        .hit-count { font-size: 9px; margin-bottom: 4px; color: var(--text); font-weight: bold; }
     </style>
 </head>
 <body>
@@ -74,223 +40,159 @@
 <div class="app-container">
     <div id="home" class="screen active-screen">
         <div style="text-align:center; margin-top:40px;">
-            <div class="logo-badge">AI</div>
-            <div style="font-size:32px; font-weight:900; letter-spacing:6px;">ALL IN</div>
-            <p style="color:var(--gray); font-size:12px;">ARCHERY TRACKER</p>
+            <div style="background:var(--accent); color:#000; width:60px; height:60px; border-radius:15px; display:inline-flex; align-items:center; justify-content:center; font-weight:900; font-size:24px;">AI</div>
+            <div style="font-size:28px; font-weight:900; letter-spacing:4px; margin-top:10px;">ALL IN</div>
         </div>
         <div class="menu-list">
-            <div class="menu-row">
-                <button class="menu-btn" onclick="startApp('3D PRACTICE', 2, 24)">3D PRACTICE</button>
-                <button class="history-btn" onclick="showHistory('3D PRACTICE')">📜<span style="font-size:8px; font-weight:900;">HISTORY</span></button>
-            </div>
-            <div class="menu-row">
-                <button class="menu-btn" onclick="startApp('FIELD PRACTICE', 3, 24)">FIELD PRACTICE</button>
-                <button class="history-btn" onclick="showHistory('FIELD PRACTICE')">📜<span style="font-size:8px; font-weight:900;">HISTORY</span></button>
-            </div>
-            <div class="menu-row">
-                <button class="menu-btn" onclick="startApp('TARGET INDOOR', 3, 20)">TARGET INDOOR</button>
-                <button class="history-btn" onclick="showHistory('TARGET INDOOR')">📜<span style="font-size:8px; font-weight:900;">HISTORY</span></button>
-            </div>
-            <div class="menu-row">
-                <button class="menu-btn" onclick="startApp('TARGET OUTDOOR', 6, 12)">TARGET OUTDOOR</button>
-                <button class="history-btn" onclick="showHistory('TARGET OUTDOOR')">📜<span style="font-size:8px; font-weight:900;">HISTORY</span></button>
-            </div>
-        </div>
-        <div class="home-footer">
-            <div class="gear-link" onclick="showGearScreen()">
-                <span>⚙️</span><span class="gear-text">Gear / Setup</span>
-            </div>
-        </div>
-    </div>
-
-    <div id="gear-screen" class="screen">
-        <header>
-            <button onclick="showScreen('home')" style="background:none; border:none; color:var(--gray); font-size:22px;">✕</button>
-            <div class="header-center"><div class="stat-label" style="color:#fff;">MY SETUP</div></div>
-            <button onclick="saveGear()" style="background:none; border:none; color:var(--accent); font-weight:bold;">SAVE</button>
-        </header>
-        <div id="gear-list" style="padding-bottom: 40px;">
-            <div class="gear-section-title">Riser Details</div>
-            <div class="gear-grid">
-                <div class="gear-input-group"><label class="gear-label">Riser Make</label><input type="text" id="g-r-make" class="gear-input"></div>
-                <div class="gear-input-group"><label class="gear-label">Riser Length</label><input type="text" id="g-r-len" class="gear-input"></div>
-            </div>
-            <div class="gear-section-title">Limb Details</div>
-            <div class="gear-grid">
-                <div class="gear-input-group"><label class="gear-label">Limb Make</label><input type="text" id="g-l-make" class="gear-input"></div>
-                <div class="gear-input-group"><label class="gear-label">Limb Length</label><input type="text" id="g-l-len" class="gear-input"></div>
-                <div class="gear-input-group"><label class="gear-label">Limb Weight</label><input type="text" id="g-l-weight" class="gear-input"></div>
-            </div>
-            <div class="gear-section-title">Arrow Details</div>
-            <div class="gear-grid">
-                <div class="gear-input-group"><label class="gear-label">Arrow Make</label><input type="text" id="g-a-make" class="gear-input"></div>
-                <div class="gear-input-group"><label class="gear-label">Arrow Spine</label><input type="text" id="g-a-spine" class="gear-input"></div>
-                <div class="gear-input-group"><label class="gear-label">Arrow Length</label><input type="text" id="g-a-len" class="gear-input"></div>
-                <div class="gear-input-group"><label class="gear-label">Point Weight</label><input type="text" id="g-a-point" class="gear-input"></div>
-                <div class="gear-input-group"><label class="gear-label">Nock Details</label><input type="text" id="g-a-nock" class="gear-input"></div>
-                <div class="gear-input-group"><label class="gear-label">Vanes Details</label><input type="text" id="g-a-vanes" class="gear-input"></div>
-            </div>
-            <div class="gear-section-title">Barebow Crawls</div>
-            <div class="crawl-grid" id="crawl-inputs"></div>
+            <div class="menu-row"><button class="menu-btn" onclick="startApp('3D PRACTICE', 2, 24)">3D PRACTICE</button><button class="history-btn">📜</button></div>
+            <div class="menu-row"><button class="menu-btn" onclick="startApp('FIELD PRACTICE', 3, 24)">FIELD PRACTICE</button><button class="history-btn">📜</button></div>
+            <div class="menu-row"><button class="menu-btn" onclick="startApp('TARGET INDOOR', 3, 20)">TARGET INDOOR</button><button class="history-btn">📜</button></div>
+            <div class="menu-row"><button class="menu-btn" onclick="startApp('TARGET OUTDOOR', 6, 12)">TARGET OUTDOOR</button><button class="history-btn">📜</button></div>
         </div>
     </div>
 
     <div id="scoring" class="screen">
         <header>
-            <button onclick="if(confirm('Exit?')) showScreen('home')" style="background:none; border:none; color:var(--gray); font-size:22px;">✕</button>
-            <div class="header-center"><div id="mode-display" style="color:#fff; font-weight:800; text-transform:uppercase;">MODE (0/0)</div></div>
-            <div class="header-right">
-                <div style="display:flex; flex-direction:column;"><span class="stat-label">AVG</span><span id="avg-score" class="stat-val">0.0</span></div>
-                <div style="display:flex; flex-direction:column;"><span class="stat-label">TOTAL</span><span id="total-score" class="stat-val" style="color:var(--accent);">0</span></div>
+            <button onclick="stopTimer(); showScreen('home');" style="background:none; border:none; color:var(--gray); font-size:22px;">✕</button>
+            <div class="header-center">
+                <div id="mode-display" style="color:#fff; font-weight:800; font-size: 11px;">MODE</div>
+                <div id="timer-text" style="font-size:10px; color:var(--gray); font-weight:900; letter-spacing:1px; margin-top:2px;">READY</div>
+            </div>
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <button id="timer-icon" onclick="toggleTimer()" style="background:none; border:none; color:var(--gray); font-size:24px;">⏰</button>
+                <div style="text-align: right;">
+                    <div class="stat-label">TOTAL</div>
+                    <div id="total-score" class="stat-val" style="color:var(--accent);">0</div>
+                </div>
             </div>
         </header>
+        <div class="timer-bar-container" id="t-container"><div class="timer-bar-fill" id="t-fill"></div></div>
+        
         <div id="score-list"></div>
-        <div style="padding-bottom:30px; border-top: 1px solid #222;">
-            <button id="next-btn" class="next-btn" onclick="handleMainAction()">NEXT END</button>
+        <div style="padding-bottom:30px;">
+            <button id="next-btn" class="next-btn" onclick="handleNextEnd()">NEXT END</button>
             <div id="button-grid" class="btn-grid"></div>
         </div>
-    </div>
-
-    <div id="history-screen" class="screen">
-        <header><button onclick="showScreen('home')" style="background:none; border:none; color:var(--gray); font-size:22px;">✕</button><div class="header-center"><div id="history-title" class="stat-label" style="color:#fff;">HISTORY</div></div><button onclick="clearHistory()" style="background:none; border:none; color:var(--gray); font-size:10px; font-weight:bold;">CLEAR</button></header>
-        <div id="history-list"></div>
-    </div>
-    <div id="detail-screen" class="screen">
-        <header><button onclick="showScreen('history-screen')" style="background:none; border:none; color:var(--gray); font-size:22px;">✕</button><div class="header-center"><div id="detail-title" class="stat-label" style="color:#fff;">SESSION DETAIL</div></div><div style="width:30px;"></div></header>
-        <div id="detail-list"></div>
     </div>
 </div>
 
 <script>
-    let state = { current: [], history: [], arrows: 2, ends: 24, mode: '', editingIndex: -1 };
+    let state = { current: [], history: [], arrows: 2, ends: 24, mode: '' };
+    let timer = { interval: null, timeLeft: 0, total: 0, active: false };
+    const audio = new (window.AudioContext || window.webkitAudioContext)();
 
-    const crawlContainer = document.getElementById('crawl-inputs');
-    for(let d=5; d<=50; d+=5) { crawlContainer.innerHTML += `<div class="crawl-item"><div class="crawl-dist">${d}m</div><input type="text" id="c-${d}" class="crawl-val"></div>`; }
-
-    function showScreen(id) { document.querySelectorAll('.screen').forEach(s => s.classList.remove('active-screen')); document.getElementById(id).classList.add('active-screen'); }
-
-    function startApp(mode, arrows, ends) { state = { current: [], history: [], arrows: arrows, ends: ends, mode: mode, editingIndex: -1 }; renderButtons(); renderUI(); showScreen('scoring'); }
-
-    function showGearScreen() {
-        const g = JSON.parse(localStorage.getItem('archer_gear') || "{}");
-        document.getElementById('g-r-make').value = g.r_make || ""; document.getElementById('g-r-len').value = g.r_len || "";
-        document.getElementById('g-l-make').value = g.l_make || ""; document.getElementById('g-l-len').value = g.l_len || ""; document.getElementById('g-l-weight').value = g.l_weight || "";
-        document.getElementById('g-a-make').value = g.a_make || ""; document.getElementById('g-a-spine').value = g.a_spine || ""; document.getElementById('g-a-len').value = g.a_len || "";
-        document.getElementById('g-a-point').value = g.a_point || ""; document.getElementById('g-a-nock').value = g.a_nock || ""; document.getElementById('g-a-vanes').value = g.a_vanes || "";
-        for(let d=5; d<=50; d+=5) { document.getElementById(`c-${d}`).value = (g.crawls && g.crawls[d]) ? g.crawls[d] : ""; }
-        showScreen('gear-screen');
+    function bip(count) {
+        for(let i=0; i<count; i++) {
+            setTimeout(() => {
+                const osc = audio.createOscillator();
+                const gain = audio.createGain();
+                osc.type = "square";
+                osc.frequency.setValueAtTime(800, audio.currentTime);
+                gain.gain.setValueAtTime(0.1, audio.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.0001, audio.currentTime + 0.2);
+                osc.connect(gain); gain.connect(audio.destination);
+                osc.start(); osc.stop(audio.currentTime + 0.2);
+            }, i * 200);
+        }
     }
 
-    function saveGear() {
-        const crawls = {};
-        for(let d=5; d<=50; d+=5) { crawls[d] = document.getElementById(`c-${d}`).value; }
-        const gear = { r_make: document.getElementById('g-r-make').value, r_len: document.getElementById('g-r-len').value, l_make: document.getElementById('g-l-make').value, l_len: document.getElementById('g-l-len').value, l_weight: document.getElementById('g-l-weight').value, a_make: document.getElementById('g-a-make').value, a_spine: document.getElementById('g-a-spine').value, a_len: document.getElementById('g-a-len').value, a_point: document.getElementById('g-a-point').value, a_nock: document.getElementById('g-a-nock').value, a_vanes: document.getElementById('g-a-vanes').value, crawls: crawls };
-        localStorage.setItem('archer_gear', JSON.stringify(gear)); showScreen('home');
+    function toggleTimer() {
+        if (timer.active) stopTimer(); else startTimer();
     }
 
-    function getArrowColor(s) {
-        if (state.mode.includes('TARGET')) { if (s === 'X' || s >= 9) return '#FFD700'; if (s >= 7) return '#FF3B30'; if (s >= 5) return '#007AFF'; if (s >= 3) return '#333'; if (s >= 1) return '#FFF'; }
-        else if (state.mode.includes('3D')) { if (s === 11) return '#FFD700'; if (s === 10) return '#FFF176'; if (s === 8) return '#FF3B30'; if (s === 5) return '#007AFF'; }
-        else if (state.mode.includes('FIELD')) { if (s >= 5) return '#FFD700'; if (s >= 1) return '#333'; }
-        return '#34C759';
+    function startTimer() {
+        stopTimer();
+        if (state.mode.includes('3D')) timer.total = 120;
+        else if (state.mode.includes('FIELD')) timer.total = 180;
+        else if (state.mode.includes('INDOOR')) timer.total = 90;
+        else if (state.mode.includes('OUTDOOR')) timer.total = 180;
+
+        timer.timeLeft = timer.total;
+        timer.active = true;
+        document.getElementById('t-container').style.display = 'block';
+        document.getElementById('timer-icon').classList.add('timer-active');
+        
+        const isTarget = state.mode.includes('TARGET');
+        if (isTarget) bip(1); 
+        
+        updateUI();
+
+        timer.interval = setInterval(() => {
+            timer.timeLeft--;
+            updateUI();
+            
+            if (isTarget) {
+                if (timer.timeLeft === (timer.total - 10)) bip(2); 
+                if (timer.timeLeft <= 0) { bip(3); stopTimer(); }
+            } else {
+                if (timer.timeLeft <= 0) stopTimer();
+            }
+        }, 1000);
+    }
+
+    function stopTimer() {
+        clearInterval(timer.interval);
+        timer.active = false;
+        document.getElementById('t-container').style.display = 'none';
+        document.getElementById('timer-icon').classList.remove('timer-active');
+        document.getElementById('timer-text').innerText = "READY";
+    }
+
+    function updateUI() {
+        const m = Math.floor(timer.timeLeft / 60);
+        const s = timer.timeLeft % 60;
+        if(timer.active) {
+            document.getElementById('timer-text').innerText = `${m}:${s < 10 ? '0' : ''}${s}`;
+            document.getElementById('timer-text').style.color = timer.timeLeft <= 10 ? 'var(--red)' : 'var(--accent)';
+        }
+        document.getElementById('t-fill').style.width = (timer.timeLeft / timer.total * 100) + "%";
+        document.getElementById('t-fill').style.backgroundColor = timer.timeLeft <= 10 ? 'var(--red)' : 'var(--accent)';
+        
+        const tot = state.history.reduce((a, b) => a + b.total, 0) + state.current.reduce((a, b) => a + (parseInt(b)||0), 0);
+        document.getElementById('total-score').innerText = tot;
+        document.getElementById('mode-display').innerText = `${state.mode} (${state.history.length}/${state.ends})`;
+    }
+
+    function startApp(mode, arrows, ends) {
+        state = { current: [], history: [], arrows: arrows, ends: ends, mode: mode };
+        stopTimer();
+        renderButtons();
+        showScreen('scoring');
+        renderEndList();
+        updateUI();
     }
 
     function renderButtons() {
         const grid = document.getElementById('button-grid'); grid.innerHTML = '';
-        let scores = state.mode.includes('3D') ? [11, 10, 8, 5, 0] : state.mode.includes('TARGET') ? ['X', 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0] : [6,5,4,3,2,1,0];
-        grid.style.gridTemplateColumns = scores.length > 5 ? 'repeat(4, 1fr)' : 'repeat(3, 1fr)';
+        let scores = state.mode.includes('3D') ? [11, 10, 8, 5, 0] : [10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0];
         scores.forEach(s => {
-            const b = document.createElement('button'); b.className = 'score-btn'; 
-            const color = getArrowColor(s === 'X' ? 10 : s);
-            Object.assign(b.style, { backgroundColor: color, color: (color === '#FFF' || color === '#FFD700' || color === '#FFF176') ? '#000' : '#fff' });
-            b.innerText = s === 0 ? 'M' : s; b.onclick = () => { if(state.current.length < state.arrows) { state.current.push(s); renderUI(); } };
+            const b = document.createElement('button'); b.className = 'score-btn';
+            b.innerText = s === 0 ? 'M' : s;
+            b.onclick = () => { if(state.current.length < state.arrows) { state.current.push(s); renderEndList(); updateUI(); } };
             grid.appendChild(b);
         });
-        const del = document.createElement('button'); del.className = 'score-btn'; del.innerText = '⌫'; del.style.background = '#444'; del.onclick = () => { state.current.pop(); renderUI(); }; grid.appendChild(del);
     }
 
-    function getVal(s) { return s === 'X' ? 10 : (parseInt(s) || 0); }
-    function editEnd(index) { state.editingIndex = index; state.current = [...state.history[index].rawScores]; renderUI(); }
-
-    function renderUI() {
-        const histTot = state.history.reduce((acc, end, idx) => acc + (idx === state.editingIndex ? 0 : end.total), 0);
-        const curTot = state.current.reduce((a, b) => a + getVal(b), 0);
-        const grandTot = histTot + curTot;
-        const totArrs = (state.history.length * state.arrows) + (state.editingIndex === -1 ? state.current.length : 0);
-        document.getElementById('total-score').innerText = grandTot;
-        document.getElementById('avg-score').innerText = totArrs > 0 ? (grandTot / totArrs).toFixed(1) : "0.0";
-        document.getElementById('mode-display').innerText = `${state.mode} (${state.history.length}/${state.ends})`;
+    function renderEndList() {
         const list = document.getElementById('score-list'); list.innerHTML = '';
         state.history.forEach((end, i) => {
-            if (state.editingIndex === i) {
-                const actDisp = state.current.map(s => s === 0 ? 'M' : s).join(' · ') || '---';
-                list.insertAdjacentHTML('beforeend', `<div class="end-card" style="border:1px solid var(--accent); background: #1a1500;"><div><div class="stat-label">END ${i+1} (EDIT)</div><b>${actDisp}</b></div><div style="color:var(--accent); font-weight:900; font-size:20px;">${curTot}</div></div>`);
-            } else {
-                list.insertAdjacentHTML('beforeend', `<div class="end-card clickable-end" onclick="editEnd(${i})"><div><div class="stat-label">END ${i+1}</div><b>${end.displayScores.join(' · ')}</b></div><div style="color:var(--accent); font-weight:900; font-size:20px;">${end.total}</div></div>`);
-            }
+            list.insertAdjacentHTML('beforeend', `<div class="end-card"><div><div class="stat-label">END ${i+1}</div><b>${end.scores.join(' · ')}</b></div><div style="color:var(--accent); font-weight:900;">${end.total}</div></div>`);
         });
-        if (state.editingIndex === -1 && state.history.length < state.ends) {
-            const actDisp = state.current.map(s => s === 0 ? 'M' : s).join(' · ') || '---';
-            list.insertAdjacentHTML('beforeend', `<div class="end-card" style="border:1px solid var(--accent); background: #1a1500;"><div><div class="stat-label">END ${state.history.length + 1}</div><b>${actDisp}</b></div><div style="color:var(--accent); font-weight:900; font-size:20px;">${curTot}</div></div>`);
-        }
-        const btn = document.getElementById('next-btn'); btn.disabled = state.current.length < state.arrows;
-        btn.innerText = state.editingIndex !== -1 ? "UPDATE END" : (state.history.length === state.ends - 1 ? "FINISH SESSION" : "NEXT END");
-        btn.style.background = state.editingIndex !== -1 ? "#fff" : "var(--accent)";
+        const cur = state.current.map(s => s===0?'M':s).join(' · ') || '---';
+        list.insertAdjacentHTML('beforeend', `<div class="end-card" style="border:1px solid var(--accent);"><div><div class="stat-label">CURRENT</div><b>${cur}</b></div></div>`);
     }
 
-    function handleMainAction() {
+    function handleNextEnd() {
         if(state.current.length === state.arrows) {
-            const newEnd = { rawScores: [...state.current], displayScores: [...state.current].map(s => s === 0 ? 'M' : s), total: state.current.reduce((a, b) => a + getVal(b), 0) };
-            if (state.editingIndex !== -1) { state.history[state.editingIndex] = newEnd; state.editingIndex = -1; } else { state.history.push(newEnd); }
-            state.current = []; if(state.history.length >= state.ends && state.editingIndex === -1) { saveSession(); } else { renderUI(); document.getElementById('score-list').scrollTop = document.getElementById('score-list').scrollHeight; }
+            state.history.push({ scores: [...state.current], total: state.current.reduce((a,b)=>(a+(parseInt(b)||0)),0)});
+            state.current = [];
+            stopTimer();
+            renderEndList();
+            updateUI();
         }
     }
 
-    function saveSession() {
-        const histTot = state.history.reduce((a, b) => a + b.total, 0);
-        const avg = (histTot / (state.history.length * state.arrows)).toFixed(1);
-        const session = { id: Date.now(), date: new Date().toLocaleDateString('en-GB'), score: histTot, avg: avg, ends: [...state.history], arrowsPerEnd: state.arrows, totalEndsPlanned: state.ends };
-        let allHist = JSON.parse(localStorage.getItem(state.mode) || "[]"); allHist.unshift(session); localStorage.setItem(state.mode, JSON.stringify(allHist)); showScreen('home');
-    }
-
-    function showHistory(mode) {
-        state.mode = mode; showScreen('history-screen'); document.getElementById('history-title').innerText = mode + " HISTORY";
-        const list = document.getElementById('history-list'); list.innerHTML = '';
-        const data = JSON.parse(localStorage.getItem(mode) || "[]");
-        if(data.length === 0) list.innerHTML = `<p style="text-align:center; color:var(--gray); margin-top:40px;">No History found.</p>`;
-        else {
-            const maxS = Math.max(...data.map(s => s.score));
-            data.forEach(s => {
-                const isPB = s.score === maxS && maxS > 0;
-                list.insertAdjacentHTML('beforeend', `<div class="history-card" onclick="openSessionDetail(${s.id})"><div><span class="hist-date">${s.date}</span><span class="hist-avg">AVG: ${s.avg}</span>${isPB ? '<span class="pb-badge">PB</span>' : ''}</div><div style="display:flex; align-items:center; gap:8px;"><div class="hist-total">${s.score}</div><span style="color:var(--gray); font-size:18px;">›</span></div></div>`);
-            });
-        }
-    }
-
-    function openSessionDetail(sessionId) {
-        const data = JSON.parse(localStorage.getItem(state.mode) || "[]");
-        const session = data.find(s => s.id === sessionId); if(!session) return;
-        showScreen('detail-screen'); document.getElementById('detail-title').innerText = `${state.mode} - ${session.date}`;
-        const list = document.getElementById('detail-list'); list.innerHTML = '';
-        const arrsShot = session.ends.length * session.arrowsPerEnd;
-        list.insertAdjacentHTML('beforeend', `<div class="stats-card"><div><div class="stat-label">TOTAL</div><div class="stat-val" style="color:var(--accent);">${session.score}</div></div><div><div class="stat-label">AVERAGE</div><div class="stat-val">${session.avg}</div></div><div><div class="stat-label">ARROWS</div><div class="stat-val" style="font-size:16px;">${arrsShot}/${arrsShot}</div></div></div>`);
-        
-        const arrowPerEnd = session.arrowsPerEnd; const maxEndVal = state.mode.includes('TARGET') ? (arrowPerEnd * 10) : (arrowPerEnd * 11);
-        const pts = session.ends.map((end, i) => `${(i / (session.ends.length - 1)) * 100},${75 - (end.total / maxEndVal) * 65}`).join(' ');
-        const dts = session.ends.map((end, i) => { const x = (i / (session.ends.length - 1)) * 100; const y = 75 - (end.total / maxEndVal) * 65; return `<rect x="${x - 0.75}" y="${y - 1}" width="1.5" height="2" rx="0.75" fill="var(--accent)" />`; }).join('');
-        list.insertAdjacentHTML('beforeend', `<div class="chart-box"><div class="chart-title">Stamina Trend (Score per End)</div><div style="display:flex; height:110px; padding:5px 0;"><div style="display:flex; flex-direction:column; justify-content:space-between; height:75px; padding-right:8px; text-align:right; border-right:1px solid #333;"><span style="font-size:8px; color:var(--gray);">${maxEndVal}</span><span style="font-size:8px; color:var(--gray);">${Math.round(maxEndVal/2)}</span><span style="font-size:8px; color:var(--gray);">0</span></div><div style="flex:1; position:relative; margin-left:5px;"><svg viewBox="0 0 100 75" preserveAspectRatio="none" style="width:100%; height:75px; overflow:visible;"><line x1="0" y1="0" x2="100" y2="0" stroke="rgba(255,255,255,0.05)" stroke-width="0.5" /><line x1="0" y1="37.5" x2="100" y2="37.5" stroke="rgba(255,255,255,0.05)" stroke-width="0.5" /><line x1="0" y1="75" x2="100" y2="75" stroke="rgba(255,255,255,0.05)" stroke-width="0.5" /><polyline fill="none" stroke="var(--accent)" stroke-width="0.8" points="${pts}" />${dts}</svg></div></div></div>`);
-        
-        const hits = {}; session.ends.flatMap(end => end.rawScores).forEach(s => hits[s] = (hits[s] || 0) + 1);
-        let poss = state.mode.includes('3D') ? [11, 10, 8, 5, 0] : state.mode.includes('TARGET') ? ['X', 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0] : [6,5,4,3,2,1,0];
-        let maxH = Math.max(...Object.values(hits), 1);
-        let hBars = poss.map(sk => { const c = hits[sk] || 0; const bc = getArrowColor(sk === 'X' ? 10 : sk); return `<div><div class="hit-count">${c}</div><div class="hit-bar"><div class="hit-fill" style="height:${(c/maxH)*100}%; background:${bc}"></div></div><div class="hit-label" style="color:${bc}">${sk === 0 ? 'M' : sk}</div></div>`; }).join('');
-        list.insertAdjacentHTML('beforeend', `<div class="chart-box"><div class="chart-title">Hits Breakdown</div><div class="hits-chart" style="grid-template-columns: repeat(${poss.length}, 1fr);">${hBars}</div></div>`);
-        
-        list.insertAdjacentHTML('beforeend', `<div class="chart-title" style="margin-top:20px;">Detailed History</div>`);
-        session.ends.forEach((end, i) => { list.insertAdjacentHTML('beforeend', `<div class="end-card"><div><div class="stat-label">END ${i+1}</div><b>${end.displayScores.join(' · ')}</b></div><div style="color:var(--accent); font-weight:900;">${end.total}</div></div>`); });
-    }
-
-    function clearHistory() { if(confirm(`Wipe all ${state.mode} History?`)) { localStorage.removeItem(state.mode); showHistory(state.mode); } }
+    function showScreen(id) { document.querySelectorAll('.screen').forEach(s => s.classList.remove('active-screen')); document.getElementById(id).classList.add('active-screen'); }
 </script>
 </body>
 </html>
