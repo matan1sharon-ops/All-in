@@ -138,18 +138,21 @@
             if (s >= 5) return '#007AFF'; 
             if (s >= 3) return '#333';    
             if (s >= 1) return '#FFF';    
+        } else if (state.mode.includes('FIELD')) {
+            if (s >= 5) return '#FFD700'; // 6 and 5 are Yellow
+            if (s >= 1) return '#333';    // 4 to 1 are Black
         } else if (state.mode.includes('3D')) {
             if (s === 11) return '#FFD700';
             if (s === 10) return '#FFF176';
             if (s === 8) return '#FF3B30';
             if (s === 5) return '#007AFF';
         }
-        return '#34C759'; 
+        return '#34C759'; // M or Green default
     }
 
     function renderButtons() {
         const grid = document.getElementById('button-grid'); grid.innerHTML = '';
-        let scores = state.mode.includes('3D') ? [11, 10, 8, 5, 0] : state.mode.includes('TARGET') ? ['X', 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0] : [6,5,4,3,2,1,0];
+        let scores = state.mode.includes('3D') ? [11, 10, 8, 5, 0] : (state.mode.includes('TARGET') || state.mode.includes('FIELD')) ? (state.mode.includes('FIELD') ? [6, 5, 4, 3, 2, 1, 0] : ['X', 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0]) : [6,5,4,3,2,1,0];
         grid.style.gridTemplateColumns = scores.length > 5 ? 'repeat(4, 1fr)' : 'repeat(3, 1fr)';
         scores.forEach(s => {
             const b = document.createElement('button'); b.className = 'score-btn'; 
@@ -176,7 +179,7 @@
     function renderUI() {
         const historyTotal = state.history.reduce((a, b) => a + b.total, 0);
         const currentTotal = state.current.reduce((a, b) => a + getVal(b), 0);
-        const grandTotal = historyTotal + currentTotal;
+        const grandTotal = historyTotal + (state.editingIndex === -1 ? currentTotal : 0);
         const totalArrows = (state.history.length * state.arrows) + (state.editingIndex === -1 ? state.current.length : 0);
         
         document.getElementById('total-score').innerText = grandTotal;
@@ -332,7 +335,7 @@
         const allArrows = session.ends.flatMap(end => end.rawScores);
         allArrows.forEach(s => hitCounts[s] = (hitCounts[s] || 0) + 1);
 
-        let possibleScores = state.mode.includes('3D') ? [11, 10, 8, 5, 0] : ['X', 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0];
+        let possibleScores = state.mode.includes('3D') ? [11, 10, 8, 5, 0] : (state.mode.includes('FIELD') ? [6, 5, 4, 3, 2, 1, 0] : ['X', 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0]);
         let maxHits = Math.max(...Object.values(hitCounts), 1);
         
         let hitBars = possibleScores.map(scoreKey => {
