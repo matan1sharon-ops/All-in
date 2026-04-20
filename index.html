@@ -144,10 +144,10 @@
             if (s === 8) return '#FF3B30';
             if (s === 5) return '#007AFF';
         } else if (state.mode.includes('FIELD')) {
-            if (s >= 5) return '#FFD700'; // 6, 5 are Yellow
-            if (s >= 1) return '#333';    // 4, 3, 2, 1 are Black
+            if (s >= 5) return '#FFD700'; 
+            if (s >= 1) return '#333';    
         }
-        return '#34C759'; // M (0) is Green
+        return '#34C759'; 
     }
 
     function renderButtons() {
@@ -179,7 +179,6 @@
         const historyTotalExcludingEdit = state.history.reduce((acc, end, idx) => acc + (idx === state.editingIndex ? 0 : end.total), 0);
         const currentTotal = state.current.reduce((a, b) => a + getVal(b), 0);
         const grandTotal = historyTotalExcludingEdit + currentTotal;
-        
         const totalArrows = (state.history.length * state.arrows) + (state.editingIndex === -1 ? state.current.length : 0);
         
         document.getElementById('total-score').innerText = grandTotal;
@@ -187,7 +186,6 @@
         document.getElementById('mode-display').innerText = `${state.mode} (${state.history.length}/${state.ends})`;
         
         const list = document.getElementById('score-list'); list.innerHTML = '';
-        
         state.history.forEach((end, i) => {
             if (state.editingIndex === i) {
                 const activeDisplay = state.current.map(s => s === 0 ? 'M' : s).join(' · ') || '---';
@@ -216,14 +214,8 @@
 
         const btn = document.getElementById('next-btn');
         btn.disabled = state.current.length < state.arrows;
-        
-        if (state.editingIndex !== -1) {
-            btn.innerText = "UPDATE END";
-            btn.style.background = "#fff";
-        } else {
-            btn.innerText = (state.history.length === state.ends - 1) ? "FINISH SESSION" : "NEXT END";
-            btn.style.background = "var(--accent)";
-        }
+        btn.innerText = state.editingIndex !== -1 ? "UPDATE END" : (state.history.length === state.ends - 1 ? "FINISH SESSION" : "NEXT END");
+        btn.style.background = state.editingIndex !== -1 ? "#fff" : "var(--accent)";
     }
 
     function handleMainAction() {
@@ -233,40 +225,18 @@
                 displayScores: [...state.current].map(s => s === 0 ? 'M' : s), 
                 total: state.current.reduce((a, b) => a + getVal(b), 0) 
             };
-
-            if (state.editingIndex !== -1) {
-                state.history[state.editingIndex] = newEnd;
-                state.editingIndex = -1;
-            } else {
-                state.history.push(newEnd);
-            }
-
+            if (state.editingIndex !== -1) { state.history[state.editingIndex] = newEnd; state.editingIndex = -1; }
+            else { state.history.push(newEnd); }
             state.current = [];
-            
-            if(state.history.length >= state.ends && state.editingIndex === -1) { 
-                saveSession(); 
-            } else { 
-                renderUI(); 
-                const list = document.getElementById('score-list');
-                list.scrollTop = list.scrollHeight;
-            }
+            if(state.history.length >= state.ends && state.editingIndex === -1) { saveSession(); }
+            else { renderUI(); document.getElementById('score-list').scrollTop = document.getElementById('score-list').scrollHeight; }
         }
     }
 
     function saveSession() {
         const historyTotal = state.history.reduce((a, b) => a + b.total, 0);
-        const totalArrows = state.history.length * state.arrows;
-        const avg = (historyTotal / totalArrows).toFixed(1);
-        
-        const session = { 
-            id: Date.now(),
-            date: new Date().toLocaleDateString('en-GB'), 
-            score: historyTotal, 
-            avg: avg, 
-            ends: [...state.history],
-            arrowsPerEnd: state.arrows,
-            totalEndsPlanned: state.ends
-        };
+        const avg = (historyTotal / (state.history.length * state.arrows)).toFixed(1);
+        const session = { id: Date.now(), date: new Date().toLocaleDateString('en-GB'), score: historyTotal, avg: avg, ends: [...state.history], arrowsPerEnd: state.arrows, totalEndsPlanned: state.ends };
         let allHistory = JSON.parse(localStorage.getItem(state.mode) || "[]");
         allHistory.unshift(session);
         localStorage.setItem(state.mode, JSON.stringify(allHistory));
@@ -280,13 +250,12 @@
         const list = document.getElementById('history-list');
         list.innerHTML = '';
         const data = JSON.parse(localStorage.getItem(mode) || "[]");
-        if(data.length === 0) { 
-            list.innerHTML = `<p style="text-align:center; color:var(--gray); margin-top:40px;">No History found.</p>`; 
-        } else {
+        if(data.length === 0) { list.innerHTML = `<p style="text-align:center; color:var(--gray); margin-top:40px;">No History found.</p>`; }
+        else {
             const maxScore = Math.max(...data.map(s => s.score));
             data.forEach(s => {
                 const isPB = s.score === maxScore && maxScore > 0;
-                list.insertAdjacentHTML('beforeend', `<div class="history-card" onclick="openSessionDetail(${s.id})"><div style="display:flex; align-items:center;"><span class="hist-date">${s.date}</span><span class="hist-avg">AVG: ${s.avg}</span>${isPB ? '<span class="pb-badge">PB</span>' : ''}</div><div style="display:flex; align-items:center; gap:8px;"><div class="hist-total">${s.score}</div><span style="color: var(--gray); font-size:18px;">›</span></div></div>`);
+                list.insertAdjacentHTML('beforeend', `<div class="history-card" onclick="openSessionDetail(${s.id})"><div><span class="hist-date">${s.date}</span><span class="hist-avg">AVG: ${s.avg}</span>${isPB ? '<span class="pb-badge">PB</span>' : ''}</div><div style="display:flex; align-items:center; gap:8px;"><div class="hist-total">${s.score}</div><span style="color: var(--gray); font-size:18px;">›</span></div></div>`);
             });
         }
     }
@@ -297,72 +266,35 @@
         if(!session) return;
         showScreen('detail-screen');
         document.getElementById('detail-title').innerText = `${state.mode} - ${session.date}`;
-        const list = document.getElementById('detail-list');
-        list.innerHTML = '';
+        const list = document.getElementById('detail-list'); list.innerHTML = '';
 
-        const arrowsShot = session.ends.length * (session.arrowsPerEnd || 0);
+        const arrowsShot = session.ends.length * session.arrowsPerEnd;
+        list.insertAdjacentHTML('beforeend', `<div class="stats-card"><div><div class="stat-label">TOTAL</div><div class="stat-val" style="color:var(--accent);">${session.score}</div></div><div><div class="stat-label">AVERAGE</div><div class="stat-val">${session.avg}</div></div><div><div class="stat-label">ARROWS</div><div class="stat-val" style="font-size: 16px;">${arrowsShot}/${arrowsShot}</div></div></div>`);
 
-        list.insertAdjacentHTML('beforeend', `
-            <div class="stats-card">
-                <div><div class="stat-label">TOTAL</div><div class="stat-val" style="color:var(--accent);">${session.score}</div></div>
-                <div><div class="stat-label">AVERAGE</div><div class="stat-val">${session.avg}</div></div>
-                <div><div class="stat-label">ARROWS</div><div class="stat-val" style="font-size: 16px;">${arrowsShot}/${arrowsShot}</div></div>
-            </div>`);
-
-        const arrowPerEnd = session.arrowsPerEnd || (session.ends[0].rawScores.length);
+        const arrowPerEnd = session.arrowsPerEnd;
         const maxEndVal = state.mode.includes('TARGET') ? (arrowPerEnd * 10) : (arrowPerEnd * 11);
+        
+        // FIXED COORDINATES FOR CIRCLE STABILITY
         const points = session.ends.map((end, i) => `${(i / (session.ends.length - 1)) * 100},${75 - (end.total / maxEndVal) * 65}`).join(' ');
-        const dots = session.ends.map((end, i) => `<circle cx="${(i / (session.ends.length - 1)) * 100}%" cy="${75 - (end.total / maxEndVal) * 65}" r="1.5" fill="var(--accent)" />`).join('');
+        const dots = session.ends.map((end, i) => `<circle cx="${(i / (session.ends.length - 1)) * 100}" cy="${75 - (end.total / maxEndVal) * 65}" r="1.5" fill="var(--accent)" />`).join('');
 
-        list.insertAdjacentHTML('beforeend', `
-            <div class="chart-box">
-                <div class="chart-title">Stamina Trend (Score per End)</div>
-                <div style="display:flex; height:110px; padding:5px 0;">
-                    <div style="display:flex; flex-direction:column; justify-content:space-between; height:75px; padding-right:8px; text-align:right; border-right:1px solid #333;">
-                        <span style="font-size:8px; color:var(--gray);">${maxEndVal}</span>
-                        <span style="font-size:8px; color:var(--gray);">${Math.round(maxEndVal/2)}</span>
-                        <span style="font-size:8px; color:var(--gray);">0</span>
-                    </div>
-                    <div style="flex:1; position:relative; margin-left:5px;">
-                        <svg viewBox="0 0 100 75" preserveAspectRatio="none" style="width:100%; height:75px; overflow:visible;">
-                            <polyline fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="0.5" points="0,0 100,0" />
-                            <polyline fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="0.5" points="0,37 100,37" />
-                            <polyline fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="0.5" points="0,75 100,75" />
-                            <polyline fill="none" stroke="var(--accent)" stroke-width="0.8" points="${points}" />
-                            ${dots}
-                        </svg>
-                        <div style="display:flex; justify-content:space-between; margin-top:8px; border-top:1px solid #333; padding-top:4px;">
-                            <span style="font-size:8px; color:var(--gray);">E1</span>
-                            <span style="font-size:8px; color:var(--gray);">E${Math.round(session.ends.length/2)}</span>
-                            <span style="font-size:8px; color:var(--gray);">E${session.ends.length}</span>
-                        </div>
-                    </div>
-                </div>
-            </div>`);
+        list.insertAdjacentHTML('beforeend', `<div class="chart-box"><div class="chart-title">Stamina Trend (Score per End)</div><div style="display:flex; height:110px; padding:5px 0;"><div style="display:flex; flex-direction:column; justify-content:space-between; height:75px; padding-right:8px; text-align:right; border-right:1px solid #333;"><span style="font-size:8px; color:var(--gray);">${maxEndVal}</span><span style="font-size:8px; color:var(--gray);">${Math.round(maxEndVal/2)}</span><span style="font-size:8px; color:var(--gray);">0</span></div><div style="flex:1; position:relative; margin-left:5px;">
+            <svg viewBox="0 0 100 75" style="width:100%; height:75px; overflow:visible;">
+                <polyline fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="0.5" points="0,0 100,0 0,37 100,37 0,75 100,75" />
+                <polyline fill="none" stroke="var(--accent)" stroke-width="0.8" points="${points}" />
+                ${dots}
+            </svg><div style="display:flex; justify-content:space-between; margin-top:8px; border-top:1px solid #333; padding-top:4px;"><span style="font-size:8px; color:var(--gray);">E1</span><span style="font-size:8px; color:var(--gray);">E${Math.round(session.ends.length/2)}</span><span style="font-size:8px; color:var(--gray);">E${session.ends.length}</span></div></div></div></div>`);
 
         const hitCounts = {};
-        const allArrows = session.ends.flatMap(end => end.rawScores);
-        allArrows.forEach(s => hitCounts[s] = (hitCounts[s] || 0) + 1);
-
-        let possibleScores = state.mode.includes('3D') ? [11, 10, 8, 5, 0] : ['X', 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0];
+        session.ends.flatMap(end => end.rawScores).forEach(s => hitCounts[s] = (hitCounts[s] || 0) + 1);
+        let possibleScores = state.mode.includes('3D') ? [11, 10, 8, 5, 0] : state.mode.includes('TARGET') ? ['X', 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0] : [6,5,4,3,2,1,0];
         let maxHits = Math.max(...Object.values(hitCounts), 1);
-        
         let hitBars = possibleScores.map(scoreKey => {
             const count = hitCounts[scoreKey] || 0;
-            const percent = (count / maxHits) * 100;
             const barColor = getArrowColor(scoreKey === 'X' ? 10 : scoreKey);
-            return `<div>
-                <div class="hit-count">${count}</div>
-                <div class="hit-bar"><div class="hit-fill" style="height:${percent}%; background:${barColor}"></div></div>
-                <div class="hit-label" style="color:${barColor === '#333' ? '#888' : barColor}">${scoreKey === 0 ? 'M' : scoreKey}</div>
-            </div>`;
+            return `<div><div class="hit-count">${count}</div><div class="hit-bar"><div class="hit-fill" style="height:${(count / maxHits) * 100}%; background:${barColor}"></div></div><div class="hit-label" style="color:${barColor}">${scoreKey === 0 ? 'M' : scoreKey}</div></div>`;
         }).join('');
-
-        list.insertAdjacentHTML('beforeend', `
-            <div class="chart-box">
-                <div class="chart-title">Hits Breakdown</div>
-                <div class="hits-chart" style="grid-template-columns: repeat(${possibleScores.length}, 1fr);">${hitBars}</div>
-            </div>`);
+        list.insertAdjacentHTML('beforeend', `<div class="chart-box"><div class="chart-title">Hits Breakdown</div><div class="hits-chart" style="grid-template-columns: repeat(${possibleScores.length}, 1fr);">${hitBars}</div></div>`);
 
         list.insertAdjacentHTML('beforeend', `<div class="chart-title" style="margin-top:20px;">Detailed History</div>`);
         session.ends.forEach((end, i) => {
@@ -370,9 +302,7 @@
         });
     }
 
-    function clearHistory() {
-        if(confirm(`Wipe all ${state.mode} History?`)) { localStorage.removeItem(state.mode); showHistory(state.mode); }
-    }
+    function clearHistory() { if(confirm(`Wipe all ${state.mode} History?`)) { localStorage.removeItem(state.mode); showHistory(state.mode); } }
 </script>
 </body>
 </html>
