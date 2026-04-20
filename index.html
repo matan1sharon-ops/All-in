@@ -34,14 +34,13 @@
         .gear-section-title { font-size: 12px; font-weight: 900; color: var(--accent); margin: 20px 0 10px; text-transform: uppercase; border-left: 3px solid var(--accent); padding-left: 10px; }
         .gear-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
         .gear-input-group { display: flex; flex-direction: column; }
-        .gear-label { font-size: 8px; font-weight: 800; color: var(--gray); margin-bottom: 4px; text-transform: uppercase; }
+        .gear-label { font-size: 9px; font-weight: 900; color: #bbb; margin-bottom: 4px; text-transform: uppercase; }
         .gear-input { background: #111; border: 1px solid #222; color: #fff; padding: 10px; border-radius: 8px; font-size: 14px; outline: none; width: 100%; }
         .gear-input:focus { border-color: var(--accent); }
 
-        /* Crawl Grid */
         .crawl-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; background: #0a0a0a; padding: 12px; border-radius: 12px; border: 1px solid #1a1a1a; }
         .crawl-item { text-align: center; }
-        .crawl-dist { font-size: 9px; font-weight: 800; color: var(--gray); margin-bottom: 4px; }
+        .crawl-dist { font-size: 9px; font-weight: 900; color: #bbb; margin-bottom: 4px; }
         .crawl-val { background: #1a1a1a; border: 1px solid #333; color: var(--accent); width: 100%; text-align: center; padding: 5px 0; border-radius: 5px; font-size: 12px; font-weight: bold; }
 
         #score-list, #history-list, #detail-list, #gear-list { flex-grow: 1; overflow-y: auto; padding: 15px 0; display: flex; flex-direction: column; gap: 8px; }
@@ -112,32 +111,31 @@
             <button onclick="saveGear()" style="background:none; border:none; color:var(--accent); font-size:11px; font-weight:bold;">SAVE</button>
         </header>
         <div id="gear-list" style="padding-bottom: 40px;">
-            <div class="gear-section-title">Bow Part</div>
+            <div class="gear-section-title">Riser Details</div>
             <div class="gear-grid">
                 <div class="gear-input-group"><label class="gear-label">Riser Make</label><input type="text" id="g-r-make" class="gear-input"></div>
                 <div class="gear-input-group"><label class="gear-label">Riser Length</label><input type="text" id="g-r-len" class="gear-input"></div>
             </div>
 
-            <div class="gear-section-title">Limb Part</div>
+            <div class="gear-section-title">Limb Details</div>
             <div class="gear-grid">
                 <div class="gear-input-group"><label class="gear-label">Limb Make</label><input type="text" id="g-l-make" class="gear-input"></div>
                 <div class="gear-input-group"><label class="gear-label">Limb Length</label><input type="text" id="g-l-len" class="gear-input"></div>
                 <div class="gear-input-group"><label class="gear-label">Limb Weight</label><input type="text" id="g-l-weight" class="gear-input"></div>
             </div>
 
-            <div class="gear-section-title">Arrow Part</div>
+            <div class="gear-section-title">Arrow Details</div>
             <div class="gear-grid">
                 <div class="gear-input-group"><label class="gear-label">Arrow Make</label><input type="text" id="g-a-make" class="gear-input"></div>
                 <div class="gear-input-group"><label class="gear-label">Arrow Spine</label><input type="text" id="g-a-spine" class="gear-input"></div>
                 <div class="gear-input-group"><label class="gear-label">Arrow Length</label><input type="text" id="g-a-len" class="gear-input"></div>
                 <div class="gear-input-group"><label class="gear-label">Point Weight</label><input type="text" id="g-a-point" class="gear-input"></div>
-                <div class="gear-input-group"><label class="gear-label">Nock Type</label><input type="text" id="g-a-nock" class="gear-input"></div>
-                <div class="gear-input-group"><label class="gear-label">Vanes Type</label><input type="text" id="g-a-vanes" class="gear-input"></div>
+                <div class="gear-input-group"><label class="gear-label">Nock Details</label><input type="text" id="g-a-nock" class="gear-input"></div>
+                <div class="gear-input-group"><label class="gear-label">Vanes Details</label><input type="text" id="g-a-vanes" class="gear-input"></div>
             </div>
 
             <div class="gear-section-title">Barebow Crawls</div>
-            <div class="crawl-grid" id="crawl-inputs">
-                </div>
+            <div class="crawl-grid" id="crawl-inputs"></div>
         </div>
     </div>
 
@@ -179,7 +177,6 @@
 <script>
     let state = { current: [], history: [], arrows: 2, ends: 24, mode: '', editingIndex: -1 };
 
-    // Initial Crawl Grid Generation
     const crawlContainer = document.getElementById('crawl-inputs');
     for(let d=5; d<=50; d+=5) {
         crawlContainer.innerHTML += `<div class="crawl-item"><div class="crawl-dist">${d}m</div><input type="text" id="c-${d}" class="crawl-val"></div>`;
@@ -197,7 +194,6 @@
         showScreen('scoring'); 
     }
 
-    // GEAR LOGIC
     function showGearScreen() {
         const g = JSON.parse(localStorage.getItem('archer_gear') || "{}");
         document.getElementById('g-r-make').value = g.r_make || "";
@@ -211,29 +207,18 @@
         document.getElementById('g-a-point').value = g.a_point || "";
         document.getElementById('g-a-nock').value = g.a_nock || "";
         document.getElementById('g-a-vanes').value = g.a_vanes || "";
-        
-        for(let d=5; d<=50; d+=5) {
-            document.getElementById(`c-${d}`).value = (g.crawls && g.crawls[d]) ? g.crawls[d] : "";
-        }
+        for(let d=5; d<=50; d+=5) { document.getElementById(`c-${d}`).value = (g.crawls && g.crawls[d]) ? g.crawls[d] : ""; }
         showScreen('gear-screen');
     }
 
     function saveGear() {
         const crawls = {};
         for(let d=5; d<=50; d+=5) { crawls[d] = document.getElementById(`c-${d}`).value; }
-        
         const gear = {
-            r_make: document.getElementById('g-r-make').value,
-            r_len: document.getElementById('g-r-len').value,
-            l_make: document.getElementById('g-l-make').value,
-            l_len: document.getElementById('g-l-len').value,
-            l_weight: document.getElementById('g-l-weight').value,
-            a_make: document.getElementById('g-a-make').value,
-            a_spine: document.getElementById('g-a-spine').value,
-            a_len: document.getElementById('g-a-len').value,
-            a_point: document.getElementById('g-a-point').value,
-            a_nock: document.getElementById('g-a-nock').value,
-            a_vanes: document.getElementById('g-a-vanes').value,
+            r_make: document.getElementById('g-r-make').value, r_len: document.getElementById('g-r-len').value,
+            l_make: document.getElementById('g-l-make').value, l_len: document.getElementById('g-l-len').value, l_weight: document.getElementById('g-l-weight').value,
+            a_make: document.getElementById('g-a-make').value, a_spine: document.getElementById('g-a-spine').value, a_len: document.getElementById('g-a-len').value, a_point: document.getElementById('g-a-point').value,
+            a_nock: document.getElementById('g-a-nock').value, a_vanes: document.getElementById('g-a-vanes').value,
             crawls: crawls
         };
         localStorage.setItem('archer_gear', JSON.stringify(gear));
@@ -289,11 +274,9 @@
         const currentTotal = state.current.reduce((a, b) => a + getVal(b), 0);
         const grandTotal = historyTotalExcludingEdit + currentTotal;
         const totalArrows = (state.history.length * state.arrows) + (state.editingIndex === -1 ? state.current.length : 0);
-        
         document.getElementById('total-score').innerText = grandTotal;
         document.getElementById('avg-score').innerText = totalArrows > 0 ? (grandTotal / totalArrows).toFixed(1) : "0.0";
         document.getElementById('mode-display').innerText = `${state.mode} (${state.history.length}/${state.ends})`;
-        
         const list = document.getElementById('score-list'); list.innerHTML = '';
         state.history.forEach((end, i) => {
             if (state.editingIndex === i) {
@@ -304,23 +287,13 @@
                         <div style="color:var(--accent); font-weight:900; font-size:20px;">${currentTotal}</div>
                     </div>`);
             } else {
-                list.insertAdjacentHTML('beforeend', `
-                    <div class="end-card clickable-end" onclick="editEnd(${i})">
-                        <div><div class="stat-label">END ${i+1}</div><b>${end.displayScores.join(' · ')}</b></div>
-                        <div style="color:var(--accent); font-weight:900; font-size:20px;">${end.total}</div>
-                    </div>`);
+                list.insertAdjacentHTML('beforeend', `<div class="end-card clickable-end" onclick="editEnd(${i})"><div><div class="stat-label">END ${i+1}</div><b>${end.displayScores.join(' · ')}</b></div><div style="color:var(--accent); font-weight:900; font-size:20px;">${end.total}</div></div>`);
             }
         });
-
         if (state.editingIndex === -1 && state.history.length < state.ends) {
             const activeDisplay = state.current.map(s => s === 0 ? 'M' : s).join(' · ') || '---';
-            list.insertAdjacentHTML('beforeend', `
-                <div id="active-card" class="end-card" style="border:1px solid var(--accent); background: #1a1500;">
-                    <div><div class="stat-label">END ${state.history.length + 1}</div><b>${activeDisplay}</b></div>
-                    <div style="color:var(--accent); font-weight:900; font-size:20px;">${currentTotal}</div>
-                </div>`);
+            list.insertAdjacentHTML('beforeend', `<div id="active-card" class="end-card" style="border:1px solid var(--accent); background: #1a1500;"><div><div class="stat-label">END ${state.history.length + 1}</div><b>${activeDisplay}</b></div><div style="color:var(--accent); font-weight:900; font-size:20px;">${currentTotal}</div></div>`);
         }
-
         const btn = document.getElementById('next-btn');
         btn.disabled = state.current.length < state.arrows;
         btn.innerText = state.editingIndex !== -1 ? "UPDATE END" : (state.history.length === state.ends - 1 ? "FINISH SESSION" : "NEXT END");
@@ -329,11 +302,7 @@
 
     function handleMainAction() {
         if(state.current.length === state.arrows) {
-            const newEnd = { 
-                rawScores: [...state.current],
-                displayScores: [...state.current].map(s => s === 0 ? 'M' : s), 
-                total: state.current.reduce((a, b) => a + getVal(b), 0) 
-            };
+            const newEnd = { rawScores: [...state.current], displayScores: [...state.current].map(s => s === 0 ? 'M' : s), total: state.current.reduce((a, b) => a + getVal(b), 0) };
             if (state.editingIndex !== -1) { state.history[state.editingIndex] = newEnd; state.editingIndex = -1; }
             else { state.history.push(newEnd); }
             state.current = [];
@@ -346,17 +315,7 @@
         const historyTotal = state.history.reduce((a, b) => a + b.total, 0);
         const avg = (historyTotal / (state.history.length * state.arrows)).toFixed(1);
         const currentGear = JSON.parse(localStorage.getItem('archer_gear') || "{}");
-
-        const session = { 
-            id: Date.now(), 
-            date: new Date().toLocaleDateString('en-GB'), 
-            score: historyTotal, 
-            avg: avg, 
-            ends: [...state.history], 
-            arrowsPerEnd: state.arrows, 
-            totalEndsPlanned: state.ends,
-            setup: currentGear 
-        };
+        const session = { id: Date.now(), date: new Date().toLocaleDateString('en-GB'), score: historyTotal, avg: avg, ends: [...state.history], arrowsPerEnd: state.arrows, totalEndsPlanned: state.ends, setup: currentGear };
         let allHistory = JSON.parse(localStorage.getItem(state.mode) || "[]");
         allHistory.unshift(session);
         localStorage.setItem(state.mode, JSON.stringify(allHistory));
@@ -364,11 +323,8 @@
     }
 
     function showHistory(mode) {
-        state.mode = mode;
-        showScreen('history-screen');
-        document.getElementById('history-title').innerText = mode + " HISTORY";
-        const list = document.getElementById('history-list');
-        list.innerHTML = '';
+        state.mode = mode; showScreen('history-screen'); document.getElementById('history-title').innerText = mode + " HISTORY";
+        const list = document.getElementById('history-list'); list.innerHTML = '';
         const data = JSON.parse(localStorage.getItem(mode) || "[]");
         if(data.length === 0) { list.innerHTML = `<p style="text-align:center; color:var(--gray); margin-top:40px;">No History found.</p>`; }
         else {
@@ -387,72 +343,27 @@
         showScreen('detail-screen');
         document.getElementById('detail-title').innerText = `${state.mode} - ${session.date}`;
         const list = document.getElementById('detail-list'); list.innerHTML = '';
-
         const arrowsShot = session.ends.length * session.arrowsPerEnd;
         list.insertAdjacentHTML('beforeend', `<div class="stats-card"><div><div class="stat-label">TOTAL</div><div class="stat-val" style="color:var(--accent);">${session.score}</div></div><div><div class="stat-label">AVERAGE</div><div class="stat-val">${session.avg}</div></div><div><div class="stat-label">ARROWS</div><div class="stat-val" style="font-size: 16px;">${arrowsShot}/${arrowsShot}</div></div></div>`);
-
-        // SETUP DETAILS
         if(session.setup && session.setup.r_make) {
             let crawlHTML = "";
             if(session.setup.crawls) {
-                crawlHTML = `<div style="display:grid; grid-template-columns: repeat(5, 1fr); gap:5px; margin-top:10px;">` + 
-                    Object.entries(session.setup.crawls).map(([d,v]) => v ? `<div style="text-align:center; background:#111; padding:4px; border-radius:4px;"><div style="font-size:7px; color:var(--gray);">${d}m</div><div style="font-size:10px; color:var(--accent);">${v}</div></div>` : '').join('') + 
-                    `</div>`;
+                crawlHTML = `<div style="display:grid; grid-template-columns: repeat(5, 1fr); gap:5px; margin-top:10px;">` + Object.entries(session.setup.crawls).map(([d,v]) => v ? `<div style="text-align:center; background:#111; padding:4px; border-radius:4px;"><div style="font-size:7px; color:var(--gray);">${d}m</div><div style="font-size:10px; color:var(--accent);">${v}</div></div>` : '').join('') + `</div>`;
             }
-            list.insertAdjacentHTML('beforeend', `
-                <div class="chart-box" style="border-color: #333;">
-                    <div class="chart-title">Setup Summary</div>
-                    <div style="font-size: 13px; font-weight: bold; color: var(--text);">${session.setup.r_make} ${session.setup.r_len} | ${session.setup.l_weight}</div>
-                    <div style="font-size: 11px; color: var(--gray); margin-top:4px;">${session.setup.a_make} (${session.setup.a_spine})</div>
-                    ${crawlHTML}
-                </div>`);
+            list.insertAdjacentHTML('beforeend', `<div class="chart-box" style="border-color: #333;"><div class="chart-title">Setup Summary</div><div style="font-size: 13px; font-weight: bold; color: var(--text);">${session.setup.r_make} ${session.setup.r_len} | ${session.setup.l_weight}</div><div style="font-size: 11px; color: var(--gray); margin-top:4px;">${session.setup.a_make} (${session.setup.a_spine})</div>${crawlHTML}</div>`);
         }
-
         const arrowPerEnd = session.arrowsPerEnd;
         const maxEndVal = state.mode.includes('TARGET') ? (arrowPerEnd * 10) : (arrowPerEnd * 11);
         const points = session.ends.map((end, i) => `${(i / (session.ends.length - 1)) * 100},${75 - (end.total / maxEndVal) * 65}`).join(' ');
-        const dots = session.ends.map((end, i) => {
-            const x = (i / (session.ends.length - 1)) * 100;
-            const y = 75 - (end.total / maxEndVal) * 65;
-            return `<rect x="${x - 0.75}" y="${y - 1}" width="1.5" height="2" rx="0.75" fill="var(--accent)" />`;
-        }).join('');
-
-        list.insertAdjacentHTML('beforeend', `
-            <div class="chart-box">
-                <div class="chart-title">Stamina Trend (Score per End)</div>
-                <div style="display:flex; height:110px; padding:5px 0;">
-                    <div style="display:flex; flex-direction:column; justify-content:space-between; height:75px; padding-right:8px; text-align:right; border-right:1px solid #333;">
-                        <span style="font-size:8px; color:var(--gray);">${maxEndVal}</span>
-                        <span style="font-size:8px; color:var(--gray);">${Math.round(maxEndVal/2)}</span>
-                        <span style="font-size:8px; color:var(--gray);">0</span>
-                    </div>
-                    <div style="flex:1; position:relative; margin-left:5px;">
-                        <svg viewBox="0 0 100 75" preserveAspectRatio="none" style="width:100%; height:75px; overflow:visible;">
-                            <line x1="0" y1="0" x2="100" y2="0" stroke="rgba(255,255,255,0.05)" stroke-width="0.5" />
-                            <line x1="0" y1="37.5" x2="100" y2="37.5" stroke="rgba(255,255,255,0.05)" stroke-width="0.5" />
-                            <line x1="0" y1="75" x2="100" y2="75" stroke="rgba(255,255,255,0.05)" stroke-width="0.5" />
-                            <polyline fill="none" stroke="var(--accent)" stroke-width="0.8" points="${points}" />
-                            ${dots}
-                        </svg>
-                    </div>
-                </div>
-            </div>`);
-
-        const hitCounts = {};
-        session.ends.flatMap(end => end.rawScores).forEach(s => hitCounts[s] = (hitCounts[s] || 0) + 1);
+        const dots = session.ends.map((end, i) => { const x = (i / (session.ends.length - 1)) * 100; const y = 75 - (end.total / maxEndVal) * 65; return `<rect x="${x - 0.75}" y="${y - 1}" width="1.5" height="2" rx="0.75" fill="var(--accent)" />`; }).join('');
+        list.insertAdjacentHTML('beforeend', `<div class="chart-box"><div class="chart-title">Stamina Trend (Score per End)</div><div style="display:flex; height:110px; padding:5px 0;"><div style="display:flex; flex-direction:column; justify-content:space-between; height:75px; padding-right:8px; text-align:right; border-right:1px solid #333;"><span style="font-size:8px; color:var(--gray);">${maxEndVal}</span><span style="font-size:8px; color:var(--gray);">${Math.round(maxEndVal/2)}</span><span style="font-size:8px; color:var(--gray);">0</span></div><div style="flex:1; position:relative; margin-left:5px;"><svg viewBox="0 0 100 75" preserveAspectRatio="none" style="width:100%; height:75px; overflow:visible;"><line x1="0" y1="0" x2="100" y2="0" stroke="rgba(255,255,255,0.05)" stroke-width="0.5" /><line x1="0" y1="37.5" x2="100" y2="37.5" stroke="rgba(255,255,255,0.05)" stroke-width="0.5" /><line x1="0" y1="75" x2="100" y2="75" stroke="rgba(255,255,255,0.05)" stroke-width="0.5" /><polyline fill="none" stroke="var(--accent)" stroke-width="0.8" points="${points}" />${dots}</svg></div></div></div>`);
+        const hitCounts = {}; session.ends.flatMap(end => end.rawScores).forEach(s => hitCounts[s] = (hitCounts[s] || 0) + 1);
         let possibleScores = state.mode.includes('3D') ? [11, 10, 8, 5, 0] : state.mode.includes('TARGET') ? ['X', 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0] : [6,5,4,3,2,1,0];
         let maxHits = Math.max(...Object.values(hitCounts), 1);
-        let hitBars = possibleScores.map(scoreKey => {
-            const count = hitCounts[scoreKey] || 0;
-            const barColor = getArrowColor(scoreKey === 'X' ? 10 : scoreKey);
-            return `<div><div class="hit-count">${count}</div><div class="hit-bar"><div class="hit-fill" style="height:${(count / maxHits) * 100}%; background:${barColor}"></div></div><div class="hit-label" style="color:${barColor}">${scoreKey === 0 ? 'M' : scoreKey}</div></div>`;
-        }).join('');
+        let hitBars = possibleScores.map(scoreKey => { const count = hitCounts[scoreKey] || 0; const barColor = getArrowColor(scoreKey === 'X' ? 10 : scoreKey); return `<div><div class="hit-count">${count}</div><div class="hit-bar"><div class="hit-fill" style="height:${(count / maxHits) * 100}%; background:${barColor}"></div></div><div class="hit-label" style="color:${barColor}">${scoreKey === 0 ? 'M' : scoreKey}</div></div>`; }).join('');
         list.insertAdjacentHTML('beforeend', `<div class="chart-box"><div class="chart-title">Hits Breakdown</div><div class="hits-chart" style="grid-template-columns: repeat(${possibleScores.length}, 1fr);">${hitBars}</div></div>`);
-
         list.insertAdjacentHTML('beforeend', `<div class="chart-title" style="margin-top:20px;">Detailed History</div>`);
-        session.ends.forEach((end, i) => {
-            list.insertAdjacentHTML('beforeend', `<div class="end-card"><div><div class="stat-label">END ${i+1}</div><b>${end.displayScores.join(' · ')}</b></div><div style="color:var(--accent); font-weight:900;">${end.total}</div></div>`);
-        });
+        session.ends.forEach((end, i) => { list.insertAdjacentHTML('beforeend', `<div class="end-card"><div><div class="stat-label">END ${i+1}</div><b>${end.displayScores.join(' · ')}</b></div><div style="color:var(--accent); font-weight:900;">${end.total}</div></div>`); });
     }
 
     function clearHistory() { if(confirm(`Wipe all ${state.mode} History?`)) { localStorage.removeItem(state.mode); showHistory(state.mode); } }
