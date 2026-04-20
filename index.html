@@ -38,16 +38,9 @@
         .hist-avg { font-size: 12px; color: var(--gray); margin-left: 10px; font-weight: 600; }
         .hist-total { font-size: 18px; font-weight: 900; color: var(--accent); }
 
-.stats-card { 
-    background: var(--card); 
-    border-radius: 12px; 
-    padding: 12px 15px; /* Reduced vertical padding from 20px to 12px */
-    border: 1px solid #222; 
-    display: grid; 
-    grid-template-columns: repeat(3, 1fr); 
-    gap: 15px; 
-    text-align: center; 
-}        .chart-box { background: var(--card); border-radius: 12px; padding: 15px; border: 1px solid #222; margin-top: 8px; }
+        /* Narrower Stats Card */
+        .stats-card { background: var(--card); border-radius: 12px; padding: 12px 15px; border: 1px solid #222; display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; text-align: center; }
+        .chart-box { background: var(--card); border-radius: 12px; padding: 15px; border: 1px solid #222; margin-top: 8px; }
         .chart-title { font-size: 10px; font-weight: bold; color: var(--gray); text-transform: uppercase; margin-bottom: 12px; letter-spacing: 0.5px;}
         
         .hit-bar { width: 100%; background: #222; border-radius: 2px; height: 75px; position: relative; overflow: hidden;}
@@ -214,7 +207,9 @@
             date: new Date().toLocaleDateString('en-GB'), 
             score: total, 
             avg: avg, 
-            ends: [...state.history] 
+            ends: [...state.history],
+            arrowsPerEnd: state.arrows,
+            totalEndsPlanned: state.ends
         };
         let allHistory = JSON.parse(localStorage.getItem(state.mode) || "[]");
         allHistory.unshift(session);
@@ -249,14 +244,20 @@
         const list = document.getElementById('detail-list');
         list.innerHTML = '';
 
+        // Calculate arrow count for progress (e.g., 60/60)
+        const arrowsShot = session.ends.length * (session.arrowsPerEnd || 0);
+
+        // 1. Stats Card (Narrower + X/X Progress)
         list.insertAdjacentHTML('beforeend', `
             <div class="stats-card">
                 <div><div class="stat-label">TOTAL</div><div class="stat-val" style="color:var(--accent);">${session.score}</div></div>
                 <div><div class="stat-label">AVERAGE</div><div class="stat-val">${session.avg}</div></div>
-                <div><div class="stat-label">ARROWS</div><div class="stat-val">${session.ends.length * session.ends[0].rawScores.length}</div></div>
+                <div><div class="stat-label">ARROWS</div><div class="stat-val" style="font-size: 16px;">${arrowsShot}/${arrowsShot}</div></div>
             </div>`);
 
-        const maxEndVal = state.mode.includes('TARGET') ? (session.ends[0].rawScores.length * 10) : (session.ends[0].rawScores.length * 11);
+        // 2. STAMINA LINE CHART (Updated with Scales)
+        const arrowPerEnd = session.arrowsPerEnd || (session.ends[0].rawScores.length);
+        const maxEndVal = state.mode.includes('TARGET') ? (arrowPerEnd * 10) : (arrowPerEnd * 11);
         const points = session.ends.map((end, i) => `${(i / (session.ends.length - 1)) * 100},${75 - (end.total / maxEndVal) * 65}`).join(' ');
         const dots = session.ends.map((end, i) => `<circle cx="${(i / (session.ends.length - 1)) * 100}%" cy="${75 - (end.total / maxEndVal) * 65}" r="1.5" fill="var(--accent)" />`).join('');
 
@@ -286,6 +287,7 @@
                 </div>
             </div>`);
 
+        // 3. HITS BREAKDOWN (Switched count and value)
         const hitCounts = {};
         const allArrows = session.ends.flatMap(end => end.rawScores);
         allArrows.forEach(s => hitCounts[s] = (hitCounts[s] || 0) + 1);
