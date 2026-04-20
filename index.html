@@ -38,8 +38,16 @@
         .hist-avg { font-size: 12px; color: var(--gray); margin-left: 10px; font-weight: 600; }
         .hist-total { font-size: 18px; font-weight: 900; color: var(--accent); }
 
-        .stats-card { background: var(--card); border-radius: 12px; padding: 20px; border: 1px solid #222; display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; text-align: center; }
-        .chart-box { background: var(--card); border-radius: 12px; padding: 15px; border: 1px solid #222; margin-top: 8px; }
+.stats-card { 
+    background: var(--card); 
+    border-radius: 12px; 
+    padding: 12px 15px; /* Reduced vertical padding from 20px to 12px */
+    border: 1px solid #222; 
+    display: grid; 
+    grid-template-columns: repeat(3, 1fr); 
+    gap: 15px; 
+    text-align: center; 
+}        .chart-box { background: var(--card); border-radius: 12px; padding: 15px; border: 1px solid #222; margin-top: 8px; }
         .chart-title { font-size: 10px; font-weight: bold; color: var(--gray); text-transform: uppercase; margin-bottom: 12px; letter-spacing: 0.5px;}
         
         .hit-bar { width: 100%; background: #222; border-radius: 2px; height: 75px; position: relative; overflow: hidden;}
