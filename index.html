@@ -145,6 +145,7 @@
     let state = { current: [], history: [], arrows: 2, ends: 24, mode: '', editingIndex: -1 };
     let timer = { interval: null, timeLeft: 0, totalTime: 0, active: false, phase: 'READY', startTime: null };
     let wakeLock = null;
+    let longPressTimer = null;
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
     async function requestWakeLock() {
@@ -309,6 +310,16 @@
         let allHist = JSON.parse(localStorage.getItem(state.mode) || "[]"); allHist.unshift(session); localStorage.setItem(state.mode, JSON.stringify(allHist)); showScreen('home');
     }
 
+    function deleteSpecificSession(id, e) {
+        if (e) e.stopPropagation();
+        if (confirm("Delete this specific session?")) {
+            let data = JSON.parse(localStorage.getItem(state.mode) || "[]");
+            data = data.filter(s => s.id !== id);
+            localStorage.setItem(state.mode, JSON.stringify(data));
+            showHistory(state.mode);
+        }
+    }
+
     function showHistory(mode) {
         state.mode = mode; showScreen('history-screen'); document.getElementById('history-title').innerText = mode + " HISTORY";
         const list = document.getElementById('history-list'); list.innerHTML = '';
@@ -318,7 +329,20 @@
             const maxS = Math.max(...data.map(s => s.score));
             data.forEach(s => {
                 const isPB = s.score === maxS && maxS > 0;
-                list.insertAdjacentHTML('beforeend', `<div class="history-card" onclick="openSessionDetail(${s.id})"><div><span style="margin-right:15px; font-size:13px; color:var(--gray);">${s.date}</span><span class="hist-avg">AVG: ${s.avg}</span></div><div style="display:flex; align-items:center; gap:8px;">${isPB ? '<span style="color:var(--red); font-weight:900; font-size:14px; margin-right:4px;">PB</span>' : ''}<div class="hist-total">${s.score}</div><span style="color:var(--gray); font-size:18px;">›</span></div></div>`);
+                const card = document.createElement('div');
+                card.className = 'history-card';
+                card.innerHTML = `<div><span style="margin-right:15px; font-size:13px; color:var(--gray);">${s.date}</span><span class="hist-avg">AVG: ${s.avg}</span></div><div style="display:flex; align-items:center; gap:8px;">${isPB ? '<span style="color:var(--red); font-weight:900; font-size:14px; margin-right:4px;">PB</span>' : ''}<div class="hist-total">${s.score}</div><span style="color:var(--gray); font-size:18px;">›</span></div>`;
+                
+                // Tap to Open
+                card.onclick = () => openSessionDetail(s.id);
+                
+                // Press & Hold to Delete Logic
+                card.ontouchstart = () => { longPressTimer = setTimeout(() => { deleteSpecificSession(s.id); }, 1000); };
+                card.ontouchend = () => { clearTimeout(longPressTimer); };
+                card.onmousedown = () => { longPressTimer = setTimeout(() => { deleteSpecificSession(s.id); }, 1000); };
+                card.onmouseup = () => { clearTimeout(longPressTimer); };
+
+                list.appendChild(card);
             });
         }
     }
