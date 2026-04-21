@@ -318,7 +318,7 @@
             const maxS = Math.max(...data.map(s => s.score));
             data.forEach(s => {
                 const isPB = s.score === maxS && maxS > 0;
-                list.insertAdjacentHTML('beforeend', `<div class="history-card" onclick="openSessionDetail(${s.id})"><div><span class="hist-date">${s.date}</span><span class="hist-avg">AVG: ${s.avg}</span>${isPB ? '<span class="pb-badge">PB</span>' : ''}</div><div style="display:flex; align-items:center; gap:8px;"><div class="hist-total">${s.score}</div><span style="color:var(--gray); font-size:18px;">›</span></div></div>`);
+                list.insertAdjacentHTML('beforeend', `<div class="history-card" onclick="openSessionDetail(${s.id})"><div><span class="hist-date">${s.date}</span><span class="hist-avg">AVG: ${s.avg}</span>${isPB ? '<span class="pb-badge">PB</span>' : ''}</div><div style="display:flex; align-items:center; gap:12px;"><div class="hist-total">${s.score}</div><span style="color:var(--red); font-size:18px;">›</span></div></div>`);
             });
         }
     }
