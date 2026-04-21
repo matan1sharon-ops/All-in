@@ -37,8 +37,8 @@
         #score-list, #history-list, #detail-list, #gear-list { flex-grow: 1; overflow-y: auto; padding: 15px 0; display: flex; flex-direction: column; gap: 8px; }
         .end-card { background: var(--card); padding: 12px 15px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #222; }
         
-        /* Swipe to Delete Styles */
-        .history-item-wrapper { position: relative; width: 100%; overflow: hidden; border-radius: 10px; min-height: 55px; background: var(--red); }
+        /* Swipe to Delete System */
+        .history-row { position: relative; width: 100%; min-height: 55px; border-radius: 10px; overflow: hidden; }
         .history-card { 
             position: relative; 
             z-index: 2; 
@@ -49,16 +49,13 @@
             align-items: center; 
             border: 1px solid #222; 
             border-radius: 10px;
-            transition: transform 0.3s ease-out;
-            width: 100%;
+            transition: transform 0.3s ease;
             touch-action: pan-y;
         }
-        .delete-btn-overlay { 
+        .bin-btn { 
             position: absolute; 
-            right: 0; 
-            top: 0; 
-            bottom: 0; 
-            width: 80px; 
+            right: 0; top: 0; bottom: 0; 
+            width: 70px; 
             background: var(--red); 
             display: flex; 
             align-items: center; 
@@ -340,6 +337,7 @@
         let allHist = JSON.parse(localStorage.getItem(state.mode) || "[]"); allHist.unshift(session); localStorage.setItem(state.mode, JSON.stringify(allHist)); showScreen('home');
     }
 
+    // HISTORY FUNCTIONS WITH CLEAN SLIDE-TO-DELETE
     function showHistory(mode) {
         state.mode = mode; showScreen('history-screen'); document.getElementById('history-title').innerText = mode + " HISTORY";
         const list = document.getElementById('history-list'); list.innerHTML = '';
@@ -349,11 +347,11 @@
         const maxS = Math.max(...data.map(s => s.score));
         data.forEach(s => {
             const isPB = s.score === maxS && maxS > 0;
-            const wrapper = document.createElement('div');
-            wrapper.className = 'history-item-wrapper';
+            const row = document.createElement('div');
+            row.className = 'history-row';
             
-            wrapper.innerHTML = `
-                <div class="delete-btn-overlay" onclick="deleteSession(${s.id})">🗑️</div>
+            row.innerHTML = `
+                <div class="bin-btn" onclick="deleteSession(${s.id})">🗑️</div>
                 <div class="history-card" id="card-${s.id}">
                     <div><span style="margin-right:15px; font-size:13px; color:var(--gray);">${s.date}</span><span class="hist-avg">AVG: ${s.avg}</span></div>
                     <div style="display:flex; align-items:center; gap:8px;">
@@ -363,7 +361,7 @@
                     </div>
                 </div>`;
             
-            const card = wrapper.querySelector('.history-card');
+            const card = row.querySelector('.history-card');
             let startX = 0, currentX = 0;
 
             card.onclick = () => { if(currentX === 0) openSessionDetail(s.id); else resetCards(); };
@@ -372,23 +370,21 @@
             card.addEventListener('touchmove', e => {
                 currentX = e.touches[0].clientX - startX;
                 if (currentX < 0) { 
-                    const move = Math.max(currentX, -80);
+                    const move = Math.max(currentX, -70);
                     card.style.transform = `translateX(${move}px)`;
                 }
             }, {passive: true});
             card.addEventListener('touchend', () => {
-                card.style.transition = 'transform 0.3s ease-out';
-                if (currentX < -40) { card.style.transform = 'translateX(-80px)'; currentX = -80; }
+                card.style.transition = 'transform 0.3s ease';
+                if (currentX < -35) { card.style.transform = 'translateX(-70px)'; currentX = -70; }
                 else { card.style.transform = 'translateX(0)'; currentX = 0; }
             });
 
-            list.appendChild(wrapper);
+            list.appendChild(row);
         });
     }
 
-    function resetCards() {
-        document.querySelectorAll('.history-card').forEach(c => { c.style.transform = 'translateX(0)'; });
-    }
+    function resetCards() { document.querySelectorAll('.history-card').forEach(c => { c.style.transform = 'translateX(0)'; }); }
 
     function deleteSession(id) {
         if(confirm("Delete this session?")) {
