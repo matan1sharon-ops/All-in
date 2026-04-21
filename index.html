@@ -43,7 +43,6 @@
         .btn-grid { display: grid; gap: 8px; margin-top: 10px; }
         .score-btn { height: 60px; border-radius: 12px; border: 1px solid #333; font-size: 22px; font-weight: 900; color: #fff; background: #222; }
 
-        /* Gear Section Styles */
         .gear-section-title { font-size: 12px; font-weight: 900; color: var(--accent); margin: 20px 0 10px; text-transform: uppercase; border-left: 3px solid var(--accent); padding-left: 10px; }
         .gear-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
         .gear-input-group { display: flex; flex-direction: column; }
@@ -54,7 +53,6 @@
         .crawl-dist { font-size: 9px; font-weight: 900; color: #bbb; margin-bottom: 4px; }
         .crawl-val { background: #1a1a1a; border: 1px solid #333; color: var(--accent); width: 100%; text-align: center; padding: 5px 0; border-radius: 5px; font-size: 12px; font-weight: bold; }
 
-        /* Detail Chart Styles */
         .stats-card { background: var(--card); border-radius: 12px; padding: 12px 15px; border: 1px solid #222; display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; text-align: center; }
         .chart-box { background: var(--card); border-radius: 12px; padding: 15px; border: 1px solid #222; margin-top: 8px; }
         .chart-title { font-size: 10px; font-weight: bold; color: var(--gray); text-transform: uppercase; margin-bottom: 12px; letter-spacing: 0.5px;}
@@ -265,7 +263,9 @@
 
     function renderButtons() {
         const grid = document.getElementById('button-grid'); grid.innerHTML = '';
-        let scores = state.mode.includes('3D') ? [11, 10, 8, 5, 0] : state.mode.includes('TARGET INDOOR') ? [10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0] : state.mode.includes('TARGET') ? ['X', 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0] : [6,5,4,3,2,1,0];
+        let scores = state.mode.includes('3D') ? [11, 10, 8, 5, 0] : 
+                     state.mode.includes('TARGET INDOOR') ? [10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0] : 
+                     state.mode.includes('TARGET') ? ['X', 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0] : [6,5,4,3,2,1,0];
         grid.style.gridTemplateColumns = scores.length > 5 ? 'repeat(4, 1fr)' : 'repeat(3, 1fr)';
         scores.forEach(s => {
             const b = document.createElement('button'); b.className = 'score-btn'; 
@@ -318,7 +318,7 @@
             const maxS = Math.max(...data.map(s => s.score));
             data.forEach(s => {
                 const isPB = s.score === maxS && maxS > 0;
-                list.insertAdjacentHTML('beforeend', `<div class="history-card" onclick="openSessionDetail(${s.id})"><div><span class="hist-date">${s.date}</span><span class="hist-avg">AVG: ${s.avg}</span>${isPB ? '<span class="pb-badge">PB</span>' : ''}</div><div style="display:flex; align-items:center; gap:12px;"><div class="hist-total">${s.score}</div><span style="color:var(--red); font-size:18px;">›</span></div></div>`);
+                list.insertAdjacentHTML('beforeend', `<div class="history-card" onclick="openSessionDetail(${s.id})"><div><span class="hist-date">${s.date}</span><span class="hist-avg">AVG: ${s.avg}</span>${isPB ? '<span style="color:var(--red); margin-left:12px; font-weight:900;">PB</span>' : ''}</div><div style="display:flex; align-items:center; gap:8px;"><div class="hist-total">${s.score}</div><span style="color:var(--gray); font-size:18px;">›</span></div></div>`);
             });
         }
     }
