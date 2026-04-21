@@ -35,9 +35,40 @@
         .gear-text { font-size: 10px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; }
 
         #score-list, #history-list, #detail-list, #gear-list { flex-grow: 1; overflow-y: auto; padding: 15px 0; display: flex; flex-direction: column; gap: 8px; }
-        .end-card, .history-card { background: var(--card); padding: 12px 15px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #222; }
-        .clickable-end { cursor: pointer; border-left: 3px solid transparent; transition: 0.2s; }
+        .end-card { background: var(--card); padding: 12px 15px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #222; }
         
+        /* Swipe to Delete Styles */
+        .history-item-wrapper { position: relative; width: 100%; overflow: hidden; border-radius: 10px; min-height: 55px; background: var(--red); }
+        .history-card { 
+            position: relative; 
+            z-index: 2; 
+            background: var(--card); 
+            padding: 12px 15px; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            border: 1px solid #222; 
+            border-radius: 10px;
+            transition: transform 0.3s ease-out;
+            width: 100%;
+            touch-action: pan-y;
+        }
+        .delete-btn-overlay { 
+            position: absolute; 
+            right: 0; 
+            top: 0; 
+            bottom: 0; 
+            width: 80px; 
+            background: var(--red); 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            z-index: 1; 
+            color: #fff; 
+            font-size: 20px;
+        }
+
+        .clickable-end { cursor: pointer; border-left: 3px solid transparent; transition: 0.2s; }
         .next-btn { background: var(--accent); color: #000; width: 100%; padding: 18px; border-radius: 12px; font-size: 20px; font-weight: 900; border: none; margin-top: 15px; }
         .next-btn:disabled { background: #333; color: #666; }
         .btn-grid { display: grid; gap: 8px; margin-top: 10px; }
@@ -145,7 +176,6 @@
     let state = { current: [], history: [], arrows: 2, ends: 24, mode: '', editingIndex: -1 };
     let timer = { interval: null, timeLeft: 0, totalTime: 0, active: false, phase: 'READY', startTime: null };
     let wakeLock = null;
-    let longPressTimer = null;
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
     async function requestWakeLock() {
@@ -310,41 +340,63 @@
         let allHist = JSON.parse(localStorage.getItem(state.mode) || "[]"); allHist.unshift(session); localStorage.setItem(state.mode, JSON.stringify(allHist)); showScreen('home');
     }
 
-    function deleteSpecificSession(id, e) {
-        if (e) e.stopPropagation();
-        if (confirm("Delete this specific session?")) {
-            let data = JSON.parse(localStorage.getItem(state.mode) || "[]");
-            data = data.filter(s => s.id !== id);
-            localStorage.setItem(state.mode, JSON.stringify(data));
-            showHistory(state.mode);
-        }
-    }
-
     function showHistory(mode) {
         state.mode = mode; showScreen('history-screen'); document.getElementById('history-title').innerText = mode + " HISTORY";
         const list = document.getElementById('history-list'); list.innerHTML = '';
         const data = JSON.parse(localStorage.getItem(mode) || "[]");
-        if(data.length === 0) list.innerHTML = `<p style="text-align:center; color:var(--gray); margin-top:40px;">No History found.</p>`;
-        else {
-            const maxS = Math.max(...data.map(s => s.score));
-            data.forEach(s => {
-                const isPB = s.score === maxS && maxS > 0;
-                const card = document.createElement('div');
-                card.className = 'history-card';
-                card.innerHTML = `<div><span style="margin-right:15px; font-size:13px; color:var(--gray);">${s.date}</span><span class="hist-avg">AVG: ${s.avg}</span></div><div style="display:flex; align-items:center; gap:8px;">${isPB ? '<span style="color:var(--red); font-weight:900; font-size:14px; margin-right:4px;">PB</span>' : ''}<div class="hist-total">${s.score}</div><span style="color:var(--gray); font-size:18px;">›</span></div>`;
-                
-                // Tap to Open
-                card.onclick = () => openSessionDetail(s.id);
-                
-                // Press & Hold to Delete Logic
-                card.ontouchstart = () => { longPressTimer = setTimeout(() => { deleteSpecificSession(s.id); }, 1000); };
-                card.ontouchend = () => { clearTimeout(longPressTimer); };
-                card.onmousedown = () => { longPressTimer = setTimeout(() => { deleteSpecificSession(s.id); }, 1000); };
-                card.onmouseup = () => { clearTimeout(longPressTimer); };
+        if(data.length === 0) { list.innerHTML = `<p style="text-align:center; color:var(--gray); margin-top:40px;">No History found.</p>`; return; }
+        
+        const maxS = Math.max(...data.map(s => s.score));
+        data.forEach(s => {
+            const isPB = s.score === maxS && maxS > 0;
+            const wrapper = document.createElement('div');
+            wrapper.className = 'history-item-wrapper';
+            
+            wrapper.innerHTML = `
+                <div class="delete-btn-overlay" onclick="deleteSession(${s.id})">🗑️</div>
+                <div class="history-card" id="card-${s.id}">
+                    <div><span style="margin-right:15px; font-size:13px; color:var(--gray);">${s.date}</span><span class="hist-avg">AVG: ${s.avg}</span></div>
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        ${isPB ? '<span style="color:var(--red); font-weight:900; font-size:14px; margin-right:4px;">PB</span>' : ''}
+                        <div class="hist-total" style="font-weight:900; font-size:20px;">${s.score}</div>
+                        <span style="color:var(--gray); font-size:18px;">›</span>
+                    </div>
+                </div>`;
+            
+            const card = wrapper.querySelector('.history-card');
+            let startX = 0, currentX = 0;
 
-                list.appendChild(card);
+            card.onclick = () => { if(currentX === 0) openSessionDetail(s.id); else resetCards(); };
+            
+            card.addEventListener('touchstart', e => { startX = e.touches[0].clientX; card.style.transition = 'none'; }, {passive: true});
+            card.addEventListener('touchmove', e => {
+                currentX = e.touches[0].clientX - startX;
+                if (currentX < 0) { 
+                    const move = Math.max(currentX, -80);
+                    card.style.transform = `translateX(${move}px)`;
+                }
+            }, {passive: true});
+            card.addEventListener('touchend', () => {
+                card.style.transition = 'transform 0.3s ease-out';
+                if (currentX < -40) { card.style.transform = 'translateX(-80px)'; currentX = -80; }
+                else { card.style.transform = 'translateX(0)'; currentX = 0; }
             });
-        }
+
+            list.appendChild(wrapper);
+        });
+    }
+
+    function resetCards() {
+        document.querySelectorAll('.history-card').forEach(c => { c.style.transform = 'translateX(0)'; });
+    }
+
+    function deleteSession(id) {
+        if(confirm("Delete this session?")) {
+            let data = JSON.parse(localStorage.getItem(state.mode) || "[]");
+            data = data.filter(s => s.id !== id);
+            localStorage.setItem(state.mode, JSON.stringify(data));
+            showHistory(state.mode);
+        } else { resetCards(); }
     }
 
     function openSessionDetail(sessionId) {
