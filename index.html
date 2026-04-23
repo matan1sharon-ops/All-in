@@ -11,7 +11,6 @@
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; }
         body { background: var(--bg); color: var(--text); font-family: -apple-system, sans-serif; height: 100vh; overflow: hidden; padding-top: env(safe-area-inset-top); }
         
-        /* Layout is strictly LTR for both languages */
         .app-container { width: 100%; max-width: 500px; height: 100%; margin: 0 auto; position: relative; direction: ltr; }
         
         .screen { display: none; flex-direction: column; height: 100%; padding: 20px; background: var(--bg); position: absolute; width: 100%; top: 0; left: 0; bottom: 0; right: 0; }
@@ -230,33 +229,29 @@
     function releaseWakeLock() { if (wakeLock !== null) { wakeLock.release().then(() => wakeLock = null); } }
 
     function playBip(count) {
-    if (!state.mode.includes('TARGET')) return;
-    for(let i=0; i<count; i++) {
-        setTimeout(() => {
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            
-            // "sine" is a cleaner, more professional beep than "square"
-            osc.type = "sine"; 
-            osc.frequency.setValueAtTime(800, audioCtx.currentTime);
-            
-            // Start volume
-            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
-            
-            // HOLD the volume at 0.1 for 0.4 seconds (this was the missing part!)
-            gain.gain.setValueAtTime(0.1, audioCtx.currentTime + 0.4);
-            
-            // Quick fade out at the very end (0.5s mark)
-            gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.5); 
-            
-            osc.connect(gain); 
-            gain.connect(audioCtx.destination); 
-            
-            osc.start(); 
-            osc.stop(audioCtx.currentTime + 0.5); 
-        }, i * 800); // Increased gap slightly so 0.5s bips don't overlap
+        if (!state.mode.includes('TARGET')) return;
+        for(let i=0; i<count; i++) {
+            setTimeout(() => {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                
+                osc.type = "sine"; 
+                osc.frequency.setValueAtTime(800, audioCtx.currentTime);
+                
+                // Volume envelope for exactly 0.5s duration
+                gain.gain.setValueAtTime(0, audioCtx.currentTime);
+                gain.gain.linearRampToValueAtTime(0.1, audioCtx.currentTime + 0.05); // Quick attack
+                gain.gain.setValueAtTime(0.1, audioCtx.currentTime + 0.45); // Hold until 0.45s
+                gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.5); // Quick fade out at 0.5s
+                
+                osc.connect(gain); 
+                gain.connect(audioCtx.destination); 
+                
+                osc.start(); 
+                osc.stop(audioCtx.currentTime + 0.5); 
+            }, i * 900); // 0.9s gap to account for 0.5s duration + silence
+        }
     }
-}
 
     function toggleTimer() { if (timer.active) { stopTimer(); return; } requestWakeLock(); if (state.mode.includes('TARGET')) startPrep(); else startDirect(); }
     function startPrep() { timer.active = true; timer.phase = 'PREP'; timer.totalTime = 10; timer.timeLeft = 10; timer.startTime = Date.now(); playBip(2); showTimerUI(); runTimer(); }
@@ -419,41 +414,34 @@
         const list = document.getElementById('detail-list'); list.innerHTML = '';
         const arrsShot = session.ends.length * session.arrowsPerEnd;
         list.insertAdjacentHTML('beforeend', `<div class="stats-card"><div><div class="stat-label">${t.total}</div><div class="stat-val" style="color:var(--accent);">${session.score}</div></div><div><div class="stat-label">${t.avg}</div><div class="stat-val">${session.avg}</div></div><div><div class="stat-label">${t.arrowsS}</div><div class="stat-val">${arrsShot}</div></div></div>`);
-        const arrowPerEnd = session.arrowsPerEnd; const maxEndVal = state.mode.includes('TARGET') ? (arrowPerEnd * 10) : (arrowPerEnd * 11);
+        
+        const arrowPerEnd = session.arrowsPerEnd; 
+        const maxEndVal = state.mode.includes('TARGET') ? (arrowPerEnd * 10) : (arrowPerEnd * 11);
         const pts = session.ends.map((end, i) => `${(i / (session.ends.length - 1)) * 100},${75 - (end.total / maxEndVal) * 65}`).join(' ');
-        const dts = session.ends.map((end, i) => { const x = (i / (session.ends.length - 1)) * 100; const y = 75 - (end.total / maxEndVal) * 65; return `<rect x="${x - 0.75}" y="${y - 1}" width="1.5" height="2" rx="0.75" fill="var(--accent)" />`; }).join('');
-        list.insertAdjacentHTML('beforeend', `<div class="chart-box"><div class="chart-title">${t.stamina}</div><div style="display:flex; height:110px; padding:5px 0;"><div style="display:flex; flex-direction:column; justify-content:space-between; height:75px; padding-right:8px; text-align:right; border-right:1px solid #333;"><span style="font-size:8px; color:var(--gray);">${maxEndVal}</span><span style="font-size:8px; color:var(--gray);">0</span></div><div style="flex:1; position:relative; margin-left:5px;"><svg viewBox="0 0 100 75" preserveAspectRatio="none" style="width:100%; height:75px; overflow:visible;"><polyline fill="none" stroke="var(--accent)" stroke-width="0.8" points="${pts}" />${dts}</svg></div></div></div>`);
-        const hits = {}; session.ends.flatMap(end => end.rawScores).forEach(s => hits[s] = (hits[s] || 0) + 1);
-        let poss = state.mode.includes('3D') ? [11, 10, 8, 5, 0] : state.mode.includes('TARGET') ? ['X', 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0] : [6,5,4,3,2,1,0];
-        let maxH = Math.max(...Object.values(hits), 1);
-        let hBars = poss.map(sk => { const c = hits[sk] || 0; const bc = getArrowColor(sk === 'X' ? 10 : sk); return `<div><div class="hit-count">${c}</div><div class="hit-bar"><div class="hit-fill" style="height:${(c/maxH)*100}%; background:${bc}"></div></div><div class="hit-label" style="color:${bc}">${sk === 0 ? 'M' : sk}</div></div>`; }).join('');
-        list.insertAdjacentHTML('beforeend', `<div class="chart-box"><div class="chart-title">${t.hits}</div><div class="hits-chart" style="grid-template-columns: repeat(${poss.length}, 1fr);">${hBars}</div></div>`);
-        session.ends.forEach((end, i) => { list.insertAdjacentHTML('beforeend', `<div class="end-card"><div><div class="stat-label">END ${i+1}</div><b>${end.displayScores.join(' · ')}</b></div><div style="color:var(--accent); font-weight:900;">${end.total}</div></div>`); });
-    }
+        const dts = session.ends.map((end, i) => { 
+            const x = (i / (session.ends.length - 1)) * 100; 
+            const y = 75 - (end.total / maxEndVal) * 65; 
+            return `<rect x="${x - 0.75}" y="${y - 1}" width="1.5" height="2" rx="0.75" fill="var(--accent)" />`; 
+        }).join('');
 
-    function showGearScreen() {
-        const g = JSON.parse(localStorage.getItem('archer_gear') || "{}");
-        document.getElementById('lang-select').value = state.lang;
-        document.getElementById('g-r-make').value = g.r_make || ""; document.getElementById('g-r-len').value = g.r_len || "";
-        document.getElementById('g-l-make').value = g.l_make || ""; document.getElementById('g-l-len').value = g.l_len || ""; document.getElementById('g-l-weight').value = g.l_weight || "";
-        document.getElementById('g-a-make').value = g.a_make || ""; document.getElementById('g-a-spine').value = g.a_spine || ""; document.getElementById('g-a-len').value = g.a_len || "";
-        document.getElementById('g-a-point').value = g.a_point || ""; document.getElementById('g-a-nock').value = g.a_nock || ""; document.getElementById('g-a-vanes').value = g.a_vanes || "";
-        for(let d=5; d<=50; d+=5) { document.getElementById(`c-${d}`).value = (g.crawls && g.crawls[d]) ? g.crawls[d] : ""; }
-        showScreen('gear-screen');
-    }
-
-    function saveGear() {
-        const crawls = {}; for(let d=5; d<=50; d+=5) { crawls[d] = document.getElementById(`c-${d}`).value; }
-        const gear = { r_make: document.getElementById('g-r-make').value, r_len: document.getElementById('g-r-len').value, l_make: document.getElementById('g-l-make').value, l_len: document.getElementById('g-l-len').value, l_weight: document.getElementById('g-l-weight').value, a_make: document.getElementById('g-a-make').value, a_spine: document.getElementById('g-a-spine').value, a_len: document.getElementById('g-a-len').value, a_point: document.getElementById('g-a-point').value, a_nock: document.getElementById('g-a-nock').value, a_vanes: document.getElementById('g-a-vanes').value, crawls: crawls };
-        localStorage.setItem('archer_gear', JSON.stringify(gear)); showScreen('home');
+        list.insertAdjacentHTML('beforeend', `<div class="chart-box"><div class="chart-title">${t.stamina}</div><svg viewBox="0 0 100 80" style="width:100%; height:120px;"><polyline fill="none" stroke="#222" stroke-width="0.5" points="0,75 100,75"/><polyline fill="none" stroke="var(--accent)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" points="${pts}"/>${dts}</svg></div>`);
+        
+        const counts = {}; session.ends.forEach(e => e.rawScores.forEach(s => counts[s] = (counts[s] || 0) + 1));
+        const maxC = Math.max(...Object.values(counts));
+        let labels = state.mode.includes('3D') ? [11, 10, 8, 5, 0] : [10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0];
+        let hitBars = labels.map(l => {
+            const h = ((counts[l] || 0) / maxC) * 100;
+            const color = getArrowColor(l === 'X' ? 10 : l);
+            return `<div class="crawl-item"><div class="hit-count">${counts[l] || 0}</div><div class="hit-bar"><div class="hit-fill" style="height:${h}%; background:${color}"></div></div><div class="hit-label">${l === 0 ? 'M' : l}</div></div>`;
+        }).join('');
+        list.insertAdjacentHTML('beforeend', `<div class="chart-box"><div class="chart-title">${t.hits}</div><div class="hits-chart" style="grid-template-columns: repeat(${labels.length}, 1fr);">${hitBars}</div></div>`);
     }
 
     function clearHistory() { if(confirm(i18n[state.lang].wipe)) { localStorage.removeItem(state.mode); showHistory(state.mode); } }
+    function showGearScreen() { showScreen('gear-screen'); ["g-r-make", "g-r-len", "g-l-make", "g-l-len", "g-l-weight", "g-a-make", "g-a-spine", "g-a-len", "g-a-point", "g-a-nock", "g-a-vanes"].forEach(id => document.getElementById(id).value = localStorage.getItem(id) || ''); for(let d=5; d<=50; d+=5) document.getElementById(`c-${d}`).value = localStorage.getItem(`c-${d}`) || ''; document.getElementById('lang-select').value = state.lang; }
+    function saveGear() { ["g-r-make", "g-r-len", "g-l-make", "g-l-len", "g-l-weight", "g-a-make", "g-a-spine", "g-a-len", "g-a-point", "g-a-nock", "g-a-vanes"].forEach(id => localStorage.setItem(id, document.getElementById(id).value)); for(let d=5; d<=50; d+=5) localStorage.setItem(`c-${d}`, document.getElementById(`c-${d}`).value); showScreen('home'); }
 
-    window.onload = () => {
-        const savedLang = localStorage.getItem('archer_lang') || 'en';
-        toggleLang(savedLang);
-    };
+    window.onload = () => { toggleLang(localStorage.getItem('archer_lang') || 'en'); };
 </script>
 </body>
 </html>
