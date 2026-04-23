@@ -7,74 +7,81 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>ALL IN Archery</title>
     <style>
-        :root { --bg: #000; --text: #fff; --accent: #FFD700; --card: #151515; --gray: #888; --red: #FF3B30; --yellow: #FFCC00; --green: #4CD964; --blue: #007AFF; }
+        :root { --bg: #000; --text: #fff; --accent: #FFD700; --card: #151515; --gray: #888; --red: #FF3B30; --yellow: #FFCC00; --green: #4CD964; }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; }
         body { background: var(--bg); color: var(--text); font-family: -apple-system, sans-serif; height: 100vh; overflow: hidden; padding-top: env(safe-area-inset-top); }
         .app-container { width: 100%; max-width: 500px; height: 100%; margin: 0 auto; position: relative; }
         .screen { display: none; flex-direction: column; height: 100%; padding: 20px; background: var(--bg); position: absolute; width: 100%; top: 0; left: 0; bottom: 0; right: 0; }
         .active-screen { display: flex !important; z-index: 10; }
         
-        header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 10px; border-bottom: 1px solid #222; min-height: 60px; }
+        /* Modal Style */
+        .modal-overlay { display: none; position: fixed; top:0; left:0; right:0; bottom:0; background: rgba(0,0,0,0.9); z-index: 100; align-items: center; justify-content: center; padding: 20px; }
+        .modal-card { background: var(--card); border: 1px solid #333; border-radius: 20px; padding: 30px; width: 100%; max-width: 350px; text-align: center; }
+        .choice-btn { width: 100%; padding: 20px; margin: 10px 0; border-radius: 15px; border: 1px solid #444; background: #222; color: #fff; font-size: 18px; font-weight: 800; }
+        
+        header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 10px; border-bottom: 1px solid #222; }
         .stat-label { font-size: 9px; color: var(--gray); text-transform: uppercase; font-weight: 800; }
         .stat-val { font-size: 20px; font-weight: 900; }
 
-        /* Target & Loupe Logic Styles */
-        .target-container { display: none; width: 100%; aspect-ratio: 1/1; margin: 15px auto; position: relative; touch-action: none; }
-        .target-svg { width: 100%; height: 100%; border-radius: 50%; background: #111; }
-        .loupe { position: absolute; width: 130px; height: 130px; border: 3px solid var(--accent); border-radius: 50%; overflow: hidden; display: none; pointer-events: none; z-index: 100; background: #000; box-shadow: 0 0 25px #000; }
+        /* Target & Loupe Styling */
+        .target-container { display: none; width: 100%; aspect-ratio: 1/1; margin: 20px auto; position: relative; touch-action: none; overflow: visible; }
+        .target-svg { width: 100%; height: 100%; border-radius: 50%; }
+        
+        .loupe { 
+            position: absolute; width: 120px; height: 120px; border: 3px solid var(--accent); 
+            border-radius: 50%; overflow: hidden; display: none; pointer-events: none; 
+            z-index: 100; background: #000; box-shadow: 0 0 20px rgba(0,0,0,0.5);
+        }
         .loupe-content { position: absolute; width: 400%; height: 400%; transform-origin: top left; }
-        .crosshair { position: absolute; top: 50%; left: 50%; width: 100%; height: 100%; transform: translate(-50%, -50%); z-index: 101; }
-        .crosshair::before, .crosshair::after { content: ''; position: absolute; background: var(--green); box-shadow: 0 0 2px #000; }
-        .crosshair::before { width: 2px; height: 30px; top: 50%; left: 50%; transform: translate(-50%, -50%); }
-        .crosshair::after { height: 2px; width: 30px; top: 50%; left: 50%; transform: translate(-50%, -50%); }
+        .crosshair { 
+            position: absolute; top: 50%; left: 50%; width: 100%; height: 100%; 
+            transform: translate(-50%, -50%); pointer-events: none; z-index: 101; 
+        }
+        .crosshair::before, .crosshair::after { 
+            content: ''; position: absolute; background: var(--green); 
+        }
+        .crosshair::before { width: 1px; height: 20px; top: 50%; left: 50%; transform: translate(-50%, -50%); }
+        .crosshair::after { height: 1px; width: 20px; top: 50%; left: 50%; transform: translate(-50%, -50%); }
+
         .arrow-dot { position: absolute; width: 10px; height: 10px; border-radius: 50%; border: 1.5px solid #000; transform: translate(-50%, -50%); z-index: 5; }
 
-        /* Menu & Lists */
-        .menu-row { display: flex; gap: 10px; height: 75px; margin-bottom: 12px; }
-        .menu-btn { flex: 1; background: #fff; color: #000; padding: 0 20px; border-radius: 15px; font-size: 16px; font-weight: 800; border: none; text-align: left; }
-        .history-btn { background: #1a1a1a; border-radius: 15px; width: 70px; display: flex; align-items: center; justify-content: center; border: 1px solid #333; font-size: 20px; }
-        #score-list, #history-list, #gear-list { flex-grow: 1; overflow-y: auto; padding: 10px 0; display: flex; flex-direction: column; gap: 8px; }
-        .end-card, .history-card { background: var(--card); padding: 12px 15px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #222; }
-        
-        /* Gear Inputs */
-        .gear-section-title { font-size: 12px; font-weight: 900; color: var(--accent); margin: 15px 0 5px; text-transform: uppercase; border-left: 3px solid var(--accent); padding-left: 10px; }
-        .gear-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
-        .gear-label { font-size: 9px; font-weight: 900; color: #bbb; margin-bottom: 4px; text-transform: uppercase; }
-        .gear-input { background: #111; border: 1px solid #222; color: #fff; padding: 10px; border-radius: 8px; font-size: 14px; width: 100%; }
-        
+        /* UI Buttons */
         .next-btn { background: var(--accent); color: #000; width: 100%; padding: 18px; border-radius: 12px; font-size: 20px; font-weight: 900; border: none; margin-top: 10px; }
-        .btn-grid { display: grid; gap: 8px; margin-top: 10px; }
+        .next-btn:disabled { background: #333; color: #666; }
+        .btn-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 10px; }
         .score-btn { height: 50px; border-radius: 10px; border: 1px solid #333; font-size: 18px; font-weight: 900; color: #fff; background: #222; }
+        .undo-face-btn { background: #333; color: #fff; border: none; border-radius: 10px; padding: 12px; font-weight: bold; width: 100%; margin-top: 10px; }
         
-        .modal-overlay { display: none; position: fixed; top:0; left:0; right:0; bottom:0; background: rgba(0,0,0,0.9); z-index: 1000; align-items: center; justify-content: center; padding: 20px; }
-        .modal-card { background: var(--card); border: 1px solid #333; border-radius: 20px; padding: 30px; width: 100%; max-width: 350px; text-align: center; }
+        /* Menu & History list styles same as before */
+        .menu-row { display: flex; gap: 10px; height: 75px; margin-bottom: 12px; }
+        .menu-btn { flex: 1; background: #fff; color: #000; padding: 0 20px; border-radius: 15px; font-size: 15px; font-weight: 800; border: none; text-align: left; }
+        .history-btn { background: #1a1a1a; border-radius: 15px; width: 70px; display: flex; align-items: center; justify-content: center; border: 1px solid #333; }
+        #score-list { flex-grow: 1; overflow-y: auto; padding: 10px 0; display: flex; flex-direction: column; gap: 8px; }
+        .end-card { background: var(--card); padding: 10px 15px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #222; }
     </style>
 </head>
 <body>
 
 <div id="choice-modal" class="modal-overlay">
     <div class="modal-card">
-        <h2 style="margin-bottom:20px; color:var(--accent);">CHOOSE INPUT</h2>
-        <button class="menu-btn" style="width:100%; padding:20px; margin-bottom:10px; text-align:center;" onclick="setTargetView('pad')">KEYPAD</button>
-        <button class="menu-btn" style="width:100%; padding:20px; text-align:center;" onclick="setTargetView('face')">TARGET FACE</button>
+        <h2 id="l-choice-title" style="margin-bottom:20px;">Scoring Method</h2>
+        <button class="choice-btn" id="l-choice-pad" onclick="setTargetView('pad')">Buttons</button>
+        <button class="choice-btn" id="l-choice-face" onclick="setTargetView('face')">Target Face</button>
     </div>
 </div>
 
 <div class="app-container">
     <div id="home" class="screen active-screen">
-        <div style="text-align:center; margin: 40px 0;"><div style="font-size:36px; font-weight:900; letter-spacing:4px;">ALL IN</div></div>
-        <div id="main-menu"></div>
-        <div style="position:absolute; bottom:30px; left:0; right:0; text-align:center;">
-            <button onclick="showGearScreen()" style="background:#111; color:var(--gray); padding:12px 25px; border-radius:30px; border:1px solid #222; font-size:10px; font-weight:800;">⚙️ SETUP GEAR</button>
-        </div>
+        <div style="text-align:center; margin: 40px 0;"><div style="font-size:32px; font-weight:900;">ALL IN</div></div>
+        <div class="menu-list" id="main-menu"></div>
     </div>
 
     <div id="scoring" class="screen">
         <header>
-            <button onclick="exitScoring()" style="background:none; border:none; color:var(--gray); font-size:24px;">✕</button>
-            <div id="mode-display" style="text-align:center; font-weight:800; font-size:11px;"></div>
+            <button onclick="exitScoring()" style="background:none; border:none; color:var(--gray); font-size:22px;">✕</button>
+            <div id="mode-display" style="font-weight:800; font-size:11px;"></div>
             <div style="text-align:right">
-                <div class="stat-label">AVG</div><div id="avg-score" class="stat-val">0.0</div>
+                <div id="avg-score" class="stat-val">0.0</div>
                 <div id="total-score" class="stat-val" style="color:var(--accent);">0</div>
             </div>
         </header>
@@ -82,7 +89,10 @@
         <div id="score-list"></div>
 
         <div id="target-ui" class="target-container">
-            <div id="loupe" class="loupe"><div id="loupe-content" class="loupe-content"></div><div class="crosshair"></div></div>
+            <div id="loupe" class="loupe">
+                <div id="loupe-content" class="loupe-content"></div>
+                <div class="crosshair"></div>
+            </div>
             <svg id="target-svg" viewBox="0 0 100 100" class="target-svg">
                 <circle cx="50" cy="50" r="50" fill="white" stroke="#ccc" stroke-width="0.5"/>
                 <circle cx="50" cy="50" r="45" fill="white" stroke="#000" stroke-width="0.5"/>
@@ -102,46 +112,21 @@
         <div style="padding-bottom:30px; border-top: 1px solid #222;">
             <button id="next-btn" class="next-btn" onclick="handleMainAction()"></button>
             <div id="button-grid" class="btn-grid"></div>
-            <button id="face-undo" style="display:none; width:100%; margin-top:10px; color:var(--red);" class="score-btn" onclick="undoLastArrow()">⌫ UNDO ARROW</button>
-        </div>
-    </div>
-
-    <div id="history-screen" class="screen">
-        <header>
-            <button onclick="showScreen('home')" style="background:none; border:none; color:var(--gray); font-size:24px;">✕</button>
-            <div id="hist-title" class="stat-label">HISTORY</div>
-            <button onclick="clearHistory()" style="background:none; border:none; color:var(--red); font-size:10px; font-weight:800;">CLEAR</button>
-        </header>
-        <div id="history-list"></div>
-    </div>
-
-    <div id="gear-screen" class="screen">
-        <header>
-            <button onclick="showScreen('home')" style="background:none; border:none; color:var(--gray); font-size:24px;">✕</button>
-            <div class="stat-label">SETUP</div>
-            <button onclick="saveGear()" style="background:none; border:none; color:var(--accent); font-weight:800;">SAVE</button>
-        </header>
-        <div id="gear-list">
-            <div class="gear-section-title">Bow</div>
-            <div class="gear-grid"><input id="g-r-make" class="gear-input" placeholder="Riser"><input id="g-l-make" class="gear-input" placeholder="Limbs"></div>
-            <div class="gear-section-title">Arrows</div>
-            <div class="gear-grid"><input id="g-a-make" class="gear-input" placeholder="Model"><input id="g-a-spine" class="gear-input" placeholder="Spine"></div>
-            <div class="gear-section-title">Barebow Crawls (mm)</div>
-            <div id="crawl-inputs" class="gear-grid"></div>
+            <button id="face-undo" class="undo-face-btn" onclick="undoLastArrow()" style="display:none;">⌫ UNDO LAST ARROW</button>
         </div>
     </div>
 </div>
 
 <script>
-    let state = { current: [], history: [], arrows: 3, ends: 10, mode: '', scoringView: 'pad' };
+    let state = { current: [], history: [], arrows: 3, ends: 10, mode: '', scoringView: 'pad', lang: 'en' };
     let tempArgs = null;
-    let lastCoords = { x: 50, y: 50 };
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
     const modes = [
-        { name: '3D PRACTICE', a: 2, e: 24, scores: [11, 10, 8, 5, 0] },
-        { name: 'FIELD PRACTICE', a: 3, e: 24, scores: [6, 5, 4, 3, 2, 1, 0] },
-        { name: 'TARGET INDOOR', a: 3, e: 20, scores: [10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0] },
-        { name: 'TARGET OUTDOOR', a: 6, e: 12, scores: ['X', 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0] }
+        { name: '3D PRACTICE', a: 2, e: 24 },
+        { name: 'FIELD PRACTICE', a: 3, e: 24 },
+        { name: 'TARGET INDOOR', a: 3, e: 20 },
+        { name: 'TARGET OUTDOOR', a: 6, e: 12 }
     ];
 
     function renderMainMenu() {
@@ -150,15 +135,17 @@
             menu.insertAdjacentHTML('beforeend', `
                 <div class="menu-row">
                     <button class="menu-btn" onclick="preStart('${m.name}', ${m.a}, ${m.e})">${m.name}</button>
-                    <button class="history-btn" onclick="showHistory('${m.name}')">📜</button>
                 </div>`);
         });
     }
 
     function preStart(mode, a, e) {
-        tempArgs = { mode, a, e };
-        if (mode.includes('TARGET')) document.getElementById('choice-modal').style.display = 'flex';
-        else startApp(mode, a, e, 'pad');
+        if (mode.includes('TARGET')) {
+            tempArgs = { mode, a, e };
+            document.getElementById('choice-modal').style.display = 'flex';
+        } else {
+            startApp(mode, a, e, 'pad');
+        }
     }
 
     function setTargetView(view) {
@@ -167,7 +154,7 @@
     }
 
     function startApp(mode, a, e, view) {
-        state = { mode, arrows: a, ends: e, current: [], history: [], scoringView: view };
+        state = { ...state, mode, arrows: a, ends: e, current: [], history: [], scoringView: view };
         document.getElementById('target-ui').style.display = view === 'face' ? 'block' : 'none';
         document.getElementById('button-grid').style.display = view === 'face' ? 'none' : 'grid';
         document.getElementById('face-undo').style.display = view === 'face' ? 'block' : 'none';
@@ -175,34 +162,38 @@
         renderButtons(); renderUI(); showScreen('scoring');
     }
 
-    // Touch Loupe Logic
-    const targetUI = document.getElementById('target-ui'), loupe = document.getElementById('loupe'), loupeContent = document.getElementById('loupe-content'), targetSvg = document.getElementById('target-svg');
-    
-    targetUI.addEventListener('touchstart', updateLoupe);
-    targetUI.addEventListener('touchmove', updateLoupe);
+    // Loupe Logic
+    const targetUI = document.getElementById('target-ui');
+    const loupe = document.getElementById('loupe');
+    const loupeContent = document.getElementById('loupe-content');
+    const targetSvg = document.getElementById('target-svg');
+
+    targetUI.addEventListener('touchstart', handleTouch);
+    targetUI.addEventListener('touchmove', handleTouch);
     targetUI.addEventListener('touchend', endTouch);
 
-    function updateLoupe(e) {
+    let lastCoords = { x: 0, y: 0 };
+
+    function handleTouch(e) {
+        if (state.current.length >= state.arrows) return;
         e.preventDefault();
-        const touch = e.touches[0], rect = targetUI.getBoundingClientRect();
+        const touch = e.touches[0];
+        const rect = targetUI.getBoundingClientRect();
         
-        // Calculate Crosshair Aim Point
-        let x = ((touch.clientX - rect.left) / rect.width) * 100;
-        let y = ((touch.clientY - rect.top) / rect.height) * 100;
-        
-        // Clamp and Save to lastCoords (This is what recordScore uses)
-        lastCoords.x = Math.max(0, Math.min(100, x));
-        lastCoords.y = Math.max(0, Math.min(100, y));
+        // Calculate percentages
+        const x = ((touch.clientX - rect.left) / rect.width) * 100;
+        const y = ((touch.clientY - rect.top) / rect.height) * 100;
+        lastCoords = { x, y };
 
+        // Show Loupe
         loupe.style.display = 'block';
-        loupe.style.left = (touch.clientX - rect.left - 65) + 'px';
-        loupe.style.top = (touch.clientY - rect.top - 140) + 'px';
+        loupe.style.left = (touch.clientX - rect.left - 60) + 'px';
+        loupe.style.top = (touch.clientY - rect.top - 140) + 'px'; // Position above finger
 
+        // Zoom Content
         if (!loupeContent.innerHTML) loupeContent.innerHTML = targetSvg.outerHTML;
-        
-        // Move content inside magnifier to center on lastCoords (the crosshair)
-        loupeContent.style.left = (-lastCoords.x * 4) + 65 + 'px';
-        loupeContent.style.top = (-lastCoords.y * 4) + 65 + 'px';
+        loupeContent.style.left = (-x * 4) + 60 + 'px';
+        loupeContent.style.top = (-y * 4) + 60 + 'px';
     }
 
     function endTouch() {
@@ -213,114 +204,87 @@
     }
 
     function recordScore(x, y) {
-        if (state.current.length >= state.arrows) return;
         const dist = Math.sqrt(Math.pow(x-50, 2) + Math.pow(y-50, 2));
-        let s = 0; 
-        if (dist <= 2.5 && state.mode.includes('OUTDOOR')) s = 'X'; 
-        else if (dist <= 5) s = 10; else if (dist <= 10) s = 9; 
-        else if (dist <= 15) s = 8; else if (dist <= 20) s = 7; 
-        else if (dist <= 25) s = 6; else if (dist <= 30) s = 5; 
-        else if (dist <= 35) s = 4; else if (dist <= 40) s = 3; 
-        else if (dist <= 45) s = 2; else if (dist <= 50) s = 1;
-        
-        state.current.push(s); 
-        const dot = document.createElement('div'); 
-        dot.className = 'arrow-dot'; 
-        dot.style.left = x + '%'; dot.style.top = y + '%'; 
-        dot.style.background = getArrowColor(s === 'X' ? 10 : s); 
-        document.getElementById('arrow-markers').appendChild(dot); 
-        renderUI();
-    }
+        let score = 0;
+        if (dist <= 2.5 && state.mode.includes('OUTDOOR')) score = 'X';
+        else if (dist <= 5) score = 10; else if (dist <= 10) score = 9;
+        else if (dist <= 15) score = 8; else if (dist <= 20) score = 7;
+        else if (dist <= 25) score = 6; else if (dist <= 30) score = 5;
+        else if (dist <= 35) score = 4; else if (dist <= 40) score = 3;
+        else if (dist <= 45) score = 2; else if (dist <= 50) score = 1;
 
-    function renderButtons() {
-        const grid = document.getElementById('button-grid'); grid.innerHTML = '';
-        const m = modes.find(m => m.name === state.mode);
-        grid.style.gridTemplateColumns = m.scores.length > 6 ? 'repeat(4, 1fr)' : 'repeat(3, 1fr)';
-        m.scores.forEach(s => {
-            const b = document.createElement('button'); b.className = 'score-btn'; 
-            b.innerText = s === 0 ? 'M' : s;
-            const c = getArrowColor(s === 'X' ? 10 : s); b.style.backgroundColor = c; 
-            b.style.color = (c === '#FFF' || c === '#FFD700') ? '#000' : '#fff';
-            b.onclick = () => { if(state.current.length < state.arrows) { state.current.push(s); renderUI(); } }; 
-            grid.appendChild(b);
-        });
-        const del = document.createElement('button'); del.className = 'score-btn'; del.innerText = '⌫'; del.onclick = undoLastArrow; grid.appendChild(del);
+        state.current.push(score);
+        
+        // Add marker
+        const dot = document.createElement('div');
+        dot.className = 'arrow-dot';
+        dot.style.left = x + '%'; dot.style.top = y + '%';
+        dot.style.background = getArrowColor(score === 'X' ? 10 : score);
+        document.getElementById('arrow-markers').appendChild(dot);
+        renderUI();
     }
 
     function undoLastArrow() {
-        state.current.pop(); 
-        const markers = document.getElementById('arrow-markers'); 
-        if (markers.lastChild) markers.removeChild(markers.lastChild); 
+        state.current.pop();
+        const markers = document.getElementById('arrow-markers');
+        if (markers.lastChild) markers.removeChild(markers.lastChild);
         renderUI();
     }
 
+    function getArrowColor(s) {
+        if (s === 'X' || s >= 9) return '#FFD700';
+        if (s >= 7) return '#FF3B30';
+        if (s >= 5) return '#007AFF';
+        if (s >= 3) return '#333';
+        return '#FFF';
+    }
+
+    function getVal(s) { return s === 'X' ? 10 : (parseInt(s) || 0); }
+
     function handleMainAction() {
         if (state.current.length === state.arrows) {
-            const tot = state.current.reduce((a, b) => a + (b === 'X' ? 10 : (parseInt(b) || 0)), 0);
-            state.history.push({ scores: [...state.current], total: tot }); 
-            state.current = []; 
+            const endTotal = state.current.reduce((a, b) => a + getVal(b), 0);
+            state.history.push({ scores: [...state.current], total: endTotal });
+            state.current = [];
             document.getElementById('arrow-markers').innerHTML = '';
-            if (state.history.length >= state.ends) saveSession(); else renderUI();
+            if (state.history.length >= state.ends) finishSession(); else renderUI();
         }
-    }
-
-    function saveSession() {
-        const h = JSON.parse(localStorage.getItem(state.mode) || "[]");
-        const tot = state.history.reduce((a, b) => a + b.total, 0);
-        h.unshift({ id: Date.now(), date: new Date().toLocaleDateString(), score: tot, avg: (tot / (state.history.length * state.arrows)).toFixed(1) });
-        localStorage.setItem(state.mode, JSON.stringify(h)); showScreen('home');
-    }
-
-    function showHistory(mode) {
-        state.mode = mode; showScreen('history-screen'); 
-        document.getElementById('hist-title').innerText = mode + " HISTORY";
-        const list = document.getElementById('history-list'); list.innerHTML = '';
-        const data = JSON.parse(localStorage.getItem(mode) || "[]");
-        data.forEach(s => {
-            list.insertAdjacentHTML('beforeend', `<div class="history-card" onclick="deleteSession(${s.id})"><div><span style="font-size:12px; color:var(--gray);">${s.date}</span><br><b>${s.score}</b> (AVG: ${s.avg})</div><span>🗑️</span></div>`);
-        });
-    }
-
-    function deleteSession(id) { if(confirm("Delete this?")) { let d = JSON.parse(localStorage.getItem(state.mode) || "[]"); d = d.filter(s => s.id !== id); localStorage.setItem(state.mode, JSON.stringify(d)); showHistory(state.mode); } }
-    function clearHistory() { if(confirm("Clear all records?")) { localStorage.removeItem(state.mode); showHistory(state.mode); } }
-
-    function showGearScreen() {
-        const g = JSON.parse(localStorage.getItem('archer_gear') || "{}");
-        document.getElementById('g-r-make').value = g.r || ''; document.getElementById('g-l-make').value = g.l || '';
-        document.getElementById('g-a-make').value = g.a || ''; document.getElementById('g-a-spine').value = g.s || '';
-        const c = document.getElementById('crawl-inputs'); c.innerHTML = '';
-        for(let d=10; d<=50; d+=10) { c.innerHTML += `<div><div class="gear-label">${d}m</div><input id="c-${d}" class="gear-input" value="${(g.c && g.c[d]) || ''}"></div>`; }
-        showScreen('gear-screen');
-    }
-
-    function saveGear() {
-        const c = {}; for(let d=10; d<=50; d+=10) { c[d] = document.getElementById(`c-${d}`).value; }
-        const gear = { r: document.getElementById('g-r-make').value, l: document.getElementById('g-l-make').value, a: document.getElementById('g-a-make').value, s: document.getElementById('g-a-spine').value, c: c };
-        localStorage.setItem('archer_gear', JSON.stringify(gear)); showScreen('home');
-    }
-
-    function getArrowColor(s) { 
-        if (s === 11 || s === 'X' || s >= 9) return '#FFD700'; 
-        if (s >= 7) return '#FF3B30'; 
-        if (s >= 5) return '#007AFF'; 
-        if (s >= 3) return '#333'; 
-        return '#FFF'; 
     }
 
     function renderUI() {
         const hTot = state.history.reduce((a, b) => a + b.total, 0);
-        const cTot = state.current.reduce((a, b) => a + (b === 'X' ? 10 : (parseInt(b) || 0)), 0);
+        const cTot = state.current.reduce((a, b) => a + getVal(b), 0);
         document.getElementById('total-score').innerText = hTot + cTot;
         document.getElementById('avg-score').innerText = ((hTot+cTot) / (state.history.length * state.arrows + state.current.length || 1)).toFixed(1);
         document.getElementById('mode-display').innerText = `${state.mode} (${state.history.length}/${state.ends})`;
-        const list = document.getElementById('score-list'); list.innerHTML = '';
-        state.history.forEach((e, i) => list.insertAdjacentHTML('beforeend', `<div class="end-card"><b>END ${i+1}: ${e.scores.join(' · ')}</b><span>${e.total}</span></div>`));
-        if (state.history.length < state.ends) list.insertAdjacentHTML('beforeend', `<div class="end-card" style="border-color:var(--accent)"><b>END ${state.history.length+1}: ${state.current.join(' · ') || '---'}</b><span>${cTot}</span></div>`);
-        const b = document.getElementById('next-btn'); b.disabled = state.current.length < state.arrows; b.innerText = state.history.length === state.ends - 1 ? "FINISH" : "NEXT END"; list.scrollTop = list.scrollHeight;
+        
+        const list = document.getElementById('score-list');
+        list.innerHTML = '';
+        state.history.forEach((e, i) => {
+            list.insertAdjacentHTML('beforeend', `<div class="end-card"><b>END ${i+1}: ${e.scores.join(' · ')}</b><span>${e.total}</span></div>`);
+        });
+        if (state.history.length < state.ends) {
+            list.insertAdjacentHTML('beforeend', `<div class="end-card" style="border-color:var(--accent)"><b>END ${state.history.length+1}: ${state.current.join(' · ') || '---'}</b><span>${cTot}</span></div>`);
+        }
+        document.getElementById('next-btn').disabled = state.current.length < state.arrows;
+        document.getElementById('next-btn').innerText = state.history.length === state.ends - 1 ? "FINISH" : "NEXT END";
     }
 
-    function exitScoring() { if(confirm("Exit and lose progress?")) showScreen('home'); }
+    function renderButtons() {
+        const grid = document.getElementById('button-grid'); grid.innerHTML = '';
+        const scores = state.mode.includes('OUTDOOR') ? ['X',10,9,8,7,6,5,4,3,2,1,0] : [10,9,8,7,6,5,4,3,2,1,0];
+        scores.forEach(s => {
+            const b = document.createElement('button'); b.className = 'score-btn';
+            b.innerText = s === 0 ? 'M' : s;
+            b.onclick = () => { if(state.current.length < state.arrows) { state.current.push(s); renderUI(); } };
+            grid.appendChild(b);
+        });
+    }
+
+    function finishSession() { alert("Session Complete!"); showScreen('home'); }
+    function exitScoring() { if(confirm("Exit?")) showScreen('home'); }
     function showScreen(id) { document.querySelectorAll('.screen').forEach(s => s.classList.remove('active-screen')); document.getElementById(id).classList.add('active-screen'); }
+    
     window.onload = renderMainMenu;
 </script>
 </body>
