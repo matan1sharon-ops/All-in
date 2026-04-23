@@ -27,7 +27,6 @@
         .timer-bar { height: 100%; background: var(--accent); width: 100%; transition: width 0.2s linear; }
         .timer-text { font-size: 14px; font-weight: 900; color: var(--accent); margin-top: 4px; }
 
-        /* Target Face Mode Specifics */
         #target-container { width: 100%; aspect-ratio: 1/1; position: relative; margin: 20px 0; display: none; touch-action: none; }
         #target-canvas { width: 100%; height: 100%; background: #111; border-radius: 50%; }
         #magnifier { 
@@ -36,11 +35,7 @@
             box-shadow: 0 0 20px rgba(0,0,0,0.5);
         }
         #mag-canvas { width: 100%; height: 100%; }
-        .crosshair { 
-            position: absolute; top: 50%; left: 50%; width: 20px; height: 20px; 
-            border-top: 1px solid #fff; border-left: 1px solid #fff; 
-            transform: translate(-50%, -50%); pointer-events: none;
-        }
+        .crosshair { position: absolute; top: 50%; left: 50%; width: 20px; height: 20px; border-top: 1px solid #fff; border-left: 1px solid #fff; transform: translate(-50%, -50%); pointer-events: none; }
 
         .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.9); z-index: 1000; display: none; align-items: center; justify-content: center; }
         .modal-card { background: var(--card); width: 85%; padding: 25px; border-radius: 20px; border: 1px solid #333; text-align: center; }
@@ -53,11 +48,11 @@
         
         .history-btn { background: #1a1a1a; border-radius: 15px; width: 70px; display: flex; flex-direction: column; align-items: center; justify-content: center; border: 1px solid #333; color: #fff; cursor: pointer; }
         .home-footer { position: absolute; bottom: 40px; left: 0; right: 0; display: flex; justify-content: center; }
-        .gear-link { display: flex; align-items: center; gap: 10px; color: var(--gray); background: #111; padding: 12px 25px; border-radius: 30px; border: 1px solid #222; cursor: pointer; }
+        .gear-link { display: flex; align-items: center; gap: 10px; color: var(--gray); background: #111; padding: 12px 25px; border-radius: 30px; border: 1px solid #222; cursor: pointer; text-transform: uppercase; font-size: 10px; font-weight: 800; }
 
         #score-list, #history-list, #detail-list, #gear-list { flex-grow: 1; overflow-y: auto; padding: 15px 0; display: flex; flex-direction: column; gap: 8px; }
         .end-card { background: var(--card); padding: 12px 15px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #222; }
-        .history-row { position: relative; width: 100%; min-height: 55px; border-radius: 10px; overflow: hidden; background: #000; }
+        .history-row { position: relative; width: 100%; min-height: 55px; border-radius: 10px; overflow: hidden; background: #000; margin-bottom: 8px;}
         .history-card { position: relative; z-index: 2; background: var(--card); padding: 12px 15px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #222; border-radius: 10px; transition: transform 0.3s ease; touch-action: pan-y; }
         .bin-btn { position: absolute; right: 0; top: 0; bottom: 0; width: 70px; background: var(--red); display: flex; align-items: center; justify-content: center; z-index: 1; color: #fff; font-size: 20px; }
 
@@ -74,6 +69,8 @@
         .hits-chart { display: grid; gap: 4px; text-align: center; margin-top: 5px; height: 110px; align-items: end; }
         .hit-bar { width: 100%; background: #222; border-radius: 2px; height: 75px; position: relative; overflow: hidden;}
         .hit-fill { position: absolute; bottom: 0; left: 0; right: 0; }
+        .hit-label { font-size: 8px; font-weight: 900; margin-top: 4px; }
+        .hit-count { font-size: 9px; margin-bottom: 4px; color: var(--text); font-weight: bold; }
     </style>
 </head>
 <body>
@@ -81,7 +78,7 @@
 <div class="app-container">
     <div id="mode-modal" class="modal-overlay">
         <div class="modal-card">
-            <h2 id="l-mode-select">Select Scoring Mode</h2>
+            <h2 id="l-mode-select" style="margin-bottom:15px;">SELECT MODE</h2>
             <button class="modal-btn" onclick="confirmMode('pad')">PAD MODE</button>
             <button class="modal-btn" onclick="confirmMode('face')">TARGET FACE</button>
         </div>
@@ -94,7 +91,7 @@
             <p id="l-tagline" style="color:var(--gray); font-size:12px;"></p>
         </div>
         <div class="menu-list" id="main-menu"></div>
-        <div class="home-footer"><div class="gear-link" onclick="showGearScreen()"><span>⚙️</span><span id="l-gear-link" class="gear-text">Gear / Setup</span></div></div>
+        <div class="home-footer"><div class="gear-link" onclick="showGearScreen()"><span>⚙️</span><span id="l-gear-link">Gear / Setup</span></div></div>
     </div>
 
     <div id="scoring" class="screen">
@@ -106,8 +103,8 @@
             </div>
             <div class="header-right">
                 <button id="timer-btn" onclick="toggleTimer()" style="background:none; border:none; color:var(--gray); font-size:20px;">⏰</button>
-                <div style="display:flex; flex-direction:column;"><span id="l-avg" class="stat-label"></span><span id="avg-score" class="stat-val">0.0</span></div>
-                <div style="display:flex; flex-direction:column;"><span id="l-total" class="stat-label"></span><span id="total-score" class="stat-val" style="color:var(--accent);">0</span></div>
+                <div style="display:flex; flex-direction:column;"><span id="l-avg" class="stat-label">AVG</span><span id="avg-score" class="stat-val">0.0</span></div>
+                <div style="display:flex; flex-direction:column;"><span id="l-total" class="stat-label">TOTAL</span><span id="total-score" class="stat-val" style="color:var(--accent);">0</span></div>
             </div>
         </header>
         <div class="timer-container" id="t-cont"><div class="timer-bar" id="t-bar"></div></div>
@@ -120,32 +117,38 @@
         </div>
 
         <div style="padding-bottom:30px; border-top: 1px solid #222;">
-            <div id="action-area">
-                <button id="next-btn" class="next-btn" onclick="handleMainAction()"></button>
-            </div>
+            <div id="action-area"></div>
             <div id="button-grid" class="btn-grid"></div>
         </div>
     </div>
 
     <div id="history-screen" class="screen">
-        <header><button onclick="showScreen('home')" style="background:none; border:none; color:var(--gray); font-size:22px;">✕</button><div class="header-center"><div id="history-title" class="stat-label" style="color:#fff;"></div></div><button id="l-clear" onclick="clearHistory()" style="background:none; border:none; color:var(--gray); font-size:10px; font-weight:bold;"></button></header>
+        <header><button onclick="showScreen('home')" style="background:none; border:none; color:var(--gray); font-size:22px;">✕</button><div class="header-center"><div id="history-title" class="stat-label" style="color:#fff;">HISTORY</div></div><button id="l-clear" onclick="clearHistory()" style="background:none; border:none; color:var(--gray); font-size:10px; font-weight:bold;">CLEAR</button></header>
         <div id="history-list"></div>
     </div>
+
+    <div id="detail-screen" class="screen">
+        <header><button onclick="showScreen('history-screen')" style="background:none; border:none; color:var(--gray); font-size:22px;">✕</button><div class="header-center"><div id="detail-title" class="stat-label" style="color:#fff;">DETAIL</div></div><div style="width:30px;"></div></header>
+        <div id="detail-list"></div>
+    </div>
+
     <div id="gear-screen" class="screen">
-        <header><button onclick="showScreen('home')" style="background:none; border:none; color:var(--gray); font-size:22px;">✕</button><div class="header-center"><div class="stat-label" style="color:#fff;">MY SETUP</div></div><button onclick="saveGear()" style="background:none; border:none; color:var(--accent); font-weight:bold;">SAVE</button></header>
-        <div id="gear-list"></div>
+        <header><button onclick="showScreen('home')" style="background:none; border:none; color:var(--gray); font-size:22px;">✕</button><div class="header-center"><div class="stat-label" style="color:#fff;">MY SETUP</div></div><button onclick="showScreen('home')" style="background:none; border:none; color:var(--accent); font-weight:bold;">DONE</button></header>
+        <div id="gear-list" style="padding:20px; color:var(--gray); text-align:center;">Gear settings coming soon.</div>
     </div>
 </div>
 
 <script>
     const i18n = {
-        en: { tagline: "ARCHERY TRACKER", avg: "AVG", total: "TOTAL", next: "NEXT END", update: "UPDATE END", finish: "FINISH SESSION", exit: "Exit?", correct: "CORRECT", modes: ["3D PRACTICE", "FIELD PRACTICE", "TARGET INDOOR", "TARGET OUTDOOR"] },
-        he: { tagline: "מעקב קליעה בקשת", avg: "ממוצע", total: "סה״כ", next: "סבב הבא", update: "עדכן סבב", finish: "סיים אימון", exit: "לצאת?", correct: "תיקון", modes: ["3D", "פילד", "טארגט אולם", "טארגט חוץ"] }
+        en: { tagline: "ARCHERY TRACKER", avg: "AVG", total: "TOTAL", next: "NEXT END", update: "UPDATE END", finish: "FINISH SESSION", exit: "Exit?", correct: "CORRECT SCORE", history: "HISTORY", detail: "SESSION DETAIL", modes: ["3D PRACTICE", "FIELD PRACTICE", "TARGET INDOOR", "TARGET OUTDOOR"] },
+        he: { tagline: "מעקב קליעה בקשת", avg: "ממוצע", total: "סה״כ", next: "סבב הבא", update: "עדכן סבב", finish: "סיים אימון", exit: "לצאת מהאימון?", correct: "תקן תוצאה", history: "היסטוריה", detail: "פירוט אימון", modes: ["3D", "פילד", "טארגט אולם", "טארגט חוץ"] }
     };
 
     let state = { current: [], history: [], arrows: 2, ends: 24, mode: '', inputMode: 'pad', lang: 'en', pins: [] };
     let timer = { interval: null, timeLeft: 0, totalTime: 0, active: false, phase: 'READY', startTime: null };
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+    function showScreen(id) { document.querySelectorAll('.screen').forEach(s => s.classList.remove('active-screen')); document.getElementById(id).classList.add('active-screen'); }
 
     function toggleLang(lang) {
         state.lang = lang;
@@ -183,14 +186,15 @@
     }
 
     function startApp(mode, arrows, ends) {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
         state.current = []; state.history = []; state.arrows = arrows; state.ends = ends; state.mode = mode; state.pins = [];
         document.getElementById('target-container').style.display = (state.inputMode === 'face') ? 'block' : 'none';
         document.getElementById('button-grid').style.display = (state.inputMode === 'face') ? 'none' : 'grid';
-        if (state.inputMode === 'face') initTargetFace();
+        if (state.inputMode === 'face') setTimeout(initTargetFace, 100);
         renderButtons(); renderUI(); showScreen('scoring');
     }
 
-    /* Target Face Canvas Engine */
+    /* Face Canvas Logic */
     const tCanvas = document.getElementById('target-canvas');
     const tCtx = tCanvas.getContext('2d');
     const mCanvas = document.getElementById('mag-canvas');
@@ -201,7 +205,7 @@
         const size = tCanvas.parentElement.clientWidth;
         tCanvas.width = tCanvas.height = size;
         mCanvas.width = mCanvas.height = 120;
-        drawTarget(tCtx, size);
+        drawTarget(tCtx, size, []);
         
         tCanvas.addEventListener('touchstart', handleTouchStart, {passive: false});
         tCanvas.addEventListener('touchmove', handleTouchMove, {passive: false});
@@ -210,21 +214,15 @@
 
     function drawTarget(ctx, size, pins = []) {
         const center = size / 2;
-        const ringWidth = size / 22; // 10 rings + X
+        const ringWidth = size / 22;
         const colors = ['#FFF176', '#FFF176', '#FF3B30', '#FF3B30', '#007AFF', '#007AFF', '#333', '#333', '#FFF', '#FFF'];
-        
         ctx.clearRect(0,0,size,size);
         for(let i=10; i>=1; i--) {
-            ctx.beginPath();
-            ctx.arc(center, center, i * ringWidth, 0, Math.PI*2);
-            ctx.fillStyle = colors[10-i];
-            ctx.fill();
-            ctx.strokeStyle = (i > 2) ? '#000' : '#888';
-            ctx.stroke();
+            ctx.beginPath(); ctx.arc(center, center, i * ringWidth, 0, Math.PI*2);
+            ctx.fillStyle = colors[10-i]; ctx.fill();
+            ctx.strokeStyle = (i > 2) ? '#000' : '#888'; ctx.stroke();
         }
-        // X-Ring
         ctx.beginPath(); ctx.arc(center, center, 0.5 * ringWidth, 0, Math.PI*2); ctx.stroke();
-
         pins.forEach(p => {
             ctx.beginPath(); ctx.arc(p.x, p.y, 4, 0, Math.PI*2);
             ctx.fillStyle = 'black'; ctx.fill();
@@ -235,77 +233,44 @@
     let isTouching = false;
     let touchPos = {x:0, y:0};
 
-    function handleTouchStart(e) {
-        if (state.current.length >= state.arrows) return;
-        isTouching = true;
-        updateTouchPos(e);
-        magnifier.style.display = 'block';
-        updateMagnifier();
-    }
-
-    function handleTouchMove(e) {
-        if (!isTouching) return;
-        e.preventDefault();
-        updateTouchPos(e);
-        updateMagnifier();
-    }
-
-    function handleTouchEnd() {
-        if (!isTouching) return;
-        isTouching = false;
-        magnifier.style.display = 'none';
-        
+    function handleTouchStart(e) { if (state.current.length < state.arrows) { isTouching = true; updateTouchPos(e); magnifier.style.display = 'block'; updateMagnifier(); } }
+    function handleTouchMove(e) { if (isTouching) { e.preventDefault(); updateTouchPos(e); updateMagnifier(); } }
+    function handleTouchEnd() { 
+        if (!isTouching) return; isTouching = false; magnifier.style.display = 'none';
         const size = tCanvas.width;
         const dist = Math.sqrt(Math.pow(touchPos.x - size/2, 2) + Math.pow(touchPos.y - size/2, 2));
         const ringWidth = size / 22;
-        
         let score = 0;
         if (dist <= 0.5 * ringWidth) score = 'X';
-        else {
-            score = 10 - Math.floor((dist - 0.5 * ringWidth) / ringWidth);
-            if (score < 0) score = 0;
-        }
-
-        state.current.push(score);
-        state.pins.push({...touchPos});
-        drawTarget(tCtx, size, state.pins);
-        renderUI();
+        else { score = 10 - Math.floor((dist - 0.5 * ringWidth) / ringWidth); if (score < 0) score = 0; }
+        state.current.push(score); state.pins.push({...touchPos});
+        drawTarget(tCtx, size, state.pins); renderUI();
     }
-
     function updateTouchPos(e) {
         const rect = tCanvas.getBoundingClientRect();
         touchPos.x = e.touches[0].clientX - rect.left;
         touchPos.y = e.touches[0].clientY - rect.top;
-        magnifier.style.left = (touchPos.x - 60) + 'px';
-        magnifier.style.top = (touchPos.y - 140) + 'px';
+        magnifier.style.left = (touchPos.x - 60) + 'px'; magnifier.style.top = (touchPos.y - 140) + 'px';
     }
-
     function updateMagnifier() {
-        mCtx.fillStyle = '#000';
-        mCtx.fillRect(0,0,120,120);
-        mCtx.save();
-        mCtx.translate(60 - touchPos.x * 2, 60 - touchPos.y * 2);
-        mCtx.scale(2, 2);
-        drawTarget(mCtx, tCanvas.width, state.pins);
-        mCtx.restore();
+        mCtx.fillStyle = '#000'; mCtx.fillRect(0,0,120,120); mCtx.save();
+        mCtx.translate(60 - touchPos.x * 2, 60 - touchPos.y * 2); mCtx.scale(2, 2);
+        drawTarget(mCtx, tCanvas.width, state.pins); mCtx.restore();
     }
 
-    function correctScore() {
-        state.current.pop();
-        state.pins.pop();
-        drawTarget(tCtx, tCanvas.width, state.pins);
-        renderUI();
-    }
-
-    /* Standard logic remains same */
-    function handleMainAction() {
-        if(state.current.length === state.arrows) {
-            const newEnd = { rawScores: [...state.current], displayScores: [...state.current].map(s => s === 0 ? 'M' : s), total: state.current.reduce((a, b) => a + getVal(b), 0), pins: [...state.pins] };
-            state.history.push(newEnd);
-            state.current = []; state.pins = [];
-            if (state.inputMode === 'face') drawTarget(tCtx, tCanvas.width);
-            if(state.history.length >= state.ends) saveSession(); else renderUI();
-        }
+    function renderButtons() {
+        const grid = document.getElementById('button-grid'); grid.innerHTML = '';
+        if(state.inputMode === 'face') return;
+        let scores = state.mode.includes('3D') ? [11, 10, 8, 5, 0] : 
+                     state.mode.includes('TARGET INDOOR') ? [10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0] : 
+                     state.mode.includes('TARGET') ? ['X', 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0] : [6,5,4,3,2,1,0];
+        grid.style.gridTemplateColumns = scores.length > 5 ? 'repeat(4, 1fr)' : 'repeat(3, 1fr)';
+        scores.forEach(s => {
+            const b = document.createElement('button'); b.className = 'score-btn'; 
+            b.innerText = s === 0 ? 'M' : s; b.onclick = () => { if(state.current.length < state.arrows) { state.current.push(s); renderUI(); } };
+            grid.appendChild(b);
+        });
+        const del = document.createElement('button'); del.className = 'score-btn'; del.innerText = '⌫'; del.style.background = '#444'; del.onclick = () => { state.current.pop(); renderUI(); }; grid.appendChild(del);
     }
 
     function renderUI() {
@@ -314,48 +279,86 @@
         const curTot = state.current.reduce((a, b) => a + getVal(b), 0);
         document.getElementById('total-score').innerText = histTot + curTot;
         document.getElementById('avg-score').innerText = ((histTot + curTot) / ((state.history.length * state.arrows) + state.current.length || 1)).toFixed(1);
+        document.getElementById('mode-display').innerText = `${state.mode} (${state.history.length}/${state.ends})`;
         
-        const list = document.getElementById('score-list');
-        list.innerHTML = '';
+        const list = document.getElementById('score-list'); list.innerHTML = '';
         state.history.forEach((end, i) => {
             list.insertAdjacentHTML('beforeend', `<div class="end-card"><div><div class="stat-label">END ${i+1}</div><b>${end.displayScores.join(' · ')}</b></div><div style="color:var(--accent); font-weight:900; font-size:20px;">${end.total}</div></div>`);
         });
+        const activeDisp = state.current.map(s => s === 0 ? 'M' : s).join(' · ') || '---';
+        list.insertAdjacentHTML('beforeend', `<div class="end-card" style="border:1px solid var(--accent); background:#1a1500;"><div><div class="stat-label">CURRENT</div><b>${activeDisp}</b></div><div style="color:var(--accent); font-weight:900; font-size:20px;">${curTot}</div></div>`);
 
         const actArea = document.getElementById('action-area');
         if (state.inputMode === 'face') {
-            actArea.innerHTML = `<div class="action-row">
-                <button id="next-btn" class="next-btn" onclick="handleMainAction()" ${state.current.length < state.arrows ? 'disabled' : ''}>${t.next}</button>
-                <button class="secondary-btn" onclick="correctScore()">${t.correct}</button>
-            </div>`;
+            actArea.innerHTML = `<div class="action-row"><button id="next-btn" class="next-btn" onclick="handleMainAction()" ${state.current.length < state.arrows ? 'disabled' : ''}>${state.history.length === state.ends - 1 ? t.finish : t.next}</button><button class="secondary-btn" onclick="correctScore()">${t.correct}</button></div>`;
         } else {
-            actArea.innerHTML = `<button id="next-btn" class="next-btn" onclick="handleMainAction()" ${state.current.length < state.arrows ? 'disabled' : ''}>${t.next}</button>`;
+            actArea.innerHTML = `<button id="next-btn" class="next-btn" onclick="handleMainAction()" ${state.current.length < state.arrows ? 'disabled' : ''}>${state.history.length === state.ends - 1 ? t.finish : t.next}</button>`;
         }
         list.scrollTop = list.scrollHeight;
     }
 
-    function getVal(s) { return s === 'X' ? 10 : (parseInt(s) || 0); }
-    function showScreen(id) { document.querySelectorAll('.screen').forEach(s => s.classList.remove('active-screen')); document.getElementById(id).classList.add('active-screen'); }
-    function exitScoring() { if(confirm(i18n[state.lang].exit)) showScreen('home'); }
+    function correctScore() { state.current.pop(); state.pins.pop(); drawTarget(tCtx, tCanvas.width, state.pins); renderUI(); }
 
-    // Audio bip logic from previous version
-    function playBip(count) {
-        if (!state.mode.includes('TARGET')) return;
-        for(let i=0; i<count; i++) {
-            setTimeout(() => {
-                const osc = audioCtx.createOscillator();
-                const gain = audioCtx.createGain();
-                osc.type = "sine"; osc.frequency.setValueAtTime(800, audioCtx.currentTime);
-                gain.gain.setValueAtTime(0, audioCtx.currentTime);
-                gain.gain.linearRampToValueAtTime(0.1, audioCtx.currentTime + 0.05);
-                gain.gain.setValueAtTime(0.1, audioCtx.currentTime + 0.45);
-                gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.5);
-                osc.connect(gain); gain.connect(audioCtx.destination);
-                osc.start(); osc.stop(audioCtx.currentTime + 0.5);
-            }, i * 900);
+    function handleMainAction() {
+        if(state.current.length === state.arrows) {
+            const newEnd = { rawScores: [...state.current], displayScores: [...state.current].map(s => s === 0 ? 'M' : s), total: state.current.reduce((a, b) => a + getVal(b), 0), pins: [...state.pins] };
+            state.history.push(newEnd); state.current = []; state.pins = [];
+            if (state.inputMode === 'face') drawTarget(tCtx, tCanvas.width);
+            if(state.history.length >= state.ends) saveSession(); else renderUI();
         }
     }
 
-    window.onload = () => { toggleLang(localStorage.getItem('archer_lang') || 'en'); };
+    function saveSession() {
+        const histTot = state.history.reduce((a, b) => a + b.total, 0);
+        const avg = (histTot / (state.history.length * state.arrows)).toFixed(1);
+        const session = { id: Date.now(), date: new Date().toLocaleDateString('en-GB'), score: histTot, avg: avg, ends: [...state.history], arrowsPerEnd: state.arrows };
+        let allHist = JSON.parse(localStorage.getItem(state.mode) || "[]");
+        allHist.unshift(session); localStorage.setItem(state.mode, JSON.stringify(allHist));
+        showScreen('home');
+    }
+
+    function showHistory(mode) {
+        state.mode = mode; showScreen('history-screen');
+        document.getElementById('history-title').innerText = mode + " " + i18n[state.lang].history;
+        const list = document.getElementById('history-list'); list.innerHTML = '';
+        const data = JSON.parse(localStorage.getItem(mode) || "[]");
+        data.forEach(s => {
+            const row = document.createElement('div'); row.className = 'history-row';
+            row.innerHTML = `<div class="bin-btn" onclick="deleteSession(${s.id})">🗑️</div><div class="history-card" onclick="openSessionDetail(${s.id})"><div><span style="color:var(--gray); font-size:12px;">${s.date}</span><br><b>${i18n[state.lang].avg}: ${s.avg}</b></div><div style="font-weight:900; font-size:20px; color:var(--accent);">${s.score}</div></div>`;
+            list.appendChild(row);
+        });
+    }
+
+    function deleteSession(id) { if(confirm(i18n[state.lang].exit)) { let data = JSON.parse(localStorage.getItem(state.mode) || "[]"); data = data.filter(s => s.id !== id); localStorage.setItem(state.mode, JSON.stringify(data)); showHistory(state.mode); } }
+
+    function openSessionDetail(id) {
+        const data = JSON.parse(localStorage.getItem(state.mode) || "[]");
+        const s = data.find(x => x.id === id); if(!s) return;
+        showScreen('detail-screen');
+        const list = document.getElementById('detail-list'); list.innerHTML = `<div class="stats-card"><div><div class="stat-label">TOTAL</div><div class="stat-val">${s.score}</div></div><div><div class="stat-label">AVG</div><div class="stat-val">${s.avg}</div></div></div>`;
+        s.ends.forEach((e, i) => {
+            list.insertAdjacentHTML('beforeend', `<div class="end-card"><div><div class="stat-label">END ${i+1}</div><b>${e.displayScores.join(' · ')}</b></div><div style="color:var(--accent); font-weight:900;">${e.total}</div></div>`);
+        });
+    }
+
+    function clearHistory() { if(confirm("Wipe all?")) { localStorage.removeItem(state.mode); showHistory(state.mode); } }
+    function exitScoring() { if(confirm(i18n[state.lang].exit)) showScreen('home'); }
+    function showGearScreen() { showScreen('gear-screen'); }
+    function getVal(s) { return s === 'X' ? 10 : (parseInt(s) || 0); }
+
+    function toggleTimer() {
+        if (timer.active) { clearInterval(timer.interval); timer.active = false; document.getElementById('t-cont').style.display = 'none'; return; }
+        timer.active = true; timer.totalTime = 120; timer.timeLeft = 120; timer.startTime = Date.now();
+        document.getElementById('t-cont').style.display = 'block';
+        timer.interval = setInterval(() => {
+            timer.timeLeft = timer.totalTime - Math.floor((Date.now() - timer.startTime) / 1000);
+            if (timer.timeLeft <= 0) { clearInterval(timer.interval); timer.active = false; }
+            document.getElementById('t-text').innerText = timer.timeLeft;
+            document.getElementById('t-bar').style.width = (timer.timeLeft / timer.totalTime * 100) + '%';
+        }, 1000);
+    }
+
+    window.onload = () => { toggleLang('en'); };
 </script>
 </body>
 </html>
