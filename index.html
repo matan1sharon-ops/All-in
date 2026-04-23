@@ -230,18 +230,33 @@
     function releaseWakeLock() { if (wakeLock !== null) { wakeLock.release().then(() => wakeLock = null); } }
 
     function playBip(count) {
-        if (!state.mode.includes('TARGET')) return;
-        for(let i=0; i<count; i++) {
-            setTimeout(() => {
-                const osc = audioCtx.createOscillator();
-                const gain = audioCtx.createGain();
-                osc.type = "square"; osc.frequency.setValueAtTime(800, audioCtx.currentTime);
-                gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.5);
-                osc.connect(gain); gain.connect(audioCtx.destination); osc.start(); osc.stop(audioCtx.currentTime + 0.5);
-            }, i * 700); 
-        }
+    if (!state.mode.includes('TARGET')) return;
+    for(let i=0; i<count; i++) {
+        setTimeout(() => {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            
+            // "sine" is a cleaner, more professional beep than "square"
+            osc.type = "sine"; 
+            osc.frequency.setValueAtTime(800, audioCtx.currentTime);
+            
+            // Start volume
+            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            
+            // HOLD the volume at 0.1 for 0.4 seconds (this was the missing part!)
+            gain.gain.setValueAtTime(0.1, audioCtx.currentTime + 0.4);
+            
+            // Quick fade out at the very end (0.5s mark)
+            gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.5); 
+            
+            osc.connect(gain); 
+            gain.connect(audioCtx.destination); 
+            
+            osc.start(); 
+            osc.stop(audioCtx.currentTime + 0.5); 
+        }, i * 800); // Increased gap slightly so 0.5s bips don't overlap
     }
+}
 
     function toggleTimer() { if (timer.active) { stopTimer(); return; } requestWakeLock(); if (state.mode.includes('TARGET')) startPrep(); else startDirect(); }
     function startPrep() { timer.active = true; timer.phase = 'PREP'; timer.totalTime = 10; timer.timeLeft = 10; timer.startTime = Date.now(); playBip(2); showTimerUI(); runTimer(); }
