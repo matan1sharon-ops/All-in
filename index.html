@@ -220,6 +220,47 @@
             face.appendChild(ring);
         }
     }
+    function openSessionDetail(id) {
+    const data = JSON.parse(localStorage.getItem(state.mode) || "[]");
+    const session = data.find(s => s.id === id);
+    if (!session) return;
+
+    const t = i18n[state.lang];
+    document.getElementById('detail-title').innerText = `${session.date} - ${state.mode}`;
+    
+    const list = document.getElementById('detail-list');
+    list.innerHTML = `
+        <div class="stats-card">
+            <div><div class="stat-label">${t.total}</div><div class="stat-val" style="color:var(--accent)">${session.score}</div></div>
+            <div><div class="stat-label">${t.avg}</div><div class="stat-val">${session.avg}</div></div>
+            <div><div class="stat-label">${t.arrowsS}</div><div class="stat-val">${session.ends.length * session.arrowsPerEnd}</div></div>
+        </div>
+        <div class="chart-box">
+            <div class="stat-label" style="margin-bottom:10px;">${t.stamina}</div>
+            <div style="display:flex; align-items:flex-end; height:60px; gap:2px;">
+                ${session.ends.map(e => `<div style="flex:1; background:var(--accent); height:${(e.total/(session.arrowsPerEnd*10))*100}%; opacity:0.6; border-radius:1px;"></div>`).join('')}
+            </div>
+        </div>
+    `;
+
+    session.ends.forEach((end, i) => {
+        list.insertAdjacentHTML('beforeend', `
+            <div class="end-card">
+                <div><div class="stat-label">END ${i+1}</div><b>${end.displayScores.join(' · ')}</b></div>
+                <div style="color:var(--accent); font-weight:900;">${end.total}</div>
+            </div>
+        `);
+    });
+
+    // Add a delete button at the bottom of the details
+    list.insertAdjacentHTML('beforeend', `
+        <button class="next-btn" style="background:#222; color:var(--red); margin-top:20px;" onclick="deleteSession(${session.id})">
+            🗑️ DELETE SESSION
+        </button>
+    `);
+
+    showScreen('detail-screen');
+}
 
     /* Core Logic */
     function handleMainAction() {
