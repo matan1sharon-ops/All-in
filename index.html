@@ -65,9 +65,9 @@
         #crosshair::after { content: ''; position: absolute; top: 50%; left: 50%; width: 2px; height: 2px; background: red; border-radius: 50%; transform: translate(-50%, -50%); }
         #float-score { position: absolute; top: -35px; left: 50%; transform: translateX(-50%); font-weight: 900; font-size: 24px; color: #fff; text-shadow: 0 0 8px #000; }
         
-        .archer-select-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; width: 100%; max-width: 300px; }
+        /* Gate Specific Styles */
+        .archer-select-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; width: 100%; max-width: 320px; }
         .archer-btn { background: #1a1a1a; border: 2px solid #333; color: #fff; padding: 25px; border-radius: 15px; font-size: 20px; font-weight: 900; }
-        .name-input-group { width: 100%; max-width: 300px; margin-top: 10px; }
         .turn-indicator { font-size: 14px; font-weight: 900; color: var(--accent); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; }
     </style>
 </head>
@@ -86,8 +86,8 @@
 
     <div id="names-modal" class="modal-overlay">
         <h2 style="font-weight: 900; letter-spacing: 1px;">ENTER NAMES</h2>
-        <div id="name-fields-container" style="width: 100%; max-width: 300px;"></div>
-        <button class="next-btn" style="max-width: 300px;" onclick="finalizeCompetitors()">START SESSION</button>
+        <div id="name-fields-container" style="width: 100%; max-width: 320px;"></div>
+        <button class="next-btn" style="max-width: 320px;" onclick="finalizeCompetitors()">START SESSION</button>
     </div>
 
     <div id="target-choice-modal" class="modal-overlay">
@@ -148,7 +148,7 @@
             <div class="gear-grid" style="grid-template-columns: 1fr;"><select id="lang-select" class="gear-input" onchange="toggleLang(this.value)"><option value="en">English</option><option value="he">עברית</option></select></div>
             <div class="gear-section-title" id="l-riser-title"></div><div class="gear-grid"><div class="gear-input-group"><label id="l-r-make" class="gear-label"></label><input type="text" id="g-r-make" class="gear-input"></div><div class="gear-input-group"><label id="l-r-len" class="gear-label"></label><input type="text" id="g-r-len" class="gear-input"></div></div>
             <div class="gear-section-title" id="l-limb-title"></div><div class="gear-grid"><div class="gear-input-group"><label id="l-l-make" class="gear-label"></label><input type="text" id="g-l-make" class="gear-input"></div><div class="gear-input-group"><label id="l-l-len" class="gear-label"></label><input type="text" id="g-l-len" class="gear-input"></div><div class="gear-input-group"><label id="l-l-weight" class="gear-label"></label><input type="text" id="g-l-weight" class="gear-input"></div></div>
-            <div class="gear-section-title" id="l-arrow-title"></div><div class="gear-grid"><div class="gear-input-group"><label id="l-a-make" class="gear-label"></label><input type="text" id="g-a-make" class="gear-input"></div><div class="gear-input-group"><label id="l-a-spine" class="gear-label"></label><input type="text" id="g-a-spine" class="gear-input"></div><div class="gear-input-group"><label id="l-a-len" class="gear-label"></label><input type="text" id="g-a-len" class="gear-input"></div><div class="gear-input-group"><label id="l-a-point" class="gear-label"></label><input type="text" id="g-a-point" class="gear-input"></div><div class="gear-input-group"><label id="l-a-nock" class="gear-label"></label><input type="text" id="g-a-nock" class="gear-input"></div><div class="gear-input-group"><label id="l-a-vanes" class="gear-label"></label><input type="text" id="g-a-point" class="gear-input"></div></div>
+            <div class="gear-section-title" id="l-arrow-title"></div><div class="gear-grid"><div class="gear-input-group"><label id="l-a-make" class="gear-label"></label><input type="text" id="g-a-make" class="gear-input"></div><div class="gear-input-group"><label id="l-a-spine" class="gear-label"></label><input type="text" id="g-a-spine" class="gear-input"></div><div class="gear-input-group"><label id="l-a-len" class="gear-label"></label><input type="text" id="g-a-len" class="gear-input"></div><div class="gear-input-group"><label id="l-a-point" class="gear-label"></label><input type="text" id="g-a-point" class="gear-input"></div><div class="gear-input-group"><label id="l-a-nock" class="gear-label"></label><input type="text" id="g-a-nock" class="gear-input"></div><div class="gear-input-group"><label id="l-a-vanes" class="gear-label"></label><input type="text" id="g-a-vanes" class="gear-input"></div></div>
             <div class="gear-section-title" id="l-crawl-title"></div><div class="crawl-grid" id="crawl-inputs"></div>
         </div>
     </div>
@@ -162,7 +162,7 @@
 
     let state = { 
         current: [], 
-        history: [], 
+        history: [], // This will be an array of histories (one per archer)
         archerNames: [], 
         archerCount: 1, 
         currentArcherIdx: 0, 
@@ -180,7 +180,7 @@
     let wakeLock = null;
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
-    // --- START FLOW GATE ---
+    // --- GATE LOGIC ---
     function startApp(mode, arrows, ends) {
         tempSetup = { mode, arrows, ends };
         document.getElementById('competitor-modal').style.display = 'flex';
@@ -193,7 +193,7 @@
         container.innerHTML = '';
         for(let i=1; i<=count; i++) {
             container.innerHTML += `
-                <div class="name-input-group">
+                <div style="margin-bottom:15px;">
                     <label class="gear-label">ARCHER ${i}</label>
                     <input type="text" id="name-input-${i}" class="gear-input" placeholder="Name ${i}">
                 </div>`;
@@ -236,7 +236,12 @@
     // --- SCORING ENGINE ---
     function handleMainAction() {
         if(state.current.length === state.arrows) {
-            const newEnd = { rawScores: [...state.current], displayScores: [...state.current].map(s => s === 0 ? 'M' : s), total: state.current.reduce((a, b) => a + getVal(b), 0), markers: [...state.markers] };
+            const newEnd = { 
+                rawScores: [...state.current], 
+                displayScores: [...state.current].map(s => s === 0 ? 'M' : s), 
+                total: state.current.reduce((a, b) => a + getVal(b), 0), 
+                markers: [...state.markers] 
+            };
             
             if (state.editingIndex !== -1) {
                 state.history[state.currentArcherIdx][state.editingIndex] = newEnd;
@@ -247,7 +252,7 @@
 
             state.current = []; state.markers = []; stopTimer();
 
-            // Turn Logic
+            // Cycle Logic
             if (state.editingIndex === -1) {
                 if (state.currentArcherIdx < state.archerCount - 1) {
                     state.currentArcherIdx++;
@@ -299,7 +304,6 @@
         list.scrollTop = list.scrollHeight;
     }
 
-    // --- REMAINING UTILITIES (IDENTICAL TO WORKING VERSION) ---
     function getVal(s) { return s === 'X' ? 10 : (parseInt(s) || 0); }
     function editEnd(archIdx, endIdx) { state.currentArcherIdx = archIdx; state.editingIndex = endIdx; state.current = [...state.history[archIdx][endIdx].rawScores]; state.markers = [...(state.history[archIdx][endIdx].markers || [])]; renderUI(); if(state.scoringType === 'face') renderTargetFace(); else renderButtons(); }
 
@@ -325,9 +329,7 @@
         showScreen('home');
     }
 
-    // (Include all your existing functions: renderTargetFace, renderButtons, toggleTimer, updateFaceMarkers, showHistory, deleteSession, openSessionDetail, showGearScreen, saveGear, toggleLang, renderMainMenu, etc. below)
-    
-    // Placeholder for remaining working logic from your previous versions
+    // --- CORE RENDERING & UTILS ---
     function renderMainMenu() {
         const menu = document.getElementById('main-menu'); menu.innerHTML = '';
         const mNames = i18n[state.lang].modes; const rawNames = i18n.en.modes;
@@ -336,90 +338,6 @@
             menu.insertAdjacentHTML('beforeend', `<div class="menu-row"><button class="menu-btn" onclick="startApp('${name}', ${configs[i][0]}, ${configs[i][1]})">${mNames[i]}</button><button class="history-btn" onclick="showHistory('${name}')">📜</button></div>`);
         });
     }
-
-    function toggleLang(lang) {
-        state.lang = lang;
-        const t = i18n[lang];
-        document.getElementById('l-tagline').innerText = t.tagline;
-        document.getElementById('l-gear-link').innerText = t.gear;
-        document.getElementById('l-avg').innerText = t.avg;
-        document.getElementById('l-total').innerText = t.total;
-        document.getElementById('l-clear').innerText = t.clear;
-        document.getElementById('l-setup-title').innerText = t.setup;
-        document.getElementById('l-save').innerText = t.save;
-        document.getElementById('l-riser-title').innerText = t.riser;
-        document.getElementById('l-r-make').innerText = t.riserMake;
-        document.getElementById('l-r-len').innerText = t.riserLen;
-        document.getElementById('l-limb-title').innerText = t.limbs;
-        document.getElementById('l-l-make').innerText = t.limbMake;
-        document.getElementById('l-l-len').innerText = t.limbLen;
-        document.getElementById('l-l-weight').innerText = t.limbWeight;
-        document.getElementById('l-arrow-title').innerText = t.arrows;
-        document.getElementById('l-a-make').innerText = t.arrMake;
-        document.getElementById('l-a-spine').innerText = t.arrSpine;
-        document.getElementById('l-a-len').innerText = t.arrLen;
-        document.getElementById('l-a-point').innerText = t.point;
-        document.getElementById('l-a-nock').innerText = t.nock;
-        document.getElementById('l-a-vanes').innerText = t.vanes;
-        document.getElementById('l-crawl-title').innerText = t.crawls;
-        renderMainMenu();
-        localStorage.setItem('archer_lang', lang);
-    }
-
-    async function requestWakeLock() { try { if ('wakeLock' in navigator) wakeLock = await navigator.wakeLock.request('screen'); } catch (err) {} }
-    function releaseWakeLock() { if (wakeLock !== null) { wakeLock.release().then(() => wakeLock = null); } }
-
-    function playBip(count) {
-        if (!state.mode.includes('TARGET')) return;
-        for(let i=0; i<count; i++) {
-            setTimeout(() => {
-                const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
-                osc.type = "square"; osc.frequency.setValueAtTime(800, audioCtx.currentTime);
-                gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.5);
-                osc.connect(gain); gain.connect(audioCtx.destination); osc.start(); osc.stop(audioCtx.currentTime + 0.5);
-            }, i * 700); 
-        }
-    }
-
-    function toggleTimer() { if (timer.active) { stopTimer(); return; } requestWakeLock(); if (state.mode.includes('TARGET')) startPrep(); else startDirect(); }
-    function startPrep() { timer.active = true; timer.phase = 'PREP'; timer.totalTime = 10; timer.timeLeft = 10; timer.startTime = Date.now(); playBip(2); showTimerUI(); runTimer(); }
-    function startDirect() { timer.active = true; timer.phase = 'SHOOT'; timer.totalTime = state.mode.includes('3D') ? 120 : 180; timer.timeLeft = timer.totalTime; timer.startTime = Date.now(); showTimerUI(); runTimer(); }
-    function runTimer() {
-        clearInterval(timer.interval);
-        timer.interval = setInterval(() => {
-            const elapsed = Math.floor((Date.now() - timer.startTime) / 1000);
-            timer.timeLeft = timer.totalTime - elapsed;
-            if (timer.timeLeft < 0) {
-                if (timer.phase === 'PREP') {
-                    timer.phase = 'SHOOT'; timer.totalTime = state.mode.includes('INDOOR') ? 90 : 180;
-                    timer.startTime = Date.now(); timer.timeLeft = timer.totalTime; playBip(1);
-                } else { playBip(3); stopTimer(); return; }
-            }
-            updateTimerDisplay();
-        }, 200);
-    }
-
-    function stopTimer() {
-        clearInterval(timer.interval); timer.active = false; timer.phase = 'READY'; releaseWakeLock();
-        document.getElementById('t-cont').style.display = 'none'; document.getElementById('t-text').innerText = '';
-        document.getElementById('timer-btn').style.color = 'var(--gray)';
-    }
-
-    function showTimerUI() { document.getElementById('t-cont').style.display = 'block'; document.getElementById('timer-btn').style.color = 'var(--accent)'; updateTimerDisplay(); }
-    function updateTimerDisplay() {
-        const bar = document.getElementById('t-bar'), txt = document.getElementById('t-text');
-        txt.innerText = (timer.phase === 'PREP' ? (i18n[state.lang].prep + ' ') : '') + timer.timeLeft;
-        bar.style.width = Math.max(0, (timer.timeLeft / timer.totalTime * 100)) + '%';
-        if (timer.phase === 'PREP') { bar.style.background = 'var(--red)'; txt.style.color = 'var(--red)'; }
-        else {
-            if (timer.timeLeft <= 30 && state.mode.includes('TARGET')) { bar.style.background = 'var(--yellow)'; txt.style.color = 'var(--yellow)'; }
-            else { bar.style.background = 'var(--green)'; txt.style.color = 'var(--green)'; }
-        }
-    }
-
-    function showScreen(id) { document.querySelectorAll('.screen').forEach(s => s.classList.remove('active-screen')); document.getElementById(id).classList.add('active-screen'); }
-    function exitScoring() { if(confirm(i18n[state.lang].exit)) { stopTimer(); showScreen('home'); } }
 
     function getArrowColor(s) {
         if (state.mode.includes('TARGET')) { if (s === 'X' || s >= 9) return '#FFD700'; if (s >= 7) return '#FF3B30'; if (s >= 5) return '#007AFF'; if (s >= 3) return '#333'; if (s >= 1) return '#FFF'; }
@@ -441,8 +359,6 @@
         });
     }
 
-    function undoLastMarker() { state.current.pop(); if(state.scoringType === 'face') { state.markers.pop(); updateFaceMarkers(); } renderUI(); }
-
     function getTargetSvg(idPrefix, hasX) {
         return `<circle cx="50" cy="50" r="50" fill="#fff" stroke="#000" stroke-width="0.1"/><circle cx="50" cy="50" r="45" fill="#fff" stroke="#000" stroke-width="0.1"/><circle cx="50" cy="50" r="40" fill="#000" stroke="#fff" stroke-width="0.1"/><circle cx="50" cy="50" r="35" fill="#000" stroke="#fff" stroke-width="0.1"/><circle cx="50" cy="50" r="30" fill="#007AFF" stroke="#000" stroke-width="0.1"/><circle cx="50" cy="50" r="25" fill="#007AFF" stroke="#000" stroke-width="0.1"/><circle cx="50" cy="50" r="20" fill="#FF3B30" stroke="#000" stroke-width="0.1"/><circle cx="50" cy="50" r="15" fill="#FF3B30" stroke="#000" stroke-width="0.1"/><circle cx="50" cy="50" r="10" fill="#FFD700" stroke="#000" stroke-width="0.1"/><circle cx="50" cy="50" r="5" fill="#FFD700" stroke="#000" stroke-width="0.1"/>${hasX ? '<circle cx="50" cy="50" r="2.5" fill="#FFD700" stroke="#000" stroke-width="0.1"/>' : ''}<g id="${idPrefix}-markers"></g>`;
     }
@@ -459,78 +375,78 @@
 
         const updatePosition = (e) => {
             if(state.current.length >= state.arrows) return;
-            const touch = e.touches[0];
-            const rect = container.getBoundingClientRect();
+            const touch = e.touches[0]; const rect = container.getBoundingClientRect();
             let x = touch.clientX - rect.left, y = touch.clientY - rect.top;
             x = Math.max(0, Math.min(x, rect.width)); y = Math.max(0, Math.min(y, rect.height));
             mag.style.display = 'block'; mag.style.left = x + 'px'; mag.style.top = y + 'px';
             const px = (x / rect.width) * 100, py = (y / rect.height) * 100;
             magSvg.style.left = `-${px * 5 - 50}%`; magSvg.style.top = `-${py * 5 - 50}%`;
             const dist = Math.sqrt(Math.pow(px-50, 2) + Math.pow(py-50, 2));
-            let s = 0;
-            if (hasX && dist <= 2.5) s = 'X';
-            else if (dist <= 5) s = 10; else if (dist <= 10) s = 9;
-            else if (dist <= 15) s = 8; else if (dist <= 20) s = 7;
-            else if (dist <= 25) s = 6; else if (dist <= 30) s = 5;
-            else if (dist <= 35) s = 4; else if (dist <= 40) s = 3;
-            else if (dist <= 45) s = 2; else if (dist <= 50) s = 1;
-            facePendingScore = s; lastMarkerPos = { x: px, y: py };
-            floatScore.innerText = s === 0 ? 'M' : s;
+            let s = 0; if (hasX && dist <= 2.5) s = 'X'; else if (dist <= 5) s = 10; else if (dist <= 10) s = 9; else if (dist <= 15) s = 8; else if (dist <= 20) s = 7; else if (dist <= 25) s = 6; else if (dist <= 30) s = 5; else if (dist <= 35) s = 4; else if (dist <= 40) s = 3; else if (dist <= 45) s = 2; else if (dist <= 50) s = 1;
+            facePendingScore = s; lastMarkerPos = { x: px, y: py }; floatScore.innerText = s === 0 ? 'M' : s;
         };
 
         container.addEventListener('touchstart', (e) => { updatePosition(e); e.preventDefault(); }, {passive: false});
         container.addEventListener('touchmove', (e) => { updatePosition(e); e.preventDefault(); }, {passive: false});
-        container.addEventListener('touchend', () => {
-            mag.style.display = 'none';
-            if(state.current.length < state.arrows) { state.current.push(facePendingScore); state.markers.push({...lastMarkerPos}); updateFaceMarkers(); renderUI(); }
-        });
+        container.addEventListener('touchend', () => { mag.style.display = 'none'; if(state.current.length < state.arrows) { state.current.push(facePendingScore); state.markers.push({...lastMarkerPos}); updateFaceMarkers(); renderUI(); } });
     }
 
     function updateFaceMarkers() {
-        const mainG = document.getElementById('main-markers');
-        const magG = document.getElementById('mag-markers');
+        const mainG = document.getElementById('main-markers'); const magG = document.getElementById('mag-markers');
         if(!mainG || !magG) return;
         const html = state.markers.map(m => `<circle cx="${m.x}" cy="${m.y}" r="0.8" fill="white" stroke="black" stroke-width="0.2" />`).join('');
         mainG.innerHTML = html; magG.innerHTML = html;
     }
 
+    function undoLastMarker() { state.current.pop(); if(state.scoringType === 'face') { state.markers.pop(); updateFaceMarkers(); } renderUI(); }
+
+    // --- REMAINING UTILS ---
+    function toggleLang(lang) {
+        state.lang = lang; const t = i18n[lang];
+        document.getElementById('l-tagline').innerText = t.tagline; document.getElementById('l-gear-link').innerText = t.gear;
+        document.getElementById('l-avg').innerText = t.avg; document.getElementById('l-total').innerText = t.total;
+        document.getElementById('l-clear').innerText = t.clear; document.getElementById('l-setup-title').innerText = t.setup;
+        document.getElementById('l-save').innerText = t.save; document.getElementById('l-riser-title').innerText = t.riser;
+        document.getElementById('l-r-make').innerText = t.riserMake; document.getElementById('l-r-len').innerText = t.riserLen;
+        document.getElementById('l-limb-title').innerText = t.limbs; document.getElementById('l-l-make').innerText = t.limbMake;
+        document.getElementById('l-l-len').innerText = t.limbLen; document.getElementById('l-l-weight').innerText = t.limbWeight;
+        document.getElementById('l-arrow-title').innerText = t.arrows; document.getElementById('l-a-make').innerText = t.arrMake;
+        document.getElementById('l-a-spine').innerText = t.arrSpine; document.getElementById('l-a-len').innerText = t.arrLen;
+        document.getElementById('l-a-point').innerText = t.point; document.getElementById('l-a-nock').innerText = t.nock;
+        document.getElementById('l-a-vanes').innerText = t.vanes; document.getElementById('l-crawl-title').innerText = t.crawls;
+        renderMainMenu(); localStorage.setItem('archer_lang', lang);
+    }
+
+    function toggleTimer() { if (timer.active) { stopTimer(); return; } if (state.mode.includes('TARGET')) startPrep(); else startDirect(); }
+    function startPrep() { timer.active = true; timer.phase = 'PREP'; timer.totalTime = 10; timer.timeLeft = 10; timer.startTime = Date.now(); playBip(2); showTimerUI(); runTimer(); }
+    function startDirect() { timer.active = true; timer.phase = 'SHOOT'; timer.totalTime = state.mode.includes('3D') ? 120 : 180; timer.timeLeft = timer.totalTime; timer.startTime = Date.now(); showTimerUI(); runTimer(); }
+    function runTimer() { clearInterval(timer.interval); timer.interval = setInterval(() => { const elapsed = Math.floor((Date.now() - timer.startTime) / 1000); timer.timeLeft = timer.totalTime - elapsed; if (timer.timeLeft < 0) { if (timer.phase === 'PREP') { timer.phase = 'SHOOT'; timer.totalTime = state.mode.includes('INDOOR') ? 90 : 180; timer.startTime = Date.now(); timer.timeLeft = timer.totalTime; playBip(1); } else { playBip(3); stopTimer(); return; } } updateTimerDisplay(); }, 200); }
+    function stopTimer() { clearInterval(timer.interval); timer.active = false; timer.phase = 'READY'; document.getElementById('t-cont').style.display = 'none'; document.getElementById('t-text').innerText = ''; document.getElementById('timer-btn').style.color = 'var(--gray)'; }
+    function showTimerUI() { document.getElementById('t-cont').style.display = 'block'; document.getElementById('timer-btn').style.color = 'var(--accent)'; updateTimerDisplay(); }
+    function updateTimerDisplay() { const bar = document.getElementById('t-bar'), txt = document.getElementById('t-text'); txt.innerText = (timer.phase === 'PREP' ? (i18n[state.lang].prep + ' ') : '') + timer.timeLeft; bar.style.width = Math.max(0, (timer.timeLeft / timer.totalTime * 100)) + '%'; if (timer.phase === 'PREP') { bar.style.background = 'var(--red)'; txt.style.color = 'var(--red)'; } else { if (timer.timeLeft <= 30 && state.mode.includes('TARGET')) { bar.style.background = 'var(--yellow)'; txt.style.color = 'var(--yellow)'; } else { bar.style.background = 'var(--green)'; txt.style.color = 'var(--green)'; } } }
+    function playBip(count) { if (!state.mode.includes('TARGET')) return; for(let i=0; i<count; i++) { setTimeout(() => { const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain(); osc.type = "square"; osc.frequency.setValueAtTime(800, audioCtx.currentTime); gain.gain.setValueAtTime(0.1, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.5); osc.connect(gain); gain.connect(audioCtx.destination); osc.start(); osc.stop(audioCtx.currentTime + 0.5); }, i * 700); } }
+
+    function showScreen(id) { document.querySelectorAll('.screen').forEach(s => s.classList.remove('active-screen')); document.getElementById(id).classList.add('active-screen'); }
+    function exitScoring() { if(confirm(i18n[state.lang].exit)) { stopTimer(); showScreen('home'); } }
+
     function showHistory(mode) {
         state.mode = mode; showScreen('history-screen');
-        const modeIdx = i18n.en.modes.indexOf(mode);
-        document.getElementById('history-title').innerText = i18n[state.lang].modes[modeIdx] + " " + i18n[state.lang].history;
+        const modeIdx = i18n.en.modes.indexOf(mode); document.getElementById('history-title').innerText = i18n[state.lang].modes[modeIdx] + " " + i18n[state.lang].history;
         const list = document.getElementById('history-list'); list.innerHTML = '';
         const data = JSON.parse(localStorage.getItem(mode) || "[]");
         if(data.length === 0) { list.innerHTML = `<p style="text-align:center; color:var(--gray); margin-top:40px;">No History found.</p>`; return; }
-        data.forEach(s => {
-            const row = document.createElement('div'); row.className = 'history-row';
-            row.innerHTML = `<div class="bin-btn" onclick="deleteSession(${s.id})">🗑️</div><div class="history-card" id="card-${s.id}"><div><span style="font-size:11px; color:var(--accent); font-weight:900;">${s.archer.toUpperCase()}</span><br><span style="margin-right:15px; font-size:12px; color:var(--gray);">${s.date}</span></div><div style="display:flex; align-items:center; gap:8px;"><div class="hist-total" style="font-weight:900; font-size:20px;">${s.score}</div><span style="color:var(--gray); font-size:18px;">›</span></div></div>`;
-            const card = row.querySelector('.history-card');
-            card.onclick = () => openSessionDetail(s.id);
-            list.appendChild(row);
-        });
+        data.forEach(s => { const row = document.createElement('div'); row.className = 'history-row'; row.innerHTML = `<div class="bin-btn" onclick="deleteSession(${s.id})">🗑️</div><div class="history-card" id="card-${s.id}"><div><span style="font-size:11px; color:var(--accent); font-weight:900;">${s.archer.toUpperCase()}</span><br><span style="margin-right:15px; font-size:12px; color:var(--gray);">${s.date}</span></div><div style="display:flex; align-items:center; gap:8px;"><div class="hist-total" style="font-weight:900; font-size:20px;">${s.score}</div><span style="color:var(--gray); font-size:18px;">›</span></div></div>`; row.querySelector('.history-card').onclick = () => openSessionDetail(s.id); list.appendChild(row); });
     }
 
     function deleteSession(id) { if(confirm(i18n[state.lang].delSess)) { let data = JSON.parse(localStorage.getItem(state.mode) || "[]"); data = data.filter(s => s.id !== id); localStorage.setItem(state.mode, JSON.stringify(data)); showHistory(state.mode); } }
     function clearHistory() { if(confirm(i18n[state.lang].wipe)) { localStorage.removeItem(state.mode); showHistory(state.mode); } }
 
     function openSessionDetail(sessionId) {
-        const data = JSON.parse(localStorage.getItem(state.mode) || "[]");
-        const session = data.find(s => s.id === sessionId); if(!session) return;
-        const t = i18n[state.lang];
-        showScreen('detail-screen'); 
-        document.getElementById('detail-title').innerText = session.archer + " - " + t.detail;
-        const list = document.getElementById('detail-list'); list.innerHTML = '';
-        const arrsShot = session.ends.length * session.arrowsPerEnd;
+        const data = JSON.parse(localStorage.getItem(state.mode) || "[]"); const session = data.find(s => s.id === sessionId); if(!session) return;
+        const t = i18n[state.lang]; showScreen('detail-screen'); document.getElementById('detail-title').innerText = session.archer + " - " + t.detail;
+        const list = document.getElementById('detail-list'); list.innerHTML = ''; const arrsShot = session.ends.length * session.arrowsPerEnd;
         list.insertAdjacentHTML('beforeend', `<div class="stats-card"><div><div class="stat-label">${t.total}</div><div class="stat-val" style="color:var(--accent);">${session.score}</div></div><div><div class="stat-label">${t.avg}</div><div class="stat-val">${session.avg}</div></div><div><div class="stat-label">${t.arrowsS}</div><div class="stat-val">${arrsShot}</div></div></div>`);
-        
-        if (session.scoringType === 'face') {
-            const hasX = state.mode.includes('OUTDOOR');
-            const allMarkers = session.ends.flatMap(e => e.markers || []);
-            const markerHtml = allMarkers.map(m => `<circle cx="${m.x}" cy="${m.y}" r="1" fill="white" stroke="black" stroke-width="0.3" opacity="0.7" />`).join('');
-            list.insertAdjacentHTML('beforeend', `<div class="chart-box"><div class="chart-title">${t.heatmap}</div><div class="history-face-container"><svg viewBox="0 0 100 100">${getTargetSvg('hist', hasX)}</svg></div></div>`);
-            document.getElementById('hist-markers').innerHTML = markerHtml;
-        }
-
+        if (session.scoringType === 'face') { const hasX = state.mode.includes('OUTDOOR'); const allMarkers = session.ends.flatMap(e => e.markers || []); const markerHtml = allMarkers.map(m => `<circle cx="${m.x}" cy="${m.y}" r="1" fill="white" stroke="black" stroke-width="0.3" opacity="0.7" />`).join(''); list.insertAdjacentHTML('beforeend', `<div class="chart-box"><div class="chart-title">${t.heatmap}</div><div class="history-face-container"><svg viewBox="0 0 100 100">${getTargetSvg('hist', hasX)}</svg></div></div>`); document.getElementById('hist-markers').innerHTML = markerHtml; }
         const hits = {}; session.ends.flatMap(end => end.rawScores).forEach(s => hits[s] = (hits[s] || 0) + 1);
         let poss = state.mode.includes('3D') ? [11, 10, 8, 5, 0] : state.mode.includes('TARGET') ? ['X', 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0] : [6,5,4,3,2,1,0];
         let maxH = Math.max(...Object.values(hits), 1);
@@ -539,21 +455,13 @@
         session.ends.forEach((end, i) => { list.insertAdjacentHTML('beforeend', `<div class="end-card"><div><div class="stat-label">END ${i+1}</div><b>${end.displayScores.join(' · ')}</b></div><div style="color:var(--accent); font-weight:900;">${end.total}</div></div>`); });
     }
 
-    // Gear logic
     const crawlContainer = document.getElementById('crawl-inputs');
     for(let d=5; d<=50; d+=5) { crawlContainer.innerHTML += `<div class="crawl-item"><div class="crawl-dist">${d}m</div><input type="text" id="c-${d}" class="crawl-val"></div>`; }
-
     function showGearScreen() {
-        const g = JSON.parse(localStorage.getItem('archer_gear') || "{}");
-        document.getElementById('lang-select').value = state.lang;
-        document.getElementById('g-r-make').value = g.r_make || ""; document.getElementById('g-r-len').value = g.r_len || "";
-        document.getElementById('g-l-make').value = g.l_make || ""; document.getElementById('g-l-len').value = g.l_len || ""; document.getElementById('g-l-weight').value = g.l_weight || "";
-        document.getElementById('g-a-make').value = g.a_make || ""; document.getElementById('g-a-spine').value = g.a_spine || ""; document.getElementById('g-a-len').value = g.a_len || "";
-        document.getElementById('g-a-point').value = g.a_point || ""; document.getElementById('g-a-nock').value = g.a_nock || ""; document.getElementById('g-a-vanes').value = g.a_vanes || "";
-        for(let d=5; d<=50; d+=5) { document.getElementById(`c-${d}`).value = (g.crawls && g.crawls[d]) ? g.crawls[d] : ""; }
-        showScreen('gear-screen');
+        const g = JSON.parse(localStorage.getItem('archer_gear') || "{}"); document.getElementById('lang-select').value = state.lang;
+        document.getElementById('g-r-make').value = g.r_make || ""; document.getElementById('g-r-len').value = g.r_len || ""; document.getElementById('g-l-make').value = g.l_make || ""; document.getElementById('g-l-len').value = g.l_len || ""; document.getElementById('g-l-weight').value = g.l_weight || ""; document.getElementById('g-a-make').value = g.a_make || ""; document.getElementById('g-a-spine').value = g.a_spine || ""; document.getElementById('g-a-len').value = g.a_len || ""; document.getElementById('g-a-point').value = g.a_point || ""; document.getElementById('g-a-nock').value = g.a_nock || ""; document.getElementById('g-a-vanes').value = g.a_vanes || "";
+        for(let d=5; d<=50; d+=5) { document.getElementById(`c-${d}`).value = (g.crawls && g.crawls[d]) ? g.crawls[d] : ""; } showScreen('gear-screen');
     }
-
     function saveGear() {
         const crawls = {}; for(let d=5; d<=50; d+=5) { crawls[d] = document.getElementById(`c-${d}`).value; }
         const gear = { r_make: document.getElementById('g-r-make').value, r_len: document.getElementById('g-r-len').value, l_make: document.getElementById('g-l-make').value, l_len: document.getElementById('g-l-len').value, l_weight: document.getElementById('g-l-weight').value, a_make: document.getElementById('g-a-make').value, a_spine: document.getElementById('g-a-spine').value, a_len: document.getElementById('g-a-len').value, a_point: document.getElementById('g-a-point').value, a_nock: document.getElementById('g-a-nock').value, a_vanes: document.getElementById('g-a-vanes').value, crawls: crawls };
