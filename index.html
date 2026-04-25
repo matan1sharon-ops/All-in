@@ -37,6 +37,8 @@
         .clickable-end { cursor: pointer; border-left: 3px solid transparent; transition: 0.2s; }
         .next-btn { background: var(--accent); color: #000; width: 100%; padding: 18px; border-radius: 12px; font-size: 20px; font-weight: 900; border: none; margin-top: 15px; }
         .next-btn:disabled { background: #333; color: #666; }
+        .control-row { display: flex; gap: 10px; margin-top: 15px; align-items: center; }
+        .back-btn { background: #444; color: #fff; width: 75px; padding: 18px; border-radius: 12px; font-size: 20px; font-weight: 900; border: none; flex-shrink: 0; }
         .btn-grid { display: grid; gap: 8px; margin-top: 10px; }
         .score-btn { height: 60px; border-radius: 12px; border: 1px solid #333; font-size: 22px; font-weight: 900; color: #fff; background: #222; }
         .gear-section-title { font-size: 12px; font-weight: 900; color: var(--accent); margin: 20px 0 10px; text-transform: uppercase; border-left: 3px solid var(--accent); padding-left: 10px; }
@@ -102,7 +104,10 @@
         <div class="timer-container" id="t-cont"><div class="timer-bar" id="t-bar"></div></div>
         <div id="score-list"></div>
         <div style="padding-bottom:30px; border-top: 1px solid #222;">
-            <button id="next-btn" class="next-btn" onclick="handleMainAction()"></button>
+            <div class="control-row">
+                <button id="back-btn" class="back-btn" onclick="undoLastMarker()">⌫</button>
+                <button id="next-btn" class="next-btn" style="margin-top:0;" onclick="handleMainAction()"></button>
+            </div>
             <div id="button-grid" class="btn-grid"></div>
         </div>
     </div>
@@ -252,7 +257,13 @@
     function initScoring(mode, arrows, ends, type) {
         state.current = []; state.history = []; state.arrows = arrows; state.ends = ends; state.mode = mode; state.editingIndex = -1; state.scoringType = type; state.markers = [];
         stopTimer(); 
-        if (type === 'face') renderTargetFace(); else renderButtons();
+        if (type === 'face') {
+            document.getElementById('back-btn').style.display = 'block';
+            renderTargetFace(); 
+        } else {
+            document.getElementById('back-btn').style.display = 'none';
+            renderButtons();
+        }
         renderUI(); showScreen('scoring'); 
     }
 
@@ -285,7 +296,6 @@
                     <div id="crosshair"><div id="float-score"></div></div>
                 </div>
                 <svg id="main-svg" viewBox="0 0 100 100">${getSvgContent('main')}</svg>
-                <button class="score-btn" style="position:absolute; bottom:10px; right:10px; width:50px; background:#444; z-index:5;" onclick="undoLastMarker(); event.stopPropagation();">⌫</button>
             </div>
         `;
 
@@ -356,8 +366,10 @@
 
     function undoLastMarker() {
         state.current.pop();
-        state.markers.pop();
-        updateFaceMarkers();
+        if(state.scoringType === 'face') {
+            state.markers.pop();
+            updateFaceMarkers();
+        }
         renderUI();
     }
 
@@ -368,7 +380,7 @@
             const newEnd = { rawScores: [...state.current], displayScores: [...state.current].map(s => s === 0 ? 'M' : s), total: state.current.reduce((a, b) => a + getVal(b), 0) };
             if (state.editingIndex !== -1) { state.history[state.editingIndex] = newEnd; state.editingIndex = -1; } else { state.history.push(newEnd); }
             state.current = []; 
-            state.markers = []; // Clear marks for next end
+            state.markers = [];
             stopTimer();
             if(state.history.length >= state.ends && state.editingIndex === -1) saveSession(); 
             else {
@@ -396,7 +408,7 @@
             b.innerText = s === 0 ? 'M' : s; b.onclick = () => { if(state.current.length < state.arrows) { state.current.push(s); renderUI(); } };
             grid.appendChild(b);
         });
-        const del = document.createElement('button'); del.className = 'score-btn'; del.innerText = '⌫'; del.style.background = '#444'; del.onclick = () => { state.current.pop(); renderUI(); }; grid.appendChild(del);
+        const del = document.createElement('button'); del.className = 'score-btn'; del.innerText = '⌫'; del.style.background = '#444'; del.onclick = () => { undoLastMarker(); }; grid.appendChild(del);
     }
 
     function getVal(s) { return s === 'X' ? 10 : (parseInt(s) || 0); }
