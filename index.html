@@ -57,10 +57,8 @@
         .hit-label { font-size: 8px; font-weight: 900; margin-top: 4px; }
         .hit-count { font-size: 9px; margin-bottom: 4px; color: var(--text); font-weight: bold; }
 
-        /* MODAL STYLES */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 100; align-items: center; justify-content: center; flex-direction: column; gap: 20px; }
         
-        /* FACE SCORING STYLES */
         #face-container { width: 100%; aspect-ratio: 1; position: relative; margin: 10px 0; touch-action: none; overflow: hidden; border-radius: 10px; background: #0a0a0a; border: 1px solid #222;}
         #magnifier { position: absolute; width: 120px; height: 120px; border-radius: 50%; border: 3px solid #fff; display: none; pointer-events: none; overflow: hidden; background: #000; z-index: 20; transform: translate(-50%, -130%); box-shadow: 0 0 20px rgba(0,0,0,0.8); }
         #magnifier svg { position: absolute; width: 500%; height: 500%; }
@@ -138,7 +136,7 @@
         he: { tagline: "מעקב קליעה בקשת", gear: "ציוד / הגדרות", avg: "ממוצע", total: "סה״כ", clear: "נקה", setup: "הציוד שלי", save: "שמור", next: "סבב הבא", update: "עדכן סבב", finish: "סיים אימון", exit: "לצאת מהאימון?", delSess: "למחוק אימון זה?", wipe: "למחוק את כל ההיסטוריה?", riser: "רייזר", riserMake: "יצרן רייזר", riserLen: "אורך רייזר", limbs: "כנפיים", limbMake: "יצרן כנפיים", limbLen: "אורך כנפיים", limbWeight: "כח כנפיים", arrows: "פרטי חצים", arrMake: "יצרן חץ", arrSpine: "ספיין חץ", arrLen: "אורך חץ", point: "משקל פוינט", nock: "פרטי נוק", vanes: "פרטי כנפונים", crawls: "Crawls", history: "היסטוריה", detail: "פירוט אימון", arrowsS: "חצים", prep: "הכנה", stamina: "מגמת עייפות", hits: "פירוט פגיעות", modes: ["3D", "פילד", "טארגט אולם", "טארגט חוץ"] }
     };
 
-    let state = { current: [], history: [], arrows: 2, ends: 24, mode: '', editingIndex: -1, lang: 'en', scoringType: 'pad' };
+    let state = { current: [], history: [], arrows: 2, ends: 24, mode: '', editingIndex: -1, lang: 'en', scoringType: 'pad', markers: [] };
     let timer = { interval: null, timeLeft: 0, totalTime: 0, active: false, phase: 'READY', startTime: null };
     let targetSelectionState = { mode: '', arrows: 0, ends: 0 };
     let wakeLock = null;
@@ -252,41 +250,46 @@
     }
 
     function initScoring(mode, arrows, ends, type) {
-        state.current = []; state.history = []; state.arrows = arrows; state.ends = ends; state.mode = mode; state.editingIndex = -1; state.scoringType = type;
+        state.current = []; state.history = []; state.arrows = arrows; state.ends = ends; state.mode = mode; state.editingIndex = -1; state.scoringType = type; state.markers = [];
         stopTimer(); 
         if (type === 'face') renderTargetFace(); else renderButtons();
         renderUI(); showScreen('scoring'); 
     }
 
-    /* FACE SCORING LOGIC */
     let facePendingScore = 0;
+    let lastMarkerPos = { x: 0, y: 0 };
+
     function renderTargetFace() {
         const grid = document.getElementById('button-grid'); grid.innerHTML = ''; grid.style.gridTemplateColumns = '1fr';
         const hasX = state.mode.includes('OUTDOOR');
         
-        // WA Uniform Rings (Each ring is 5% of radius)
-        const faceSVG = `
-            <svg id="target-svg" viewBox="0 0 100 100" style="background:#0a0a0a;">
-                <circle cx="50" cy="50" r="50" fill="#fff" stroke="#000" stroke-width="0.1"/>
-                <circle cx="50" cy="50" r="45" fill="#fff" stroke="#000" stroke-width="0.1"/>
-                <circle cx="50" cy="50" r="40" fill="#000" stroke="#fff" stroke-width="0.1"/>
-                <circle cx="50" cy="50" r="35" fill="#000" stroke="#fff" stroke-width="0.1"/>
-                <circle cx="50" cy="50" r="30" fill="#007AFF" stroke="#000" stroke-width="0.1"/>
-                <circle cx="50" cy="50" r="25" fill="#007AFF" stroke="#000" stroke-width="0.1"/>
-                <circle cx="50" cy="50" r="20" fill="#FF3B30" stroke="#000" stroke-width="0.1"/>
-                <circle cx="50" cy="50" r="15" fill="#FF3B30" stroke="#000" stroke-width="0.1"/>
-                <circle cx="50" cy="50" r="10" fill="#FFD700" stroke="#000" stroke-width="0.1"/>
-                <circle cx="50" cy="50" r="5" fill="#FFD700" stroke="#000" stroke-width="0.1"/>
-                ${hasX ? '<circle cx="50" cy="50" r="2.5" fill="#FFD700" stroke="#000" stroke-width="0.1"/>' : ''}
-            </svg>
+        const getSvgContent = (idPrefix) => `
+            <circle cx="50" cy="50" r="50" fill="#fff" stroke="#000" stroke-width="0.1"/>
+            <circle cx="50" cy="50" r="45" fill="#fff" stroke="#000" stroke-width="0.1"/>
+            <circle cx="50" cy="50" r="40" fill="#000" stroke="#fff" stroke-width="0.1"/>
+            <circle cx="50" cy="50" r="35" fill="#000" stroke="#fff" stroke-width="0.1"/>
+            <circle cx="50" cy="50" r="30" fill="#007AFF" stroke="#000" stroke-width="0.1"/>
+            <circle cx="50" cy="50" r="25" fill="#007AFF" stroke="#000" stroke-width="0.1"/>
+            <circle cx="50" cy="50" r="20" fill="#FF3B30" stroke="#000" stroke-width="0.1"/>
+            <circle cx="50" cy="50" r="15" fill="#FF3B30" stroke="#000" stroke-width="0.1"/>
+            <circle cx="50" cy="50" r="10" fill="#FFD700" stroke="#000" stroke-width="0.1"/>
+            <circle cx="50" cy="50" r="5" fill="#FFD700" stroke="#000" stroke-width="0.1"/>
+            ${hasX ? '<circle cx="50" cy="50" r="2.5" fill="#FFD700" stroke="#000" stroke-width="0.1"/>' : ''}
+            <g id="${idPrefix}-markers"></g>
         `;
+
         grid.innerHTML = `
             <div id="face-container">
-                <div id="magnifier">${faceSVG}<div id="crosshair"><div id="float-score"></div></div></div>
-                ${faceSVG}
-                <button class="score-btn" style="position:absolute; bottom:10px; right:10px; width:50px; background:#444; z-index:5;" onclick="state.current.pop(); renderUI(); event.stopPropagation();">⌫</button>
+                <div id="magnifier">
+                    <svg viewBox="0 0 100 100">${getSvgContent('mag')}</svg>
+                    <div id="crosshair"><div id="float-score"></div></div>
+                </div>
+                <svg id="main-svg" viewBox="0 0 100 100">${getSvgContent('main')}</svg>
+                <button class="score-btn" style="position:absolute; bottom:10px; right:10px; width:50px; background:#444; z-index:5;" onclick="undoLastMarker(); event.stopPropagation();">⌫</button>
             </div>
         `;
+
+        updateFaceMarkers();
 
         const container = document.getElementById('face-container');
         const mag = document.getElementById('magnifier');
@@ -298,28 +301,22 @@
             const touch = e.touches[0];
             const rect = container.getBoundingClientRect();
             
-            // X and Y relative to container
             let x = touch.clientX - rect.left;
             let y = touch.clientY - rect.top;
             
-            // Constrain x/y inside container for smoother tracking
             x = Math.max(0, Math.min(x, rect.width));
             y = Math.max(0, Math.min(y, rect.height));
 
-            // Magnifier follows finger
             mag.style.display = 'block';
             mag.style.left = x + 'px';
             mag.style.top = y + 'px';
 
-            // Calculate score based on center of magnifier (which is finger position px/py)
             const px = (x / rect.width) * 100;
             const py = (y / rect.height) * 100;
             
-            // Center SVG inside magnifier to finger location
             magSvg.style.left = `-${px * 5 - 50}%`; 
             magSvg.style.top = `-${py * 5 - 50}%`;
             
-            // Calculation: distance from center (50,50) in SVG units
             const dist = Math.sqrt(Math.pow(px-50, 2) + Math.pow(py-50, 2));
             let s = 0;
             if (hasX && dist <= 2.5) s = 'X';
@@ -330,6 +327,7 @@
             else if (dist <= 45) s = 2; else if (dist <= 50) s = 1;
             
             facePendingScore = s;
+            lastMarkerPos = { x: px, y: py };
             floatScore.innerText = s === 0 ? 'M' : s;
         };
 
@@ -337,17 +335,46 @@
         container.addEventListener('touchmove', (e) => { updatePosition(e); e.preventDefault(); }, {passive: false});
         container.addEventListener('touchend', () => {
             mag.style.display = 'none';
-            if(state.current.length < state.arrows) { state.current.push(facePendingScore); renderUI(); }
+            if(state.current.length < state.arrows) { 
+                state.current.push(facePendingScore); 
+                state.markers.push({...lastMarkerPos});
+                updateFaceMarkers();
+                renderUI(); 
+            }
         });
     }
 
+    function updateFaceMarkers() {
+        const mainG = document.getElementById('main-markers');
+        const magG = document.getElementById('mag-markers');
+        if(!mainG || !magG) return;
+        
+        const html = state.markers.map(m => `<circle cx="${m.x}" cy="${m.y}" r="0.8" fill="white" stroke="black" stroke-width="0.2" />`).join('');
+        mainG.innerHTML = html;
+        magG.innerHTML = html;
+    }
+
+    function undoLastMarker() {
+        state.current.pop();
+        state.markers.pop();
+        updateFaceMarkers();
+        renderUI();
+    }
+
     function exitScoring() { if(confirm(i18n[state.lang].exit)) { stopTimer(); showScreen('home'); } }
+    
     function handleMainAction() {
         if(state.current.length === state.arrows) {
             const newEnd = { rawScores: [...state.current], displayScores: [...state.current].map(s => s === 0 ? 'M' : s), total: state.current.reduce((a, b) => a + getVal(b), 0) };
             if (state.editingIndex !== -1) { state.history[state.editingIndex] = newEnd; state.editingIndex = -1; } else { state.history.push(newEnd); }
-            state.current = []; stopTimer();
-            if(state.history.length >= state.ends && state.editingIndex === -1) saveSession(); else renderUI();
+            state.current = []; 
+            state.markers = []; // Clear marks for next end
+            stopTimer();
+            if(state.history.length >= state.ends && state.editingIndex === -1) saveSession(); 
+            else {
+                if(state.scoringType === 'face') updateFaceMarkers();
+                renderUI(); 
+            }
         }
     }
 
@@ -373,7 +400,7 @@
     }
 
     function getVal(s) { return s === 'X' ? 10 : (parseInt(s) || 0); }
-    function editEnd(index) { state.editingIndex = index; state.current = [...state.history[index].rawScores]; renderUI(); if(state.scoringType === 'face') renderTargetFace(); else renderButtons(); }
+    function editEnd(index) { state.editingIndex = index; state.current = [...state.history[index].rawScores]; state.markers = []; renderUI(); if(state.scoringType === 'face') renderTargetFace(); else renderButtons(); }
 
     function renderUI() {
         const t = i18n[state.lang];
