@@ -61,11 +61,12 @@
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 100; align-items: center; justify-content: center; flex-direction: column; gap: 20px; }
         
         /* FACE SCORING STYLES */
-        #face-container { width: 100%; aspect-ratio: 1; position: relative; margin: 10px 0; touch-action: none; overflow: hidden; border-radius: 50%; }
-        #magnifier { position: absolute; width: 100px; height: 100px; border-radius: 50%; border: 2px solid white; display: none; pointer-events: none; overflow: hidden; background: black; z-index: 20; transform: translate(-50%, -120%); box-shadow: 0 0 15px rgba(0,0,0,0.5); }
-        #magnifier svg { position: absolute; width: 400%; height: 400%; }
-        #crosshair { position: absolute; width: 10px; height: 10px; border: 1px solid #fff; border-radius: 50%; background: rgba(255,255,255,0.5); top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 21; }
-        #float-score { position: absolute; top: -30px; left: 50%; transform: translateX(-50%); font-weight: 900; font-size: 18px; color: #fff; text-shadow: 0 0 5px #000; }
+        #face-container { width: 100%; aspect-ratio: 1; position: relative; margin: 10px 0; touch-action: none; overflow: hidden; border-radius: 10px; background: #0a0a0a; border: 1px solid #222;}
+        #magnifier { position: absolute; width: 120px; height: 120px; border-radius: 50%; border: 3px solid #fff; display: none; pointer-events: none; overflow: hidden; background: #000; z-index: 20; transform: translate(-50%, -130%); box-shadow: 0 0 20px rgba(0,0,0,0.8); }
+        #magnifier svg { position: absolute; width: 500%; height: 500%; }
+        #crosshair { position: absolute; width: 14px; height: 14px; border: 1px solid #fff; border-radius: 50%; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 21; }
+        #crosshair::after { content: ''; position: absolute; top: 50%; left: 50%; width: 2px; height: 2px; background: red; border-radius: 50%; transform: translate(-50%, -50%); }
+        #float-score { position: absolute; top: -35px; left: 50%; transform: translateX(-50%); font-weight: 900; font-size: 24px; color: #fff; text-shadow: 0 0 8px #000; }
     </style>
 </head>
 <body>
@@ -262,19 +263,21 @@
     function renderTargetFace() {
         const grid = document.getElementById('button-grid'); grid.innerHTML = ''; grid.style.gridTemplateColumns = '1fr';
         const hasX = state.mode.includes('OUTDOOR');
+        
+        // WA Uniform Rings (Each ring is 5% of radius)
         const faceSVG = `
-            <svg id="target-svg" viewBox="0 0 100 100">
-                <circle cx="50" cy="50" r="48" fill="#fff" stroke="#000" stroke-width="0.2"/>
-                <circle cx="50" cy="50" r="40" fill="#fff" stroke="#000" stroke-width="0.2"/>
-                <circle cx="50" cy="50" r="32" fill="#000" stroke="#fff" stroke-width="0.2"/>
-                <circle cx="50" cy="50" r="24" fill="#000" stroke="#fff" stroke-width="0.2"/>
-                <circle cx="50" cy="50" r="16" fill="#007AFF" stroke="#000" stroke-width="0.2"/>
-                <circle cx="50" cy="50" r="12" fill="#007AFF" stroke="#000" stroke-width="0.2"/>
-                <circle cx="50" cy="50" r="8" fill="#FF3B30" stroke="#000" stroke-width="0.2"/>
-                <circle cx="50" cy="50" r="6" fill="#FF3B30" stroke="#000" stroke-width="0.2"/>
-                <circle cx="50" cy="50" r="4" fill="#FFD700" stroke="#000" stroke-width="0.2"/>
-                <circle cx="50" cy="50" r="2.5" fill="#FFD700" stroke="#000" stroke-width="0.2"/>
-                ${hasX ? '<circle cx="50" cy="50" r="1.2" fill="#FFD700" stroke="#000" stroke-width="0.1"/>' : ''}
+            <svg id="target-svg" viewBox="0 0 100 100" style="background:#0a0a0a;">
+                <circle cx="50" cy="50" r="50" fill="#fff" stroke="#000" stroke-width="0.1"/>
+                <circle cx="50" cy="50" r="45" fill="#fff" stroke="#000" stroke-width="0.1"/>
+                <circle cx="50" cy="50" r="40" fill="#000" stroke="#fff" stroke-width="0.1"/>
+                <circle cx="50" cy="50" r="35" fill="#000" stroke="#fff" stroke-width="0.1"/>
+                <circle cx="50" cy="50" r="30" fill="#007AFF" stroke="#000" stroke-width="0.1"/>
+                <circle cx="50" cy="50" r="25" fill="#007AFF" stroke="#000" stroke-width="0.1"/>
+                <circle cx="50" cy="50" r="20" fill="#FF3B30" stroke="#000" stroke-width="0.1"/>
+                <circle cx="50" cy="50" r="15" fill="#FF3B30" stroke="#000" stroke-width="0.1"/>
+                <circle cx="50" cy="50" r="10" fill="#FFD700" stroke="#000" stroke-width="0.1"/>
+                <circle cx="50" cy="50" r="5" fill="#FFD700" stroke="#000" stroke-width="0.1"/>
+                ${hasX ? '<circle cx="50" cy="50" r="2.5" fill="#FFD700" stroke="#000" stroke-width="0.1"/>' : ''}
             </svg>
         `;
         grid.innerHTML = `
@@ -294,20 +297,37 @@
             if(state.current.length >= state.arrows) return;
             const touch = e.touches[0];
             const rect = container.getBoundingClientRect();
-            const x = touch.clientX - rect.left; const y = touch.clientY - rect.top;
-            const px = (x / rect.width) * 100; const py = (y / rect.height) * 100;
             
-            mag.style.display = 'block'; mag.style.left = x + 'px'; mag.style.top = y + 'px';
-            magSvg.style.left = `-${px * 4}%`; magSvg.style.top = `-${py * 4}%`;
+            // X and Y relative to container
+            let x = touch.clientX - rect.left;
+            let y = touch.clientY - rect.top;
             
+            // Constrain x/y inside container for smoother tracking
+            x = Math.max(0, Math.min(x, rect.width));
+            y = Math.max(0, Math.min(y, rect.height));
+
+            // Magnifier follows finger
+            mag.style.display = 'block';
+            mag.style.left = x + 'px';
+            mag.style.top = y + 'px';
+
+            // Calculate score based on center of magnifier (which is finger position px/py)
+            const px = (x / rect.width) * 100;
+            const py = (y / rect.height) * 100;
+            
+            // Center SVG inside magnifier to finger location
+            magSvg.style.left = `-${px * 5 - 50}%`; 
+            magSvg.style.top = `-${py * 5 - 50}%`;
+            
+            // Calculation: distance from center (50,50) in SVG units
             const dist = Math.sqrt(Math.pow(px-50, 2) + Math.pow(py-50, 2));
             let s = 0;
-            if (hasX && dist <= 1.2) s = 'X';
-            else if (dist <= 2.5) s = 10; else if (dist <= 4) s = 9;
-            else if (dist <= 6) s = 8; else if (dist <= 8) s = 7;
-            else if (dist <= 12) s = 6; else if (dist <= 16) s = 5;
-            else if (dist <= 24) s = 4; else if (dist <= 32) s = 3;
-            else if (dist <= 40) s = 2; else if (dist <= 48) s = 1;
+            if (hasX && dist <= 2.5) s = 'X';
+            else if (dist <= 5) s = 10; else if (dist <= 10) s = 9;
+            else if (dist <= 15) s = 8; else if (dist <= 20) s = 7;
+            else if (dist <= 25) s = 6; else if (dist <= 30) s = 5;
+            else if (dist <= 35) s = 4; else if (dist <= 40) s = 3;
+            else if (dist <= 45) s = 2; else if (dist <= 50) s = 1;
             
             facePendingScore = s;
             floatScore.innerText = s === 0 ? 'M' : s;
@@ -339,7 +359,7 @@
     }
 
     function renderButtons() {
-        const grid = document.getElementById('button-grid'); grid.innerHTML = '';
+        const grid = document.getElementById('button-grid'); grid.innerHTML = ''; grid.style.gridTemplateColumns = 'repeat(4, 1fr)';
         let scores = state.mode.includes('3D') ? [11, 10, 8, 5, 0] : state.mode.includes('TARGET INDOOR') ? [10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0] : state.mode.includes('TARGET') ? ['X', 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0] : [6,5,4,3,2,1,0];
         grid.style.gridTemplateColumns = scores.length > 5 ? 'repeat(4, 1fr)' : 'repeat(3, 1fr)';
         scores.forEach(s => {
