@@ -61,7 +61,7 @@
 
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 100; align-items: center; justify-content: center; flex-direction: column; gap: 20px; }
         
-        #face-container { width: 100%; aspect-ratio: 1; position: relative; margin: 10px 0; touch-action: none; overflow: hidden; border-radius: 10px; background: #0a0a0a; border: 1px solid #222;}
+        #face-container, .history-face-container { width: 100%; aspect-ratio: 1; position: relative; margin: 10px 0; touch-action: none; overflow: hidden; border-radius: 10px; background: #0a0a0a; border: 1px solid #222;}
         #magnifier { position: absolute; width: 120px; height: 120px; border-radius: 50%; border: 3px solid #fff; display: none; pointer-events: none; overflow: hidden; background: #000; z-index: 20; transform: translate(-50%, -130%); box-shadow: 0 0 20px rgba(0,0,0,0.8); }
         #magnifier svg { position: absolute; width: 500%; height: 500%; }
         #crosshair { position: absolute; width: 14px; height: 14px; border: 1px solid #fff; border-radius: 50%; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 21; }
@@ -129,7 +129,7 @@
             <div class="gear-grid" style="grid-template-columns: 1fr;"><select id="lang-select" class="gear-input" onchange="toggleLang(this.value)"><option value="en">English</option><option value="he">עברית</option></select></div>
             <div class="gear-section-title" id="l-riser-title"></div><div class="gear-grid"><div class="gear-input-group"><label id="l-r-make" class="gear-label"></label><input type="text" id="g-r-make" class="gear-input"></div><div class="gear-input-group"><label id="l-r-len" class="gear-label"></label><input type="text" id="g-r-len" class="gear-input"></div></div>
             <div class="gear-section-title" id="l-limb-title"></div><div class="gear-grid"><div class="gear-input-group"><label id="l-l-make" class="gear-label"></label><input type="text" id="g-l-make" class="gear-input"></div><div class="gear-input-group"><label id="l-l-len" class="gear-label"></label><input type="text" id="g-l-len" class="gear-input"></div><div class="gear-input-group"><label id="l-l-weight" class="gear-label"></label><input type="text" id="g-l-weight" class="gear-input"></div></div>
-            <div class="gear-section-title" id="l-arrow-title"></div><div class="gear-grid"><div class="gear-input-group"><label id="l-a-make" class="gear-label"></label><input type="text" id="g-a-make" class="gear-input"></div><div class="gear-input-group"><label id="l-a-spine" class="gear-label"></label><input type="text" id="g-a-spine" class="gear-input"></div><div class="gear-input-group"><label id="l-a-len" class="gear-label"></label><input type="text" id="g-a-len" class="gear-input"></div><div class="gear-input-group"><label id="l-a-point" class="gear-label"></label><input type="text" id="g-a-point" class="gear-input"></div><div class="gear-input-group"><label id="l-a-nock" class="gear-label"></label><input type="text" id="g-a-nock" class="gear-input"></div><div class="gear-input-group"><label id="l-a-vanes" class="gear-label"></label><input type="text" id="g-a-vanes" class="gear-input"></div></div>
+            <div class="gear-section-title" id="l-arrow-title"></div><div class="gear-grid"><div class="gear-input-group"><label id="l-a-make" class="gear-label"></label><input type="text" id="g-a-make" class="gear-input"></div><div class="gear-input-group"><label id="l-a-spine" class="gear-label"></label><input type="text" id="g-a-spine" class="gear-input"></div><div class="gear-input-group"><label id="l-a-len" class="gear-label"></label><input type="text" id="g-a-len" class="gear-input"></div><div class="gear-input-group"><label id="l-a-point" class="gear-label"></label><input type="text" id="g-a-point" class="gear-input"></div><div class="gear-input-group"><label id="l-a-nock" class="gear-label"></label><input type="text" id="g-a-nock" class="gear-input"></div><div class="gear-input-group"><label id="l-a-vanes" class="gear-label"></label><input type="text" id="g-a-point" class="gear-input"></div></div>
             <div class="gear-section-title" id="l-crawl-title"></div><div class="crawl-grid" id="crawl-inputs"></div>
         </div>
     </div>
@@ -137,8 +137,8 @@
 
 <script>
     const i18n = {
-        en: { tagline: "ARCHERY TRACKER", gear: "Gear / Setup", avg: "AVG", total: "TOTAL", clear: "CLEAR", setup: "MY SETUP", save: "SAVE", next: "NEXT END", update: "UPDATE END", finish: "FINISH SESSION", exit: "Exit?", delSess: "Delete this session?", wipe: "Wipe all history?", riser: "Riser Details", riserMake: "Riser Make", riserLen: "Riser Length", limbs: "Limb Details", limbMake: "Limb Make", limbLen: "Limb Length", limbWeight: "Limb Weight", arrows: "Arrow Details", arrMake: "Arrow Make", arrSpine: "Arrow Spine", arrLen: "Arrow Length", point: "Point Weight", nock: "Nock Details", vanes: "Vanes Details", crawls: "Barebow Crawls", history: "HISTORY", detail: "SESSION DETAIL", arrowsS: "ARROWS", prep: "PREP", stamina: "Stamina Trend", hits: "Hits Breakdown", modes: ["3D PRACTICE", "FIELD PRACTICE", "TARGET INDOOR", "TARGET OUTDOOR"] },
-        he: { tagline: "מעקב קליעה בקשת", gear: "ציוד / הגדרות", avg: "ממוצע", total: "סה״כ", clear: "נקה", setup: "הציוד שלי", save: "שמור", next: "סבב הבא", update: "עדכן סבב", finish: "סיים אימון", exit: "לצאת מהאימון?", delSess: "למחוק אימון זה?", wipe: "למחוק את כל ההיסטוריה?", riser: "רייזר", riserMake: "יצרן רייזר", riserLen: "אורך רייזר", limbs: "כנפיים", limbMake: "יצרן כנפיים", limbLen: "אורך כנפיים", limbWeight: "כח כנפיים", arrows: "פרטי חצים", arrMake: "יצרן חץ", arrSpine: "ספיין חץ", arrLen: "אורך חץ", point: "משקל פוינט", nock: "פרטי נוק", vanes: "פרטי כנפונים", crawls: "Crawls", history: "היסטוריה", detail: "פירוט אימון", arrowsS: "חצים", prep: "הכנה", stamina: "מגמת עייפות", hits: "פירוט פגיעות", modes: ["3D", "פילד", "טארגט אולם", "טארגט חוץ"] }
+        en: { tagline: "ARCHERY TRACKER", gear: "Gear / Setup", avg: "AVG", total: "TOTAL", clear: "CLEAR", setup: "MY SETUP", save: "SAVE", next: "NEXT END", update: "UPDATE END", finish: "FINISH SESSION", exit: "Exit?", delSess: "Delete this session?", wipe: "Wipe all history?", riser: "Riser Details", riserMake: "Riser Make", riserLen: "Riser Length", limbs: "Limb Details", limbMake: "Limb Make", limbLen: "Limb Length", limbWeight: "Limb Weight", arrows: "Arrow Details", arrMake: "Arrow Make", arrSpine: "Arrow Spine", arrLen: "Arrow Length", point: "Point Weight", nock: "Nock Details", vanes: "Vanes Details", crawls: "Barebow Crawls", history: "HISTORY", detail: "SESSION DETAIL", arrowsS: "ARROWS", prep: "PREP", stamina: "Stamina Trend", hits: "Hits Breakdown", heatmap: "SESSION HEAT MAP", modes: ["3D PRACTICE", "FIELD PRACTICE", "TARGET INDOOR", "TARGET OUTDOOR"] },
+        he: { tagline: "מעקב קליעה בקשת", gear: "ציוד / הגדרות", avg: "ממוצע", total: "סה״כ", clear: "נקה", setup: "הציוד שלי", save: "שמור", next: "סבב הבא", update: "עדכן סבב", finish: "סיים אימון", exit: "לצאת מהאימון?", delSess: "למחוק אימון זה?", wipe: "למחוק את כל ההיסטוריה?", riser: "רייזר", riserMake: "יצרן רייזר", riserLen: "אורך רייזר", limbs: "כנפיים", limbMake: "יצרן כנפיים", limbLen: "אורך כנפיים", limbWeight: "כח כנפיים", arrows: "פרטי חצים", arrMake: "יצרן חץ", arrSpine: "ספיין חץ", arrLen: "אורך חץ", point: "משקל פוינט", nock: "פרטי נוק", vanes: "פרטי כנפונים", crawls: "Crawls", history: "היסטוריה", detail: "פירוט אימון", arrowsS: "חצים", prep: "הכנה", stamina: "מגמת עייפות", hits: "פירוט פגיעות", heatmap: "מפת פגיעות", modes: ["3D", "פילד", "טארגט אולם", "טארגט חוץ"] }
     };
 
     let state = { current: [], history: [], arrows: 2, ends: 24, mode: '', editingIndex: -1, lang: 'en', scoringType: 'pad', markers: [] };
@@ -270,11 +270,8 @@
     let facePendingScore = 0;
     let lastMarkerPos = { x: 0, y: 0 };
 
-    function renderTargetFace() {
-        const grid = document.getElementById('button-grid'); grid.innerHTML = ''; grid.style.gridTemplateColumns = '1fr';
-        const hasX = state.mode.includes('OUTDOOR');
-        
-        const getSvgContent = (idPrefix) => `
+    function getTargetSvg(idPrefix, hasX) {
+        return `
             <circle cx="50" cy="50" r="50" fill="#fff" stroke="#000" stroke-width="0.1"/>
             <circle cx="50" cy="50" r="45" fill="#fff" stroke="#000" stroke-width="0.1"/>
             <circle cx="50" cy="50" r="40" fill="#000" stroke="#fff" stroke-width="0.1"/>
@@ -288,14 +285,19 @@
             ${hasX ? '<circle cx="50" cy="50" r="2.5" fill="#FFD700" stroke="#000" stroke-width="0.1"/>' : ''}
             <g id="${idPrefix}-markers"></g>
         `;
+    }
 
+    function renderTargetFace() {
+        const grid = document.getElementById('button-grid'); grid.innerHTML = ''; grid.style.gridTemplateColumns = '1fr';
+        const hasX = state.mode.includes('OUTDOOR');
+        
         grid.innerHTML = `
             <div id="face-container">
                 <div id="magnifier">
-                    <svg viewBox="0 0 100 100">${getSvgContent('mag')}</svg>
+                    <svg viewBox="0 0 100 100">${getTargetSvg('mag', hasX)}</svg>
                     <div id="crosshair"><div id="float-score"></div></div>
                 </div>
-                <svg id="main-svg" viewBox="0 0 100 100">${getSvgContent('main')}</svg>
+                <svg id="main-svg" viewBox="0 0 100 100">${getTargetSvg('main', hasX)}</svg>
             </div>
         `;
 
@@ -310,22 +312,14 @@
             if(state.current.length >= state.arrows) return;
             const touch = e.touches[0];
             const rect = container.getBoundingClientRect();
-            
-            let x = touch.clientX - rect.left;
-            let y = touch.clientY - rect.top;
-            
-            x = Math.max(0, Math.min(x, rect.width));
-            y = Math.max(0, Math.min(y, rect.height));
+            let x = touch.clientX - rect.left, y = touch.clientY - rect.top;
+            x = Math.max(0, Math.min(x, rect.width)); y = Math.max(0, Math.min(y, rect.height));
 
             mag.style.display = 'block';
-            mag.style.left = x + 'px';
-            mag.style.top = y + 'px';
+            mag.style.left = x + 'px'; mag.style.top = y + 'px';
 
-            const px = (x / rect.width) * 100;
-            const py = (y / rect.height) * 100;
-            
-            magSvg.style.left = `-${px * 5 - 50}%`; 
-            magSvg.style.top = `-${py * 5 - 50}%`;
+            const px = (x / rect.width) * 100, py = (y / rect.height) * 100;
+            magSvg.style.left = `-${px * 5 - 50}%`; magSvg.style.top = `-${py * 5 - 50}%`;
             
             const dist = Math.sqrt(Math.pow(px-50, 2) + Math.pow(py-50, 2));
             let s = 0;
@@ -336,8 +330,7 @@
             else if (dist <= 35) s = 4; else if (dist <= 40) s = 3;
             else if (dist <= 45) s = 2; else if (dist <= 50) s = 1;
             
-            facePendingScore = s;
-            lastMarkerPos = { x: px, y: py };
+            facePendingScore = s; lastMarkerPos = { x: px, y: py };
             floatScore.innerText = s === 0 ? 'M' : s;
         };
 
@@ -348,8 +341,7 @@
             if(state.current.length < state.arrows) { 
                 state.current.push(facePendingScore); 
                 state.markers.push({...lastMarkerPos});
-                updateFaceMarkers();
-                renderUI(); 
+                updateFaceMarkers(); renderUI(); 
             }
         });
     }
@@ -358,18 +350,13 @@
         const mainG = document.getElementById('main-markers');
         const magG = document.getElementById('mag-markers');
         if(!mainG || !magG) return;
-        
         const html = state.markers.map(m => `<circle cx="${m.x}" cy="${m.y}" r="0.8" fill="white" stroke="black" stroke-width="0.2" />`).join('');
-        mainG.innerHTML = html;
-        magG.innerHTML = html;
+        mainG.innerHTML = html; magG.innerHTML = html;
     }
 
     function undoLastMarker() {
         state.current.pop();
-        if(state.scoringType === 'face') {
-            state.markers.pop();
-            updateFaceMarkers();
-        }
+        if(state.scoringType === 'face') { state.markers.pop(); updateFaceMarkers(); }
         renderUI();
     }
 
@@ -377,16 +364,17 @@
     
     function handleMainAction() {
         if(state.current.length === state.arrows) {
-            const newEnd = { rawScores: [...state.current], displayScores: [...state.current].map(s => s === 0 ? 'M' : s), total: state.current.reduce((a, b) => a + getVal(b), 0) };
+            const newEnd = { 
+                rawScores: [...state.current], 
+                displayScores: [...state.current].map(s => s === 0 ? 'M' : s), 
+                total: state.current.reduce((a, b) => a + getVal(b), 0),
+                markers: [...state.markers]
+            };
             if (state.editingIndex !== -1) { state.history[state.editingIndex] = newEnd; state.editingIndex = -1; } else { state.history.push(newEnd); }
-            state.current = []; 
-            state.markers = [];
+            state.current = []; state.markers = [];
             stopTimer();
             if(state.history.length >= state.ends && state.editingIndex === -1) saveSession(); 
-            else {
-                if(state.scoringType === 'face') updateFaceMarkers();
-                renderUI(); 
-            }
+            else { if(state.scoringType === 'face') updateFaceMarkers(); renderUI(); }
         }
     }
 
@@ -412,7 +400,7 @@
     }
 
     function getVal(s) { return s === 'X' ? 10 : (parseInt(s) || 0); }
-    function editEnd(index) { state.editingIndex = index; state.current = [...state.history[index].rawScores]; state.markers = []; renderUI(); if(state.scoringType === 'face') renderTargetFace(); else renderButtons(); }
+    function editEnd(index) { state.editingIndex = index; state.current = [...state.history[index].rawScores]; state.markers = [...(state.history[index].markers || [])]; renderUI(); if(state.scoringType === 'face') renderTargetFace(); else renderButtons(); }
 
     function renderUI() {
         const t = i18n[state.lang];
@@ -441,7 +429,16 @@
     function saveSession() {
         const histTot = state.history.reduce((a, b) => a + b.total, 0);
         const avg = (histTot / (state.history.length * state.arrows)).toFixed(1);
-        const session = { id: Date.now(), date: new Date().toLocaleDateString('en-GB'), score: histTot, avg: avg, ends: [...state.history], arrowsPerEnd: state.arrows, totalEndsPlanned: state.ends };
+        const session = { 
+            id: Date.now(), 
+            date: new Date().toLocaleDateString('en-GB'), 
+            score: histTot, 
+            avg: avg, 
+            ends: [...state.history], 
+            arrowsPerEnd: state.arrows, 
+            totalEndsPlanned: state.ends, 
+            scoringType: state.scoringType 
+        };
         let allHist = JSON.parse(localStorage.getItem(state.mode) || "[]"); allHist.unshift(session); localStorage.setItem(state.mode, JSON.stringify(allHist)); showScreen('home');
     }
 
@@ -477,6 +474,15 @@
         const list = document.getElementById('detail-list'); list.innerHTML = '';
         const arrsShot = session.ends.length * session.arrowsPerEnd;
         list.insertAdjacentHTML('beforeend', `<div class="stats-card"><div><div class="stat-label">${t.total}</div><div class="stat-val" style="color:var(--accent);">${session.score}</div></div><div><div class="stat-label">${t.avg}</div><div class="stat-val">${session.avg}</div></div><div><div class="stat-label">${t.arrowsS}</div><div class="stat-val">${arrsShot}</div></div></div>`);
+        
+        if (session.scoringType === 'face') {
+            const hasX = state.mode.includes('OUTDOOR');
+            const allMarkers = session.ends.flatMap(e => e.markers || []);
+            const markerHtml = allMarkers.map(m => `<circle cx="${m.x}" cy="${m.y}" r="1" fill="white" stroke="black" stroke-width="0.3" opacity="0.7" />`).join('');
+            list.insertAdjacentHTML('beforeend', `<div class="chart-box"><div class="chart-title">${t.heatmap}</div><div class="history-face-container"><svg viewBox="0 0 100 100">${getTargetSvg('hist', hasX)}</svg></div></div>`);
+            document.getElementById('hist-markers').innerHTML = markerHtml;
+        }
+
         const arrowPerEnd = session.arrowsPerEnd; const maxEndVal = state.mode.includes('TARGET') ? (arrowPerEnd * 10) : (arrowPerEnd * 11);
         const pts = session.ends.map((end, i) => `${(i / (session.ends.length - 1)) * 100},${75 - (end.total / maxEndVal) * 65}`).join(' ');
         const dts = session.ends.map((end, i) => { const x = (i / (session.ends.length - 1)) * 100; const y = 75 - (end.total / maxEndVal) * 65; return `<rect x="${x - 0.75}" y="${y - 1}" width="1.5" height="2" rx="0.75" fill="var(--accent)" />`; }).join('');
