@@ -42,7 +42,6 @@
         .btn-grid { display: grid; gap: 8px; margin-top: 10px; }
         .score-btn { height: 60px; border-radius: 12px; border: 1px solid #333; font-size: 22px; font-weight: 900; color: #fff; background: #222; }
         
-        /* Participant Selection UI */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 100; align-items: center; justify-content: center; flex-direction: column; gap: 20px; padding: 20px; }
         .p-count-row { display: flex; gap: 10px; margin-bottom: 10px; width: 100%; }
         .p-count-btn { flex: 1; background: #222; border: 1px solid #444; color: #fff; padding: 15px; border-radius: 10px; font-weight: 900; }
@@ -168,7 +167,6 @@
     let wakeLock = null;
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
-    // --- Participant Logic ---
     function setParticipantCount(num, btn) {
         document.querySelectorAll('.p-count-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
@@ -196,12 +194,12 @@
     }
 
     function switchArcher(idx) {
-        // Save current archer state
+        // SAVE current state into the participant's slot
         state.participants[state.activeArcherIdx].current = [...state.current];
         state.participants[state.activeArcherIdx].history = [...state.history];
         state.participants[state.activeArcherIdx].markers = [...state.markers];
 
-        // Load new archer state
+        // LOAD new archer's data
         state.activeArcherIdx = idx;
         const p = state.participants[idx];
         state.current = [...p.current];
@@ -210,9 +208,7 @@
         state.editingIndex = -1;
 
         renderTabs();
-        if(state.scoringType === 'face') {
-            updateFaceMarkers();
-        }
+        if(state.scoringType === 'face') updateFaceMarkers();
         renderUI();
     }
 
@@ -224,7 +220,39 @@
         ).join('');
     }
 
-    // --- Core Logic (From Part 1, 2, 3) ---
+    function handleMainAction() {
+        if(state.current.length === state.arrows) {
+            const newEnd = { 
+                rawScores: [...state.current], 
+                displayScores: [...state.current].map(s => s === 0 ? 'M' : s), 
+                total: state.current.reduce((a, b) => a + getVal(b), 0),
+                markers: [...state.markers]
+            };
+
+            if (state.editingIndex !== -1) { 
+                state.history[state.editingIndex] = newEnd; 
+                state.editingIndex = -1; 
+                renderUI(); 
+                return; 
+            } else { 
+                state.history.push(newEnd); 
+            }
+
+            // Logic: Move to next archer OR finish end for everyone
+            if (state.activeArcherIdx < state.participants.length - 1) {
+                switchArcher(state.activeArcherIdx + 1);
+            } else {
+                // Last archer finished this end
+                if(state.history.length >= state.ends) {
+                    saveSession(); 
+                } else {
+                    switchArcher(0); // Back to first archer for next end
+                    stopTimer(); 
+                }
+            }
+        }
+    }
+
     function toggleLang(lang) {
         state.lang = lang; const t = i18n[lang];
         document.getElementById('l-tagline').innerText = t.tagline;
@@ -331,21 +359,13 @@
         state.history = []; state.current = []; state.markers = [];
         state.arrows = arrows; state.ends = ends; state.mode = mode; state.editingIndex = -1; state.scoringType = type;
         state.activeArcherIdx = 0;
-        
         stopTimer(); 
-        if (type === 'face') {
-            document.getElementById('back-btn').style.display = 'block';
-            renderTargetFace(); 
-        } else {
-            document.getElementById('back-btn').style.display = 'none';
-            renderButtons();
-        }
-        renderTabs();
-        renderUI(); showScreen('scoring'); 
+        if (type === 'face') { document.getElementById('back-btn').style.display = 'block'; renderTargetFace(); } 
+        else { document.getElementById('back-btn').style.display = 'none'; renderButtons(); }
+        renderTabs(); renderUI(); showScreen('scoring'); 
     }
 
-    let facePendingScore = 0;
-    let lastMarkerPos = { x: 0, y: 0 };
+    let facePendingScore = 0; let lastMarkerPos = { x: 0, y: 0 };
 
     function getTargetSvg(idPrefix, hasX) {
         return `
@@ -367,25 +387,12 @@
     function renderTargetFace() {
         const grid = document.getElementById('button-grid'); grid.innerHTML = ''; grid.style.gridTemplateColumns = '1fr';
         const hasX = state.mode.includes('OUTDOOR');
-        grid.innerHTML = `
-            <div id="face-container">
-                <div id="magnifier">
-                    <svg viewBox="0 0 100 100">${getTargetSvg('mag', hasX)}</svg>
-                    <div id="crosshair"><div id="float-score"></div></div>
-                </div>
-                <svg id="main-svg" viewBox="0 0 100 100">${getTargetSvg('main', hasX)}</svg>
-            </div>
-        `;
+        grid.innerHTML = `<div id="face-container"><div id="magnifier"><svg viewBox="0 0 100 100">${getTargetSvg('mag', hasX)}</svg><div id="crosshair"><div id="float-score"></div></div></div><svg id="main-svg" viewBox="0 0 100 100">${getTargetSvg('main', hasX)}</svg></div>`;
         updateFaceMarkers();
-        const container = document.getElementById('face-container');
-        const mag = document.getElementById('magnifier');
-        const magSvg = mag.querySelector('svg');
-        const floatScore = document.getElementById('float-score');
-
-        const updatePosition = (e) => {
+        const container = document.getElementById('face-container'), mag = document.getElementById('magnifier'), magSvg = mag.querySelector('svg'), floatScore = document.getElementById('float-score');
+        const updatePos = (e) => {
             if(state.current.length >= state.arrows) return;
-            const touch = e.touches[0];
-            const rect = container.getBoundingClientRect();
+            const touch = e.touches[0], rect = container.getBoundingClientRect();
             let x = touch.clientX - rect.left, y = touch.clientY - rect.top;
             x = Math.max(0, Math.min(x, rect.width)); y = Math.max(0, Math.min(y, rect.height));
             mag.style.display = 'block'; mag.style.left = x + 'px'; mag.style.top = y + 'px';
@@ -394,66 +401,25 @@
             const dist = Math.sqrt(Math.pow(px-50, 2) + Math.pow(py-50, 2));
             let s = 0;
             if (hasX && dist <= 2.5) s = 'X';
-            else if (dist <= 5) s = 10; else if (dist <= 10) s = 9;
-            else if (dist <= 15) s = 8; else if (dist <= 20) s = 7;
-            else if (dist <= 25) s = 6; else if (dist <= 30) s = 5;
-            else if (dist <= 35) s = 4; else if (dist <= 40) s = 3;
-            else if (dist <= 45) s = 2; else if (dist <= 50) s = 1;
-            facePendingScore = s; lastMarkerPos = { x: px, y: py };
-            floatScore.innerText = s === 0 ? 'M' : s;
+            else if (dist <= 5) s = 10; else if (dist <= 10) s = 9; else if (dist <= 15) s = 8;
+            else if (dist <= 20) s = 7; else if (dist <= 25) s = 6; else if (dist <= 30) s = 5;
+            else if (dist <= 35) s = 4; else if (dist <= 40) s = 3; else if (dist <= 45) s = 2; else if (dist <= 50) s = 1;
+            facePendingScore = s; lastMarkerPos = { x: px, y: py }; floatScore.innerText = s === 0 ? 'M' : s;
         };
-
-        container.addEventListener('touchstart', (e) => { updatePosition(e); e.preventDefault(); }, {passive: false});
-        container.addEventListener('touchmove', (e) => { updatePosition(e); e.preventDefault(); }, {passive: false});
-        container.addEventListener('touchend', () => {
-            mag.style.display = 'none';
-            if(state.current.length < state.arrows) { 
-                state.current.push(facePendingScore); 
-                state.markers.push({...lastMarkerPos});
-                updateFaceMarkers(); renderUI(); 
-            }
-        });
+        container.addEventListener('touchstart', (e) => { updatePos(e); e.preventDefault(); }, {passive: false});
+        container.addEventListener('touchmove', (e) => { updatePos(e); e.preventDefault(); }, {passive: false});
+        container.addEventListener('touchend', () => { mag.style.display = 'none'; if(state.current.length < state.arrows) { state.current.push(facePendingScore); state.markers.push({...lastMarkerPos}); updateFaceMarkers(); renderUI(); } });
     }
 
     function updateFaceMarkers() {
-        const mainG = document.getElementById('main-markers');
-        const magG = document.getElementById('mag-markers');
-        if(!mainG || !magG) return;
+        const mG = document.getElementById('main-markers'), mgG = document.getElementById('mag-markers');
+        if(!mG || !mgG) return;
         const html = state.markers.map(m => `<circle cx="${m.x}" cy="${m.y}" r="0.8" fill="white" stroke="black" stroke-width="0.2" />`).join('');
-        mainG.innerHTML = html; magG.innerHTML = html;
+        mG.innerHTML = html; mgG.innerHTML = html;
     }
 
-    function undoLastMarker() {
-        state.current.pop();
-        if(state.scoringType === 'face') { state.markers.pop(); updateFaceMarkers(); }
-        renderUI();
-    }
-
+    function undoLastMarker() { state.current.pop(); if(state.scoringType === 'face') { state.markers.pop(); updateFaceMarkers(); } renderUI(); }
     function exitScoring() { if(confirm(i18n[state.lang].exit)) { stopTimer(); showScreen('home'); } }
-    
-    function handleMainAction() {
-        if(state.current.length === state.arrows) {
-            const newEnd = { 
-                rawScores: [...state.current], 
-                displayScores: [...state.current].map(s => s === 0 ? 'M' : s), 
-                total: state.current.reduce((a, b) => a + getVal(b), 0),
-                markers: [...state.markers]
-            };
-            if (state.editingIndex !== -1) { state.history[state.editingIndex] = newEnd; state.editingIndex = -1; } 
-            else { state.history.push(newEnd); }
-
-            // Turn logic for multiple participants
-            if (state.activeArcherIdx < state.participants.length - 1 && state.editingIndex === -1) {
-                switchArcher(state.activeArcherIdx + 1);
-            } else {
-                // Return to first archer for next end
-                switchArcher(0);
-                stopTimer();
-                if(state.history.length >= state.ends && state.editingIndex === -1) saveSession(); 
-                else { if(state.scoringType === 'face') updateFaceMarkers(); renderUI(); }
-            }
-        }
-    }
 
     function getArrowColor(s) {
         if (state.mode.includes('TARGET')) { if (s === 'X' || s >= 9) return '#FFD700'; if (s >= 7) return '#FF3B30'; if (s >= 5) return '#007AFF'; if (s >= 3) return '#333'; if (s >= 1) return '#FFF'; }
@@ -463,7 +429,7 @@
     }
 
     function renderButtons() {
-        const grid = document.getElementById('button-grid'); grid.innerHTML = ''; grid.style.gridTemplateColumns = 'repeat(4, 1fr)';
+        const grid = document.getElementById('button-grid'); grid.innerHTML = '';
         let scores = state.mode.includes('3D') ? [11, 10, 8, 5, 0] : state.mode.includes('TARGET INDOOR') ? [10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0] : state.mode.includes('TARGET') ? ['X', 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0] : [6,5,4,3,2,1,0];
         grid.style.gridTemplateColumns = scores.length > 5 ? 'repeat(4, 1fr)' : 'repeat(3, 1fr)';
         scores.forEach(s => {
@@ -473,7 +439,7 @@
             b.innerText = s === 0 ? 'M' : s; b.onclick = () => { if(state.current.length < state.arrows) { state.current.push(s); renderUI(); } };
             grid.appendChild(b);
         });
-        const del = document.createElement('button'); del.className = 'score-btn'; del.innerText = '⌫'; del.style.background = '#444'; del.onclick = () => { undoLastMarker(); }; grid.appendChild(del);
+        const del = document.createElement('button'); del.className = 'score-btn'; del.innerText = '⌫'; del.style.background = '#444'; del.onclick = () => undoLastMarker(); grid.appendChild(del);
     }
 
     function getVal(s) { return s === 'X' ? 10 : (parseInt(s) || 0); }
@@ -486,8 +452,8 @@
         const grandTot = histTot + curTot;
         document.getElementById('total-score').innerText = grandTot;
         document.getElementById('avg-score').innerText = (grandTot / ((state.history.length * state.arrows) + (state.editingIndex === -1 ? state.current.length : 0) || 1)).toFixed(1);
-        const modeIdx = i18n.en.modes.indexOf(state.mode); const translatedMode = i18n[state.lang].modes[modeIdx];
-        document.getElementById('mode-display').innerText = `${translatedMode} (${state.history.length}/${state.ends})`;
+        const modeIdx = i18n.en.modes.indexOf(state.mode);
+        document.getElementById('mode-display').innerText = `${i18n[state.lang].modes[modeIdx]} (${state.history.length}/${state.ends})`;
         const list = document.getElementById('score-list'); list.innerHTML = '';
         state.history.forEach((end, i) => {
             const active = state.editingIndex === i;
@@ -504,9 +470,7 @@
     }
 
     function saveSession() {
-        // Save current archer's latest state
         state.participants[state.activeArcherIdx].history = [...state.history];
-        
         state.participants.forEach(p => {
             const histTot = p.history.reduce((a, b) => a + b.total, 0);
             const avg = (histTot / (p.history.length * state.arrows)).toFixed(1);
@@ -518,8 +482,7 @@
 
     function showHistory(mode) {
         state.mode = mode; showScreen('history-screen');
-        const modeIdx = i18n.en.modes.indexOf(mode);
-        document.getElementById('history-title').innerText = i18n[state.lang].modes[modeIdx] + " " + i18n[state.lang].history;
+        document.getElementById('history-title').innerText = i18n[state.lang].modes[i18n.en.modes.indexOf(mode)] + " " + i18n[state.lang].history;
         const list = document.getElementById('history-list'); list.innerHTML = '';
         const data = JSON.parse(localStorage.getItem(mode) || "[]");
         if(data.length === 0) { list.innerHTML = `<p style="text-align:center; color:var(--gray); margin-top:40px;">No History found.</p>`; return; }
@@ -528,70 +491,54 @@
             const isPB = s.score === maxS && maxS > 0;
             const row = document.createElement('div'); row.className = 'history-row';
             row.innerHTML = `<div class="bin-btn" onclick="deleteSession(${s.id})">🗑️</div><div class="history-card" id="card-${s.id}"><div><span style="margin-right:15px; font-size:13px; color:var(--gray);">${s.date}</span><span style="color:var(--accent); font-weight:bold; font-size:10px">${s.archer || ''}</span><br><span class="hist-avg">${i18n[state.lang].avg}: ${s.avg}</span></div><div style="display:flex; align-items:center; gap:8px;">${isPB ? '<span style="color:var(--red); font-weight:900; font-size:14px; margin-right:4px;">PB</span>' : ''}<div class="hist-total" style="font-weight:900; font-size:20px;">${s.score}</div><span style="color:var(--gray); font-size:18px;">›</span></div></div>`;
-            const card = row.querySelector('.history-card'); let startX = 0, currentX = 0;
-            card.onclick = () => { if(currentX === 0) openSessionDetail(s.id); else resetCards(); };
-            card.addEventListener('touchstart', e => { startX = e.touches[0].clientX; card.style.transition = 'none'; }, {passive: true});
-            card.addEventListener('touchmove', e => { currentX = e.touches[0].clientX - startX; if (currentX < 0) { const move = Math.max(currentX, -70); card.style.transform = `translateX(${move}px)`; } }, {passive: true});
-            card.addEventListener('touchend', () => { card.style.transition = 'transform 0.3s ease'; if (Math.abs(currentX) > 35) { card.style.transform = `translateX(-70px)`; currentX = -70; } else { card.style.transform = 'translateX(0)'; currentX = 0; } });
+            const card = row.querySelector('.history-card'); let sX = 0, cX = 0;
+            card.onclick = () => { if(cX === 0) openSessionDetail(s.id); else resetCards(); };
+            card.addEventListener('touchstart', e => { sX = e.touches[0].clientX; card.style.transition = 'none'; }, {passive: true});
+            card.addEventListener('touchmove', e => { cX = e.touches[0].clientX - sX; if (cX < 0) card.style.transform = `translateX(${Math.max(cX, -70)}px)`; }, {passive: true});
+            card.addEventListener('touchend', () => { card.style.transition = 'transform 0.3s ease'; if (Math.abs(cX) > 35) { card.style.transform = `translateX(-70px)`; cX = -70; } else { card.style.transform = 'translateX(0)'; cX = 0; } });
             list.appendChild(row);
         });
     }
 
-    function resetCards() { document.querySelectorAll('.history-card').forEach(c => { c.style.transform = 'translateX(0)'; }); }
-    function deleteSession(id) { if(confirm(i18n[state.lang].delSess)) { let data = JSON.parse(localStorage.getItem(state.mode) || "[]"); data = data.filter(s => s.id !== id); localStorage.setItem(state.mode, JSON.stringify(data)); showHistory(state.mode); } else { resetCards(); } }
+    function resetCards() { document.querySelectorAll('.history-card').forEach(c => c.style.transform = 'translateX(0)'); }
+    function deleteSession(id) { if(confirm(i18n[state.lang].delSess)) { let data = JSON.parse(localStorage.getItem(state.mode) || "[]"); data = data.filter(s => s.id !== id); localStorage.setItem(state.mode, JSON.stringify(data)); showHistory(state.mode); } else resetCards(); }
 
     function openSessionDetail(sessionId) {
         const data = JSON.parse(localStorage.getItem(state.mode) || "[]");
         const session = data.find(s => s.id === sessionId); if(!session) return;
-        const t = i18n[state.lang];
-        showScreen('detail-screen'); document.getElementById('detail-title').innerText = `${t.detail}`;
+        const t = i18n[state.lang]; showScreen('detail-screen'); document.getElementById('detail-title').innerText = `${t.detail}`;
         const list = document.getElementById('detail-list'); list.innerHTML = '';
-        const arrsShot = session.ends.length * session.arrowsPerEnd;
-        list.insertAdjacentHTML('beforeend', `<div class="stats-card"><div><div class="stat-label">${t.total}</div><div class="stat-val" style="color:var(--accent);">${session.score}</div></div><div><div class="stat-label">${t.avg}</div><div class="stat-val">${session.avg}</div></div><div><div class="stat-label">${t.arrowsS}</div><div class="stat-val">${arrsShot}</div></div></div>`);
+        list.insertAdjacentHTML('beforeend', `<div class="stats-card"><div><div class="stat-label">${t.total}</div><div class="stat-val" style="color:var(--accent);">${session.score}</div></div><div><div class="stat-label">${t.avg}</div><div class="stat-val">${session.avg}</div></div><div><div class="stat-label">${t.arrowsS}</div><div class="stat-val">${session.ends.length * session.arrowsPerEnd}</div></div></div>`);
         if (session.scoringType === 'face') {
             const hasX = state.mode.includes('OUTDOOR');
-            const allMarkers = session.ends.flatMap(e => e.markers || []);
-            const markerHtml = allMarkers.map(m => `<circle cx="${m.x}" cy="${m.y}" r="1" fill="white" stroke="black" stroke-width="0.3" opacity="0.7" />`).join('');
             list.insertAdjacentHTML('beforeend', `<div class="chart-box"><div class="chart-title">${t.heatmap}</div><div class="history-face-container"><svg viewBox="0 0 100 100">${getTargetSvg('hist', hasX)}</svg></div></div>`);
-            document.getElementById('hist-markers').innerHTML = markerHtml;
+            document.getElementById('hist-markers').innerHTML = session.ends.flatMap(e => e.markers || []).map(m => `<circle cx="${m.x}" cy="${m.y}" r="1" fill="white" stroke="black" stroke-width="0.3" opacity="0.7" />`).join('');
         }
-        const arrowPerEnd = session.arrowsPerEnd; const maxEndVal = state.mode.includes('TARGET') ? (arrowPerEnd * 10) : (arrowPerEnd * 11);
-        const pts = session.ends.map((end, i) => `${(i / (session.ends.length - 1)) * 100},${75 - (end.total / maxEndVal) * 65}`).join(' ');
-        const dts = session.ends.map((end, i) => { const x = (i / (session.ends.length - 1)) * 100; const y = 75 - (end.total / maxEndVal) * 65; return `<rect x="${x - 0.75}" y="${y - 1}" width="1.5" height="2" rx="0.75" fill="var(--accent)" />`; }).join('');
-        list.insertAdjacentHTML('beforeend', `<div class="chart-box"><div class="chart-title">${t.stamina}</div><div style="display:flex; height:110px; padding:5px 0;"><div style="display:flex; flex-direction:column; justify-content:space-between; height:75px; padding-right:8px; text-align:right; border-right:1px solid #333;"><span style="font-size:8px; color:var(--gray);">${maxEndVal}</span><span style="font-size:8px; color:var(--gray);">0</span></div><div style="flex:1; position:relative; margin-left:5px;"><svg viewBox="0 0 100 75" preserveAspectRatio="none" style="width:100%; height:75px; overflow:visible;"><polyline fill="none" stroke="var(--accent)" stroke-width="0.8" points="${pts}" />${dts}</svg></div></div></div>`);
-        const hits = {}; session.ends.flatMap(end => end.rawScores).forEach(s => hits[s] = (hits[s] || 0) + 1);
+        const maxE = state.mode.includes('TARGET') ? (session.arrowsPerEnd * 10) : (session.arrowsPerEnd * 11);
+        const pts = session.ends.map((e, i) => `${(i / (session.ends.length - 1)) * 100},${75 - (e.total / maxE) * 65}`).join(' ');
+        list.insertAdjacentHTML('beforeend', `<div class="chart-box"><div class="chart-title">${t.stamina}</div><div style="display:flex; height:110px;"><div style="display:flex; flex-direction:column; justify-content:space-between; height:75px; padding-right:8px; border-right:1px solid #333;"><span style="font-size:8px; color:var(--gray);">${maxE}</span><span style="font-size:8px; color:var(--gray);">0</span></div><div style="flex:1; position:relative; margin-left:5px;"><svg viewBox="0 0 100 75" preserveAspectRatio="none" style="width:100%; height:75px; overflow:visible;"><polyline fill="none" stroke="var(--accent)" stroke-width="0.8" points="${pts}" /></svg></div></div></div>`);
+        const hits = {}; session.ends.flatMap(e => e.rawScores).forEach(s => hits[s] = (hits[s] || 0) + 1);
         let poss = state.mode.includes('3D') ? [11, 10, 8, 5, 0] : state.mode.includes('TARGET') ? ['X', 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0] : [6,5,4,3,2,1,0];
         let maxH = Math.max(...Object.values(hits), 1);
-        let hBars = poss.map(sk => { const c = hits[sk] || 0; const bc = getArrowColor(sk === 'X' ? 10 : sk); return `<div><div class="hit-count">${c}</div><div class="hit-bar"><div class="hit-fill" style="height:${(c/maxH)*100}%; background:${bc}"></div></div><div class="hit-label" style="color:${bc}">${sk === 0 ? 'M' : sk}</div></div>`; }).join('');
+        let hBars = poss.map(sk => { const c = hits[sk] || 0, bc = getArrowColor(sk === 'X' ? 10 : sk); return `<div><div class="hit-count">${c}</div><div class="hit-bar"><div class="hit-fill" style="height:${(c/maxH)*100}%; background:${bc}"></div></div><div class="hit-label" style="color:${bc}">${sk === 0 ? 'M' : sk}</div></div>`; }).join('');
         list.insertAdjacentHTML('beforeend', `<div class="chart-box"><div class="chart-title">${t.hits}</div><div class="hits-chart" style="grid-template-columns: repeat(${poss.length}, 1fr);">${hBars}</div></div>`);
-        session.ends.forEach((end, i) => { list.insertAdjacentHTML('beforeend', `<div class="end-card"><div><div class="stat-label">END ${i+1}</div><b>${end.displayScores.join(' · ')}</b></div><div style="color:var(--accent); font-weight:900;">${end.total}</div></div>`); });
+        session.ends.forEach((e, i) => list.insertAdjacentHTML('beforeend', `<div class="end-card"><div><div class="stat-label">END ${i+1}</div><b>${e.displayScores.join(' · ')}</b></div><div style="color:var(--accent); font-weight:900;">${e.total}</div></div>`));
     }
 
     function showGearScreen() {
         const g = JSON.parse(localStorage.getItem('archer_gear') || "{}");
         document.getElementById('lang-select').value = state.lang;
-        document.getElementById('g-r-make').value = g.r_make || ""; 
-        document.getElementById('g-r-len').value = g.r_len || "";
-        document.getElementById('g-l-make').value = g.l_make || ""; 
-        document.getElementById('g-l-len').value = g.l_len || ""; 
-        document.getElementById('g-l-weight').value = g.l_weight || "";
-        document.getElementById('g-a-make').value = g.a_make || ""; 
-        document.getElementById('g-a-spine').value = g.a_spine || ""; 
-        document.getElementById('g-a-len').value = g.a_len || "";
-        document.getElementById('g-a-point').value = g.a_point || ""; 
-        document.getElementById('g-a-nock').value = g.a_nock || ""; 
-        const vanesInput = document.getElementById('g-a-vanes');
-        if(vanesInput) vanesInput.value = g.a_vanes || "";
-        for(let d=5; d<=50; d+=5) { 
-            const cInput = document.getElementById(`c-${d}`);
-            if(cInput) cInput.value = (g.crawls && g.crawls[d]) ? g.crawls[d] : ""; 
-        }
+        document.getElementById('g-r-make').value = g.r_make || ""; document.getElementById('g-r-len').value = g.r_len || "";
+        document.getElementById('g-l-make').value = g.l_make || ""; document.getElementById('g-l-len').value = g.l_len || ""; document.getElementById('g-l-weight').value = g.l_weight || "";
+        document.getElementById('g-a-make').value = g.a_make || ""; document.getElementById('g-a-spine').value = g.a_spine || ""; document.getElementById('g-a-len').value = g.a_len || "";
+        document.getElementById('g-a-point').value = g.a_point || ""; document.getElementById('g-a-nock').value = g.a_nock || ""; 
+        if(document.getElementById('g-a-vanes')) document.getElementById('g-a-vanes').value = g.a_vanes || "";
+        for(let d=5; d<=50; d+=5) { if(document.getElementById(`c-${d}`)) document.getElementById(`c-${d}`).value = (g.crawls && g.crawls[d]) ? g.crawls[d] : ""; }
         showScreen('gear-screen');
     }
 
     function saveGear() {
-        const crawls = {}; 
-        for(let d=5; d<=50; d+=5) { const cInput = document.getElementById(`c-${d}`); if(cInput) crawls[d] = cInput.value; }
+        const crawls = {}; for(let d=5; d<=50; d+=5) { if(document.getElementById(`c-${d}`)) crawls[d] = document.getElementById(`c-${d}`).value; }
         const gear = { r_make: document.getElementById('g-r-make').value, r_len: document.getElementById('g-r-len').value, l_make: document.getElementById('g-l-make').value, l_len: document.getElementById('g-l-len').value, l_weight: document.getElementById('g-l-weight').value, a_make: document.getElementById('g-a-make').value, a_spine: document.getElementById('g-a-spine').value, a_len: document.getElementById('g-a-len').value, a_point: document.getElementById('g-a-point').value, a_nock: document.getElementById('g-a-nock').value, a_vanes: document.getElementById('g-a-vanes') ? document.getElementById('g-a-vanes').value : "", crawls: crawls };
         localStorage.setItem('archer_gear', JSON.stringify(gear)); showScreen('home');
     }
@@ -599,13 +546,9 @@
     function clearHistory() { if(confirm(i18n[state.lang].wipe)) { localStorage.removeItem(state.mode); showHistory(state.mode); } }
 
     window.onload = () => { 
-        const savedLang = localStorage.getItem('archer_lang') || 'en'; 
-        toggleLang(savedLang); 
-        const crawlContainer = document.getElementById('crawl-inputs');
-        if (crawlContainer) {
-            crawlContainer.innerHTML = '';
-            for(let d=5; d<=50; d+=5) { crawlContainer.innerHTML += `<div class="crawl-item"><div class="crawl-dist">${d}m</div><input type="text" id="c-${d}" class="crawl-val"></div>`; }
-        }
+        toggleLang(localStorage.getItem('archer_lang') || 'en'); 
+        const cC = document.getElementById('crawl-inputs');
+        if (cC) { cC.innerHTML = ''; for(let d=5; d<=50; d+=5) cC.innerHTML += `<div class="crawl-item"><div class="crawl-dist">${d}m</div><input type="text" id="c-${d}" class="crawl-val"></div>`; }
     };
 </script>
 </body>
