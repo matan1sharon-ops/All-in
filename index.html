@@ -562,12 +562,10 @@
 
     function resetCards() { document.querySelectorAll('.history-card').forEach(c => c.style.transform = 'translateX(0)'); }
     function deleteSession(id) { if(confirm(i18n[state.lang].delSess)) { let data = JSON.parse(localStorage.getItem(state.mode) || "[]"); data = data.filter(s => s.id !== id); localStorage.setItem(state.mode, JSON.stringify(data)); showHistory(state.mode); } else resetCards(); }
-
-   function openSessionDetail(sessionId) {
+function openSessionDetail(sessionId) {
         const data = JSON.parse(localStorage.getItem(state.mode) || "[]");
         const session = data.find(s => s.id === sessionId); if(!session) return;
         
-        // Handle both old single-archer data and new grouped data
         const archers = session.archers || [{
             archer: session.archer,
             score: session.score,
@@ -578,25 +576,28 @@
         const t = i18n[state.lang]; 
         showScreen('detail-screen'); 
         document.getElementById('detail-title').innerText = `${t.detail}`;
-        
         const list = document.getElementById('detail-list');
         
-        // Internal function to render a specific archer's data
         const renderArcherDetail = (idx) => {
-            const a = archers[idx];
             list.innerHTML = '';
+            const a = archers[idx];
             
-            // Archer Switcher Tabs (only if more than 1 archer)
+            // 1. TABS AT THE TOP
             if (archers.length > 1) {
-                const tabs = document.createElement('div');
-                tabs.className = 'archer-tabs';
-                tabs.style.marginBottom = '15px';
+                const tabContainer = document.createElement('div');
+                tabContainer.className = 'archer-tabs';
+                tabContainer.style.cssText = "margin-bottom: 12px; flex-shrink: 0; padding-bottom: 4px;";
                 archers.forEach((arch, i) => {
-                    tabs.insertAdjacentHTML('beforeend', `<div class="archer-tab ${i === idx ? 'active' : ''}" onclick="window.renderDetailFor(${i})">${arch.archer}</div>`);
+                    const tab = document.createElement('div');
+                    tab.className = `archer-tab ${i === idx ? 'active' : ''}`;
+                    tab.innerText = arch.archer;
+                    tab.onclick = () => renderArcherDetail(i);
+                    tabContainer.appendChild(tab);
                 });
-                list.appendChild(tabs);
+                list.appendChild(tabContainer);
             }
 
+            // 2. STATS AND CHARTS BELOW
             list.insertAdjacentHTML('beforeend', `<div class="stats-card"><div><div class="stat-label">${t.total}</div><div class="stat-val" style="color:var(--accent);">${a.score}</div></div><div><div class="stat-label">${t.avg}</div><div class="stat-val">${a.avg}</div></div><div><div class="stat-label">${t.arrowsS}</div><div class="stat-val">${a.ends.length * session.arrowsPerEnd}</div></div></div>`);
             
             if (session.scoringType === 'face') {
@@ -618,8 +619,6 @@
             a.ends.forEach((e, i) => list.insertAdjacentHTML('beforeend', `<div class="end-card"><div><div class="stat-label">END ${i+1}</div><b>${e.displayScores.join(' · ')}</b></div><div style="color:var(--accent); font-weight:900;">${e.total}</div></div>`));
         };
 
-        // Attach to window so the tab onclick works
-        window.renderDetailFor = renderArcherDetail;
         renderArcherDetail(0);
     }
 
