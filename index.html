@@ -563,26 +563,64 @@
     function resetCards() { document.querySelectorAll('.history-card').forEach(c => c.style.transform = 'translateX(0)'); }
     function deleteSession(id) { if(confirm(i18n[state.lang].delSess)) { let data = JSON.parse(localStorage.getItem(state.mode) || "[]"); data = data.filter(s => s.id !== id); localStorage.setItem(state.mode, JSON.stringify(data)); showHistory(state.mode); } else resetCards(); }
 
-    function openSessionDetail(sessionId) {
+   function openSessionDetail(sessionId) {
         const data = JSON.parse(localStorage.getItem(state.mode) || "[]");
         const session = data.find(s => s.id === sessionId); if(!session) return;
-        const t = i18n[state.lang]; showScreen('detail-screen'); document.getElementById('detail-title').innerText = `${t.detail}`;
-        const list = document.getElementById('detail-list'); list.innerHTML = '';
-        list.insertAdjacentHTML('beforeend', `<div class="stats-card"><div><div class="stat-label">${t.total}</div><div class="stat-val" style="color:var(--accent);">${session.score}</div></div><div><div class="stat-label">${t.avg}</div><div class="stat-val">${session.avg}</div></div><div><div class="stat-label">${t.arrowsS}</div><div class="stat-val">${session.ends.length * session.arrowsPerEnd}</div></div></div>`);
-        if (session.scoringType === 'face') {
-            const hasX = state.mode.includes('OUTDOOR');
-            list.insertAdjacentHTML('beforeend', `<div class="chart-box"><div class="chart-title">${t.heatmap}</div><div class="history-face-container"><svg viewBox="0 0 100 100">${getTargetSvg('hist', hasX)}</svg></div></div>`);
-            document.getElementById('hist-markers').innerHTML = session.ends.flatMap(e => e.markers || []).map(m => `<circle cx="${m.x}" cy="${m.y}" r="1" fill="white" stroke="black" stroke-width="0.3" opacity="0.7" />`).join('');
-        }
-        const maxE = state.mode.includes('TARGET') ? (session.arrowsPerEnd * 10) : (session.arrowsPerEnd * 11);
-        const pts = session.ends.map((e, i) => `${(i / (session.ends.length - 1)) * 100},${75 - (e.total / maxE) * 65}`).join(' ');
-        list.insertAdjacentHTML('beforeend', `<div class="chart-box"><div class="chart-title">${t.stamina}</div><div style="display:flex; height:110px;"><div style="display:flex; flex-direction:column; justify-content:space-between; height:75px; padding-right:8px; border-right:1px solid #333;"><span style="font-size:8px; color:var(--gray);">${maxE}</span><span style="font-size:8px; color:var(--gray);">0</span></div><div style="flex:1; position:relative; margin-left:5px;"><svg viewBox="0 0 100 75" preserveAspectRatio="none" style="width:100%; height:75px; overflow:visible;"><polyline fill="none" stroke="var(--accent)" stroke-width="0.8" points="${pts}" /></svg></div></div></div>`);
-        const hits = {}; session.ends.flatMap(e => e.rawScores).forEach(s => hits[s] = (hits[s] || 0) + 1);
-        let poss = state.mode.includes('3D') ? [11, 10, 8, 5, 0] : state.mode.includes('TARGET') ? ['X', 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0] : [6,5,4,3,2,1,0];
-        let maxH = Math.max(...Object.values(hits), 1);
-        let hBars = poss.map(sk => { const c = hits[sk] || 0, bc = getArrowColor(sk === 'X' ? 10 : sk); return `<div><div class="hit-count">${c}</div><div class="hit-bar"><div class="hit-fill" style="height:${(c/maxH)*100}%; background:${bc}"></div></div><div class="hit-label" style="color:${bc}">${sk === 0 ? 'M' : sk}</div></div>`; }).join('');
-        list.insertAdjacentHTML('beforeend', `<div class="chart-box"><div class="chart-title">${t.hits}</div><div class="hits-chart" style="grid-template-columns: repeat(${poss.length}, 1fr);">${hBars}</div></div>`);
-        session.ends.forEach((e, i) => list.insertAdjacentHTML('beforeend', `<div class="end-card"><div><div class="stat-label">END ${i+1}</div><b>${e.displayScores.join(' · ')}</b></div><div style="color:var(--accent); font-weight:900;">${e.total}</div></div>`));
+        
+        // Handle both old single-archer data and new grouped data
+        const archers = session.archers || [{
+            archer: session.archer,
+            score: session.score,
+            avg: session.avg,
+            ends: session.ends
+        }];
+
+        const t = i18n[state.lang]; 
+        showScreen('detail-screen'); 
+        document.getElementById('detail-title').innerText = `${t.detail}`;
+        
+        const list = document.getElementById('detail-list');
+        
+        // Internal function to render a specific archer's data
+        const renderArcherDetail = (idx) => {
+            const a = archers[idx];
+            list.innerHTML = '';
+            
+            // Archer Switcher Tabs (only if more than 1 archer)
+            if (archers.length > 1) {
+                const tabs = document.createElement('div');
+                tabs.className = 'archer-tabs';
+                tabs.style.marginBottom = '15px';
+                archers.forEach((arch, i) => {
+                    tabs.insertAdjacentHTML('beforeend', `<div class="archer-tab ${i === idx ? 'active' : ''}" onclick="window.renderDetailFor(${i})">${arch.archer}</div>`);
+                });
+                list.appendChild(tabs);
+            }
+
+            list.insertAdjacentHTML('beforeend', `<div class="stats-card"><div><div class="stat-label">${t.total}</div><div class="stat-val" style="color:var(--accent);">${a.score}</div></div><div><div class="stat-label">${t.avg}</div><div class="stat-val">${a.avg}</div></div><div><div class="stat-label">${t.arrowsS}</div><div class="stat-val">${a.ends.length * session.arrowsPerEnd}</div></div></div>`);
+            
+            if (session.scoringType === 'face') {
+                const hasX = state.mode.includes('OUTDOOR');
+                list.insertAdjacentHTML('beforeend', `<div class="chart-box"><div class="chart-title">${t.heatmap}</div><div class="history-face-container"><svg viewBox="0 0 100 100">${getTargetSvg('hist', hasX)}</svg></div></div>`);
+                document.getElementById('hist-markers').innerHTML = a.ends.flatMap(e => e.markers || []).map(m => `<circle cx="${m.x}" cy="${m.y}" r="1" fill="white" stroke="black" stroke-width="0.3" opacity="0.7" />`).join('');
+            }
+            
+            const maxE = state.mode.includes('TARGET') ? (session.arrowsPerEnd * 10) : (session.arrowsPerEnd * 11);
+            const pts = a.ends.map((e, i) => `${(i / (a.ends.length - 1)) * 100},${75 - (e.total / maxE) * 65}`).join(' ');
+            list.insertAdjacentHTML('beforeend', `<div class="chart-box"><div class="chart-title">${t.stamina}</div><div style="display:flex; height:110px;"><div style="display:flex; flex-direction:column; justify-content:space-between; height:75px; padding-right:8px; border-right:1px solid #333;"><span style="font-size:8px; color:var(--gray);">${maxE}</span><span style="font-size:8px; color:var(--gray);">0</span></div><div style="flex:1; position:relative; margin-left:5px;"><svg viewBox="0 0 100 75" preserveAspectRatio="none" style="width:100%; height:75px; overflow:visible;"><polyline fill="none" stroke="var(--accent)" stroke-width="0.8" points="${pts}" /></svg></div></div></div>`);
+            
+            const hits = {}; a.ends.flatMap(e => e.rawScores).forEach(s => hits[s] = (hits[s] || 0) + 1);
+            let poss = state.mode.includes('3D') ? [11, 10, 8, 5, 0] : state.mode.includes('TARGET') ? ['X', 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0] : [6,5,4,3,2,1,0];
+            let maxH = Math.max(...Object.values(hits), 1);
+            let hBars = poss.map(sk => { const c = hits[sk] || 0, bc = getArrowColor(sk === 'X' ? 10 : sk); return `<div><div class="hit-count">${c}</div><div class="hit-bar"><div class="hit-fill" style="height:${(c/maxH)*100}%; background:${bc}"></div></div><div class="hit-label" style="color:${bc}">${sk === 0 ? 'M' : sk}</div></div>`; }).join('');
+            list.insertAdjacentHTML('beforeend', `<div class="chart-box"><div class="chart-title">${t.hits}</div><div class="hits-chart" style="grid-template-columns: repeat(${poss.length}, 1fr);">${hBars}</div></div>`);
+            
+            a.ends.forEach((e, i) => list.insertAdjacentHTML('beforeend', `<div class="end-card"><div><div class="stat-label">END ${i+1}</div><b>${e.displayScores.join(' · ')}</b></div><div style="color:var(--accent); font-weight:900;">${e.total}</div></div>`));
+        };
+
+        // Attach to window so the tab onclick works
+        window.renderDetailFor = renderArcherDetail;
+        renderArcherDetail(0);
     }
 
     function showGearScreen() {
