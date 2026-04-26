@@ -486,14 +486,32 @@
         list.scrollTop = list.scrollHeight;
     }
 
-    function saveSession() {
-        state.participants[state.activeArcherIdx].history = [...state.history];
-        state.participants.forEach(p => {
+ function saveSession() {
+        // Group all archers into one session object
+        const sessionData = state.participants.map(p => {
             const histTot = p.history.reduce((a, b) => a + b.total, 0);
             const avg = (histTot / (p.history.length * state.arrows)).toFixed(1);
-            const session = { id: Date.now() + Math.random(), date: new Date().toLocaleDateString('en-GB'), archer: p.name, score: histTot, avg: avg, ends: [...p.history], arrowsPerEnd: state.arrows, totalEndsPlanned: state.ends, scoringType: state.scoringType };
-            let allHist = JSON.parse(localStorage.getItem(state.mode) || "[]"); allHist.unshift(session); localStorage.setItem(state.mode, JSON.stringify(allHist));
+            return {
+                archer: p.name,
+                score: histTot,
+                avg: avg,
+                ends: [...p.history]
+            };
         });
+
+        const mainSession = {
+            id: Date.now() + Math.random(),
+            date: new Date().toLocaleDateString('en-GB'),
+            archers: sessionData, // Array of all archers
+            arrowsPerEnd: state.arrows,
+            totalEndsPlanned: state.ends,
+            scoringType: state.scoringType
+        };
+
+        let allHist = JSON.parse(localStorage.getItem(state.mode) || "[]");
+        allHist.unshift(mainSession);
+        localStorage.setItem(state.mode, JSON.stringify(allHist));
+        
         showScreen('home');
     }
 
@@ -502,12 +520,37 @@
         document.getElementById('history-title').innerText = i18n[state.lang].modes[i18n.en.modes.indexOf(mode)] + " " + i18n[state.lang].history;
         const list = document.getElementById('history-list'); list.innerHTML = '';
         const data = JSON.parse(localStorage.getItem(mode) || "[]");
-        if(data.length === 0) { list.innerHTML = `<p style="text-align:center; color:var(--gray); margin-top:40px;">No History found.</p>`; return; }
-        const maxS = Math.max(...data.map(s => s.score));
+        
+        if(data.length === 0) { 
+            list.innerHTML = `<p style="text-align:center; color:var(--gray); margin-top:40px;">No History found.</p>`; 
+            return; 
+        }
+
         data.forEach(s => {
-            const isPB = s.score === maxS && maxS > 0;
+            // Determine display name and archer count
+            const archerCount = s.archers ? s.archers.length : 1;
+            const primaryName = s.archers ? s.archers[0].archer : s.archer;
+            const primaryScore = s.archers ? s.archers[0].score : s.score;
+            const primaryAvg = s.archers ? s.archers[0].avg : s.avg;
+
             const row = document.createElement('div'); row.className = 'history-row';
-            row.innerHTML = `<div class="bin-btn" onclick="deleteSession(${s.id})">🗑️</div><div class="history-card" id="card-${s.id}"><div><span style="margin-right:15px; font-size:13px; color:var(--gray);">${s.date}</span><span style="color:var(--accent); font-weight:bold; font-size:10px">${s.archer || ''}</span><br><span class="hist-avg">${i18n[state.lang].avg}: ${s.avg}</span></div><div style="display:flex; align-items:center; gap:8px;">${isPB ? '<span style="color:var(--red); font-weight:900; font-size:14px; margin-right:4px;">PB</span>' : ''}<div class="hist-total" style="font-weight:900; font-size:20px;">${s.score}</div><span style="color:var(--gray); font-size:18px;">›</span></div></div>`;
+            row.innerHTML = `
+                <div class="bin-btn" onclick="deleteSession(${s.id})">🗑️</div>
+                <div class="history-card" id="card-${s.id}">
+                    <div>
+                        <span style="margin-right:15px; font-size:13px; color:var(--gray);">${s.date}</span>
+                        <span style="color:var(--accent); font-weight:bold; font-size:11px">
+                            ${archerCount > 1 ? `👤 x${archerCount} ` : ''}${primaryName}
+                        </span>
+                        <br>
+                        <span class="hist-avg">${i18n[state.lang].avg}: ${primaryAvg}</span>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <div class="hist-total" style="font-weight:900; font-size:20px;">${primaryScore}</div>
+                        <span style="color:var(--gray); font-size:18px;">›</span>
+                    </div>
+                </div>`;
+            
             const card = row.querySelector('.history-card'); let sX = 0, cX = 0;
             card.onclick = () => { if(cX === 0) openSessionDetail(s.id); else resetCards(); };
             card.addEventListener('touchstart', e => { sX = e.touches[0].clientX; card.style.transition = 'none'; }, {passive: true});
