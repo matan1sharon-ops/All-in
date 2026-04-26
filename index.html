@@ -517,7 +517,18 @@
 
     function clearHistory() { if(confirm(i18n[state.lang].wipe)) { localStorage.removeItem(state.mode); showHistory(state.mode); } }
 
-    window.onload = () => { const savedLang = localStorage.getItem('archer_lang') || 'en'; toggleLang(savedLang); };
+  window.onload = () => { 
+        const savedLang = localStorage.getItem('archer_lang') || 'en'; 
+        toggleLang(savedLang); 
+
+        const crawlContainer = document.getElementById('crawl-inputs');
+        if (crawlContainer) {
+            crawlContainer.innerHTML = '';
+            for(let d=5; d<=50; d+=5) { 
+                crawlContainer.innerHTML += `<div class="crawl-item"><div class="crawl-dist">${d}m</div><input type="text" id="c-${d}" class="crawl-val"></div>`; 
+            }
+        }
+    };
 </script>
 </body>
 </html>
