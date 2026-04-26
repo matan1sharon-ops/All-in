@@ -2,236 +2,188 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>ALL IN Archery</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Archery Pro Score</title>
     <style>
-        :root { --bg: #000; --text: #fff; --accent: #FFD700; --card: #151515; --gray: #888; --red: #FF3B30; --yellow: #FFCC00; --green: #4CD964; }
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; }
-        body { background: var(--bg); color: var(--text); font-family: -apple-system, sans-serif; height: 100vh; overflow: hidden; padding-top: env(safe-area-inset-top); }
-        .app-container { width: 100%; max-width: 500px; height: 100%; margin: 0 auto; position: relative; direction: ltr; }
-        .screen { display: none; flex-direction: column; height: 100%; padding: 20px; background: var(--bg); position: absolute; width: 100%; top: 0; left: 0; bottom: 0; right: 0; }
-        .active-screen { display: flex !important; z-index: 10; }
-        header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 10px; border-bottom: 1px solid #222; min-height: 60px; }
-        .header-center { flex: 2; text-align: center; padding: 0 5px; }
-        .header-right { display: flex; gap: 15px; align-items: baseline; text-align: right; }
-        .stat-label { font-size: 9px; color: var(--gray); text-transform: uppercase; font-weight: 800; letter-spacing: 0.5px; }
-        .stat-val { font-size: 20px; font-weight: 900; }
-        .timer-container { width: 100%; height: 4px; background: #222; display: none; position: relative; margin-top: -1px; }
-        .timer-bar { height: 100%; background: var(--accent); width: 100%; transition: width 0.2s linear; }
-        .timer-text { font-size: 14px; font-weight: 900; color: var(--accent); margin-top: 4px; }
-        .logo-badge { width: 80px; height: 80px; background: var(--accent); color: #000; border-radius: 20px; margin: 0 auto 10px; display: flex; align-items: center; justify-content: center; font-size: 28px; font-weight: 900; }
-        .menu-list { display: flex; flex-direction: column; gap: 12px; margin-top: 20px; }
-        .menu-row { display: flex; gap: 10px; height: 75px; }
-        .menu-btn { flex: 1; background: #fff; color: #000; padding: 0 20px; border-radius: 15px; font-size: 15px; font-weight: 800; border: none; text-align: left; }
-        .history-btn { background: #1a1a1a; border-radius: 15px; width: 70px; display: flex; flex-direction: column; align-items: center; justify-content: center; border: 1px solid #333; color: #fff; cursor: pointer; }
-        .home-footer { position: absolute; bottom: 40px; left: 0; right: 0; display: flex; justify-content: center; }
-        .gear-link { display: flex; align-items: center; gap: 10px; color: var(--gray); background: #111; padding: 12px 25px; border-radius: 30px; border: 1px solid #222; cursor: pointer; }
-        .gear-text { font-size: 10px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; }
-        #score-list, #history-list, #detail-list, #gear-list { flex-grow: 1; overflow-y: auto; padding: 15px 0; display: flex; flex-direction: column; gap: 8px; }
-        .end-card { background: var(--card); padding: 12px 15px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #222; }
-        .history-row { position: relative; width: 100%; min-height: 55px; border-radius: 10px; overflow: hidden; background: #000; }
-        .history-card { position: relative; z-index: 2; background: var(--card); padding: 12px 15px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #222; border-radius: 10px; transition: transform 0.3s ease; touch-action: pan-y; }
-        .bin-btn { position: absolute; right: 0; top: 0; bottom: 0; width: 70px; background: var(--red); display: flex; align-items: center; justify-content: center; z-index: 1; color: #fff; font-size: 20px; }
-        .clickable-end { cursor: pointer; border-left: 3px solid transparent; transition: 0.2s; }
-        .next-btn { background: var(--accent); color: #000; width: 100%; padding: 18px; border-radius: 12px; font-size: 20px; font-weight: 900; border: none; margin-top: 15px; }
-        .next-btn:disabled { background: #333; color: #666; }
-        .control-row { display: flex; gap: 10px; margin-top: 15px; align-items: center; }
-        .back-btn { background: #444; color: #fff; width: 75px; padding: 18px; border-radius: 12px; font-size: 20px; font-weight: 900; border: none; flex-shrink: 0; }
-        .btn-grid { display: grid; gap: 8px; margin-top: 10px; }
-        .score-btn { height: 60px; border-radius: 12px; border: 1px solid #333; font-size: 22px; font-weight: 900; color: #fff; background: #222; }
+        :root { --bg: #000; --card: #121212; --accent: #FFD700; --text: #fff; --gray: #888; --red: #FF3B30; --green: #34C759; --yellow: #FFCC00; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { margin: 0; background: var(--bg); color: var(--text); font-family: -apple-system, system-ui; overflow: hidden; touch-action: manipulation; }
         
-        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 100; align-items: center; justify-content: center; flex-direction: column; gap: 20px; padding: 20px; }
-        .p-count-row { display: flex; gap: 10px; margin-bottom: 10px; width: 100%; }
-        .p-count-btn { flex: 1; background: #222; border: 1px solid #444; color: #fff; padding: 15px; border-radius: 10px; font-weight: 900; }
-        .p-count-btn.active { background: var(--accent); color: #000; border-color: var(--accent); }
-        .archer-tabs { display: flex; gap: 5px; margin-top: 10px; overflow-x: auto; padding-bottom: 5px; }
-        .archer-tab { flex: 1; min-width: 70px; background: #1a1a1a; padding: 8px; border-radius: 8px; text-align: center; font-size: 10px; font-weight: 800; color: var(--gray); border: 1px solid #333; white-space: nowrap; }
-        .archer-tab.active { background: #333; color: var(--accent); border-color: var(--accent); }
-
-        #face-container, .history-face-container { width: 100%; aspect-ratio: 1; position: relative; margin: 10px 0; touch-action: none; overflow: hidden; border-radius: 10px; background: #0a0a0a; border: 1px solid #222;}
-        #magnifier { position: absolute; width: 120px; height: 120px; border-radius: 50%; border: 3px solid #fff; display: none; pointer-events: none; overflow: hidden; background: #000; z-index: 20; transform: translate(-50%, -130%); box-shadow: 0 0 20px rgba(0,0,0,0.8); }
+        .screen { display: none; height: 100vh; flex-direction: column; }
+        .active-screen { display: flex; }
+        
+        .header { padding: 20px; display: flex; justify-content: space-between; align-items: center; background: var(--bg); border-bottom: 1px solid #222; }
+        .footer-nav { height: 70px; border-top: 1px solid #222; display: flex; justify-content: space-around; align-items: center; background: var(--bg); }
+        
+        .scroll-area { flex: 1; overflow-y: auto; padding: 15px; -webkit-overflow-scrolling: touch; }
+        
+        /* Archer Tabs - Locked at top of scoring screen */
+        .archer-tabs { display: flex; gap: 10px; padding: 10px 15px; background: #0a0a0a; border-bottom: 1px solid #222; overflow-x: auto; white-space: nowrap; }
+        .archer-tab { padding: 8px 20px; border-radius: 20px; background: #222; font-size: 14px; font-weight: bold; border: 1px solid transparent; }
+        .archer-tab.active { background: var(--accent); color: #000; }
+        
+        .end-card { background: var(--card); border-radius: 12px; padding: 15px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #222; }
+        .clickable-end { active: scale(0.98); transition: transform 0.1s; }
+        
+        .score-grid { display: grid; gap: 8px; padding: 15px; background: #0a0a0a; border-top: 1px solid #222; }
+        .score-btn { height: 60px; border-radius: 8px; border: none; font-size: 20px; font-weight: 900; }
+        
+        #face-container { width: 100%; aspect-ratio: 1; position: relative; overflow: hidden; touch-action: none; background: #111; border-radius: 8px; }
+        #magnifier { position: absolute; width: 120px; height: 120px; border: 2px solid var(--accent); border-radius: 50%; display: none; pointer-events: none; z-index: 100; overflow: hidden; background: #000; box-shadow: 0 0 20px rgba(0,0,0,0.5); }
         #magnifier svg { position: absolute; width: 500%; height: 500%; }
-        #crosshair { position: absolute; width: 14px; height: 14px; border: 1px solid #fff; border-radius: 50%; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 21; }
-        #crosshair::after { content: ''; position: absolute; top: 50%; left: 50%; width: 2px; height: 2px; background: red; border-radius: 50%; transform: translate(-50%, -50%); }
-        #float-score { position: absolute; top: -35px; left: 50%; transform: translateX(-50%); font-weight: 900; font-size: 24px; color: #fff; text-shadow: 0 0 8px #000; }
+        #crosshair { position: absolute; top: 50%; left: 50%; width: 20px; height: 20px; transform: translate(-50%, -50%); pointer-events: none; }
+        #crosshair::before, #crosshair::after { content: ''; position: absolute; background: var(--accent); }
+        #crosshair::before { top: 50%; left: 0; width: 100%; height: 2px; }
+        #crosshair::after { left: 50%; top: 0; width: 2px; height: 100%; }
         
-        .gear-section-title { font-size: 12px; font-weight: 900; color: var(--accent); margin: 20px 0 10px; text-transform: uppercase; border-left: 3px solid var(--accent); padding-left: 10px; }
-        .gear-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
-        .gear-input-group { display: flex; flex-direction: column; }
-        .gear-label { font-size: 9px; font-weight: 900; color: #bbb; margin-bottom: 4px; text-transform: uppercase; }
-        .gear-input { background: #111; border: 1px solid #222; color: #fff; padding: 10px; border-radius: 8px; font-size: 14px; outline: none; width: 100%; }
-        .crawl-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; background: #0a0a0a; padding: 12px; border-radius: 12px; border: 1px solid #1a1a1a; }
-        .crawl-item { text-align: center; }
-        .crawl-dist { font-size: 9px; font-weight: 900; color: #bbb; margin-bottom: 4px; }
-        .crawl-val { background: #1a1a1a; border: 1px solid #333; color: var(--accent); width: 100%; text-align: center; padding: 5px 0; border-radius: 5px; font-size: 12px; font-weight: bold; }
-        .stats-card { background: var(--card); border-radius: 12px; padding: 12px 15px; border: 1px solid #222; display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; text-align: center; }
-        .chart-box { background: var(--card); border-radius: 12px; padding: 15px; border: 1px solid #222; margin-top: 8px; }
-        .chart-title { font-size: 10px; font-weight: bold; color: var(--gray); text-transform: uppercase; margin-bottom: 12px; letter-spacing: 0.5px;}
-        .hit-bar { width: 100%; background: #222; border-radius: 2px; height: 75px; position: relative; overflow: hidden;}
-        .hit-fill { position: absolute; bottom: 0; left: 0; right: 0; }
-        .hits-chart { display: grid; gap: 4px; text-align: center; margin-top: 5px; height: 110px; align-items: end; }
-        .hit-label { font-size: 8px; font-weight: 900; margin-top: 4px; }
-        .hit-count { font-size: 9px; margin-bottom: 4px; color: var(--text); font-weight: bold; }
+        #float-score { position: absolute; transform: translate(-50%, -50%); font-weight: 900; font-size: 24px; color: var(--accent); text-shadow: 0 0 5px #000; pointer-events: none; }
+        
+        .history-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; position: relative; }
+        .history-card { flex: 1; background: var(--card); padding: 15px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; z-index: 2; transition: transform 0.3s; }
+        .bin-btn { position: absolute; right: 15px; background: var(--red); color: white; width: 50px; height: 80%; display: flex; align-items: center; justify-content: center; border-radius: 12px; z-index: 1; }
+        
+        .stats-card { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+        .stats-card div { background: var(--card); padding: 15px; border-radius: 12px; text-align: center; }
+        .stat-label { font-size: 10px; color: var(--gray); text-transform: uppercase; }
+        .stat-val { font-size: 22px; font-weight: 900; }
+        
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 1000; align-items: center; justify-content: center; padding: 20px; }
+        .modal-content { background: var(--card); width: 100%; max-width: 400px; padding: 25px; border-radius: 20px; }
+        
+        #t-cont { height: 6px; background: #222; border-radius: 3px; margin: 10px 0; overflow: hidden; display: none; }
+        #t-bar { height: 100%; width: 100%; background: var(--green); transition: width 0.3s; }
     </style>
 </head>
 <body>
 
-<div class="app-container">
-    <div id="participant-modal" class="modal-overlay">
-        <h2 style="font-weight: 900; letter-spacing: 1px;">ARCHERS</h2>
-        <div class="p-count-row">
-            <button class="p-count-btn active" onclick="setParticipantCount(1, this)">1</button>
-            <button class="p-count-btn" onclick="setParticipantCount(2, this)">2</button>
-            <button class="p-count-btn" onclick="setParticipantCount(3, this)">3</button>
-            <button class="p-count-btn" onclick="setParticipantCount(4, this)">4</button>
+<div id="home" class="screen active-screen">
+    <div class="header">
+        <div><h1 style="margin:0; font-size:24px;">PRO ARCHER</h1><small id="l-tagline" style="color:var(--gray)"></small></div>
+        <button onclick="showGearScreen()" style="background:none; border:none; font-size:24px;">⚙️</button>
+    </div>
+    <div class="scroll-area" id="main-menu"></div>
+</div>
+
+<div id="scoring" class="screen">
+    <div class="header" style="padding: 10px 20px;">
+        <button onclick="exitScoring()" style="background:none; border:none; color:var(--red); font-weight:bold;">EXIT</button>
+        <div style="text-align:center">
+            <div id="mode-display" style="font-size:12px; color:var(--gray)"></div>
+            <div style="font-size:24px; font-weight:900;"><span id="total-score">0</span> <small style="font-size:12px; color:var(--gray)">AVG: <span id="avg-score">0</span></small></div>
         </div>
-        <div id="participant-names-container" style="width:100%; display:flex; flex-direction:column; gap:10px;"></div>
-        <button class="next-btn" onclick="confirmParticipants()">START SESSION</button>
+        <button id="timer-btn" onclick="toggleTimer()" style="background:none; border:none; font-size:22px; color:var(--gray)">⏱️</button>
     </div>
 
-    <div id="target-choice-modal" class="modal-overlay">
-        <h2 style="font-weight: 900; letter-spacing: 1px;">TARGET SCORING</h2>
-        <button class="next-btn" style="width:80%;" onclick="confirmTargetMode('pad')">SCORING BY PAD</button>
-        <button class="next-btn" style="width:80%; background:#fff;" onclick="confirmTargetMode('face')">SCORING BY FACE</button>
-    </div>
+    <div id="archer-tabs" class="archer-tabs"></div>
 
-    <div id="home" class="screen active-screen">
-        <div style="text-align:center; margin-top:40px;">
-            <div class="logo-badge">AI</div>
-            <div style="font-size:32px; font-weight:900; letter-spacing:6px;">ALL IN</div>
-            <p id="l-tagline" style="color:var(--gray); font-size:12px;"></p>
-        </div>
-        <div class="menu-list" id="main-menu"></div>
-        <div class="home-footer"><div class="gear-link" onclick="showGearScreen()"><span>⚙️</span><span id="l-gear-link" class="gear-text"></span></div></div>
-    </div>
+    <div id="t-cont"><div id="t-bar"></div></div>
+    <div id="t-text" style="text-align:center; font-weight:bold; font-size:12px; margin-bottom:5px;"></div>
 
-    <div id="scoring" class="screen">
-        <header>
-            <button onclick="exitScoring()" style="background:none; border:none; color:var(--gray); font-size:22px;">✕</button>
-            <div class="header-center">
-                <div id="mode-display" style="color:#fff; font-weight:800; text-transform:uppercase; font-size:11px;"></div>
-                <div id="t-text" class="timer-text"></div>
+    <div class="scroll-area" id="score-list"></div>
+
+    <div id="button-grid" class="score-grid"></div>
+
+    <div style="padding:15px; background:#0a0a0a;">
+        <button id="next-btn" onclick="handleMainAction()" style="width:100%; height:60px; border-radius:12px; border:none; background:var(--accent); color:#000; font-weight:900; font-size:18px;">NEXT END</button>
+    </div>
+</div>
+
+<div id="history-screen" class="screen">
+    <div class="header">
+        <button onclick="showScreen('home')" style="background:none; border:none; color:var(--accent); font-weight:bold;">BACK</button>
+        <h2 id="history-title" style="margin:0; font-size:18px;"></h2>
+        <button onclick="clearHistory()" style="background:none; border:none; font-size:20px;">🗑️</button>
+    </div>
+    <div class="scroll-area" id="history-list"></div>
+</div>
+
+<div id="detail-screen" class="screen">
+    <div class="header">
+        <button onclick="showScreen('history-screen')" style="background:none; border:none; color:var(--accent); font-weight:bold;">BACK</button>
+        <h2 id="detail-title" style="margin:0; font-size:18px;">SESSION</h2>
+        <div style="width:40px"></div>
+    </div>
+    <div class="scroll-area" id="detail-list"></div>
+</div>
+
+<div id="gear-screen" class="screen">
+    <div class="header">
+        <button onclick="showScreen('home')" style="background:none; border:none; color:var(--accent); font-weight:bold;">CANCEL</button>
+        <h2 id="l-setup-title" style="margin:0; font-size:18px;">MY SETUP</h2>
+        <button id="l-save" onclick="saveGear()" style="background:none; border:none; color:var(--green); font-weight:bold;">SAVE</button>
+    </div>
+    <div class="scroll-area">
+        <select id="lang-select" onchange="toggleLang(this.value)" style="width:100%; padding:12px; background:#222; color:#fff; border-radius:8px; margin-bottom:20px; border:none;">
+            <option value="en">English</option>
+            <option value="he">עברית</option>
+        </select>
+        <div class="stats-card" style="grid-template-columns: 1fr; gap:20px;">
+            <div>
+                <h3 id="l-riser-title" style="margin-top:0">RISER</h3>
+                <input type="text" id="g-r-make" placeholder="Make/Model" style="width:100%; padding:10px; margin-bottom:5px; background:#000; border:1px solid #333; color:#fff;">
+                <input type="text" id="g-r-len" placeholder="Length" style="width:100%; padding:10px; background:#000; border:1px solid #333; color:#fff;">
             </div>
-            <div class="header-right">
-                <button id="timer-btn" onclick="toggleTimer()" style="background:none; border:none; color:var(--gray); font-size:20px;">⏰</button>
-                <div style="display:flex; flex-direction:column;"><span id="l-avg" class="stat-label"></span><span id="avg-score" class="stat-val">0.0</span></div>
-                <div style="display:flex; flex-direction:column;"><span id="l-total" class="stat-label"></span><span id="total-score" class="stat-val" style="color:var(--accent);">0</span></div>
-            </div>
-        </header>
-        <div id="archer-tabs" class="archer-tabs"></div>
-        <div class="timer-container" id="t-cont"><div class="timer-bar" id="t-bar"></div></div>
-        <div id="score-list"></div>
-        <div style="padding-bottom:30px; border-top: 1px solid #222;">
-            <div class="control-row">
-                <button id="back-btn" class="back-btn" onclick="undoLastMarker()">⌫</button>
-                <button id="next-btn" class="next-btn" style="margin-top:0;" onclick="handleMainAction()"></button>
-            </div>
-            <div id="button-grid" class="btn-grid"></div>
+            <div id="crawl-inputs"></div>
         </div>
     </div>
+</div>
 
-    <div id="history-screen" class="screen">
-        <header><button onclick="showScreen('home')" style="background:none; border:none; color:var(--gray); font-size:22px;">✕</button><div class="header-center"><div id="history-title" class="stat-label" style="color:#fff;"></div></div><button id="l-clear" onclick="clearHistory()" style="background:none; border:none; color:var(--gray); font-size:10px; font-weight:bold;"></button></header>
-        <div id="history-list"></div>
-    </div>
-
-    <div id="detail-screen" class="screen">
-        <header><button onclick="showScreen('history-screen')" style="background:none; border:none; color:var(--gray); font-size:22px;">✕</button><div class="header-center"><div id="detail-title" class="stat-label" style="color:#fff;"></div></div><div style="width:30px;"></div></header>
-        <div id="detail-list"></div>
-    </div>
-
-    <div id="gear-screen" class="screen">
-        <header><button onclick="showScreen('home')" style="background:none; border:none; color:var(--gray); font-size:22px;">✕</button><div class="header-center"><div id="l-setup-title" class="stat-label" style="color:#fff;"></div></div><button id="l-save" onclick="saveGear()" style="background:none; border:none; color:var(--accent); font-weight:bold;"></button></header>
-        <div id="gear-list" style="padding-bottom: 40px;">
-            <div class="gear-section-title">Language / שפה</div>
-            <div class="gear-grid" style="grid-template-columns: 1fr;"><select id="lang-select" class="gear-input" onchange="toggleLang(this.value)"><option value="en">English</option><option value="he">עברית</option></select></div>
-            <div class="gear-section-title" id="l-riser-title"></div><div class="gear-grid"><div class="gear-input-group"><label id="l-r-make" class="gear-label"></label><input type="text" id="g-r-make" class="gear-input"></div><div class="gear-input-group"><label id="l-r-len" class="gear-label"></label><input type="text" id="g-r-len" class="gear-input"></div></div>
-            <div class="gear-section-title" id="l-limb-title"></div><div class="gear-grid"><div class="gear-input-group"><label id="l-l-make" class="gear-label"></label><input type="text" id="g-l-make" class="gear-input"></div><div class="gear-input-group"><label id="l-l-len" class="gear-label"></label><input type="text" id="g-l-len" class="gear-input"></div><div class="gear-input-group"><label id="l-l-weight" class="gear-label"></label><input type="text" id="g-l-weight" class="gear-input"></div></div>
-            <div class="gear-section-title" id="l-arrow-title"></div><div class="gear-grid"><div class="gear-input-group"><label id="l-a-make" class="gear-label"></label><input type="text" id="g-a-make" class="gear-input"></div><div class="gear-input-group"><label id="l-a-spine" class="gear-label"></label><input type="text" id="g-a-spine" class="gear-input"></div><div class="gear-input-group"><label id="l-a-len" class="gear-label"></label><input type="text" id="g-a-len" class="gear-input"></div><div class="gear-input-group"><label id="l-a-point" class="gear-label"></label><input type="text" id="g-a-point" class="gear-input"></div><div class="gear-input-group"><label id="l-a-nock" class="gear-label"></label><input type="text" id="g-a-nock" class="gear-input"></div><div class="gear-input-group"><label id="l-a-vanes" class="gear-label"></label><input type="text" id="g-a-vanes" class="gear-input"></div></div>
-            <div class="gear-section-title" id="l-crawl-title"></div><div class="crawl-grid" id="crawl-inputs"></div>
+<div id="participant-modal" class="modal">
+    <div class="modal-content">
+        <h3 style="margin-top:0">Participants</h3>
+        <div style="display:flex; gap:10px; margin-bottom:20px;" id="p-count-selector">
+            <button class="score-btn" style="flex:1; background:#222; color:#fff" onclick="setParticipantCount(1, this)">1</button>
+            <button class="score-btn" style="flex:1; background:#222; color:#fff" onclick="setParticipantCount(2, this)">2</button>
+            <button class="score-btn" style="flex:1; background:#222; color:#fff" onclick="setParticipantCount(3, this)">3</button>
+            <button class="score-btn" style="flex:1; background:#222; color:#fff" onclick="setParticipantCount(4, this)">4</button>
         </div>
+        <div id="p-names-input"></div>
+        <button onclick="proceedToTargetSelection()" style="width:100%; padding:15px; background:var(--accent); border:none; border-radius:12px; font-weight:bold; margin-top:10px;">CONTINUE</button>
+    </div>
+</div>
+
+<div id="target-choice-modal" class="modal">
+    <div class="modal-content">
+        <h3 style="margin-top:0">Scoring Method</h3>
+        <button onclick="confirmTargetMode('face')" style="width:100%; padding:20px; background:#222; border:1px solid #333; border-radius:12px; color:#fff; font-weight:bold; margin-bottom:10px; display:flex; align-items:center; justify-content:center; gap:15px;">
+            <div style="width:30px; height:30px; border-radius:50%; background:conic-gradient(red 25%, blue 25% 50%, black 50% 75%, white 75%);"></div> Target Face Heatmap
+        </button>
+        <button onclick="confirmTargetMode('pad')" style="width:100%; padding:20px; background:#222; border:1px solid #333; border-radius:12px; color:#fff; font-weight:bold; display:flex; align-items:center; justify-content:center; gap:15px;">
+            🔢 Number Keypad
+        </button>
     </div>
 </div>
 
 <script>
     const i18n = {
-        en: { tagline: "ARCHERY TRACKER", gear: "Gear / Setup", avg: "AVG", total: "TOTAL", clear: "CLEAR", setup: "MY SETUP", save: "SAVE", next: "NEXT END", update: "UPDATE END", finish: "FINISH SESSION", exit: "Exit?", delSess: "Delete this session?", wipe: "Wipe all history?", riser: "Riser Details", riserMake: "Riser Make", riserLen: "Riser Length", limbs: "Limb Details", limbMake: "Limb Make", limbLen: "Limb Length", limbWeight: "Limb Weight", arrows: "Arrow Details", arrMake: "Arrow Make", arrSpine: "Arrow Spine", arrLen: "Arrow Length", point: "Point Weight", nock: "Nock Details", vanes: "Vanes Details", crawls: "Barebow Crawls", history: "HISTORY", detail: "SESSION DETAIL", arrowsS: "ARROWS", prep: "PREP", stamina: "Stamina Trend", hits: "Hits Breakdown", heatmap: "SESSION HEAT MAP", modes: ["3D PRACTICE", "FIELD PRACTICE", "TARGET INDOOR", "TARGET OUTDOOR"] },
-        he: { tagline: "מעקב קליעה בקשת", gear: "ציוד / הגדרות", avg: "ממוצע", total: "סה״כ", clear: "נקה", setup: "הציוד שלי", save: "שמור", next: "סבב הבא", update: "עדכן סבב", finish: "סיים אימון", exit: "לצאת מהאימון?", delSess: "למחוק אימון זה?", wipe: "למחוק את כל ההיסטוריה?", riser: "רייזר", riserMake: "יצרן רייזר", riserLen: "אורך רייזר", limbs: "כנפיים", limbMake: "יצרן כנפיים", limbLen: "אורך כנפיים", limbWeight: "כח כנפיים", arrows: "פרטי חצים", arrMake: "יצרן חץ", arrSpine: "ספיין חץ", arrLen: "אורך חץ", point: "משקל פוינט", nock: "פרטי נוק", vanes: "פרטי כנפונים", crawls: "Crawls", history: "היסטוריה", detail: "פירוט אימון", arrowsS: "חצים", prep: "הכנה", stamina: "מגמת עייפות", hits: "פירוט פגיעות", heatmap: "מפת פגיעות", modes: ["3D", "פילד", "טארגט אולם", "טארגט חוץ"] }
+        en: { tagline: "Barebow Excellence", modes: ["TARGET OUTDOOR", "TARGET INDOOR", "FIELD", "3D"], next: "NEXT END", finish: "FINISH SESSION", update: "UPDATE END", avg: "AVG", total: "TOTAL", setup: "SETUP", gear: "GEAR", history: "HISTORY", save: "SAVE", riser: "RISER", limbs: "LIMBS", riserMake: "Make/Model", riserLen: "Length", limbMake: "Make/Model", limbLen: "Length", limbWeight: "Weight", arrows: "ARROWS", arrMake: "Make/Model", arrSpine: "Spine", arrLen: "Length", point: "Point Weight", nock: "Nock Type", vanes: "Vanes", crawls: "STRING WALKING CRAWLS", prep: "PREP", exit: "Exit session? Progress will be lost.", delSess: "Delete this session?", wipe: "Clear all history for this mode?", arrowsS: "Arrows", heatmap: "Heatmap", stamina: "End Stability", hits: "Hit Distribution" },
+        he: { tagline: "מצוינות בברבואו", modes: ["מטרה חוץ", "מטרה פנים", "שדה", "תלת מימד"], next: "אנד הבא", finish: "סיים אימון", update: "עדכן אנד", avg: "ממוצע", total: "סה״כ", setup: "הגדרות", gear: "ציוד", history: "היסטוריה", save: "שמור", riser: "ידית", limbs: "גפיים", riserMake: "חברה/דגם", riserLen: 'אורך', limbMake: "חברה/דגם", limbLen: "אורך", limbWeight: "משקל", arrows: "חיצים", arrMake: "חברה/דגם", arrSpine: "ספיין", arrLen: "אורך", point: "משקל ראש", nock: "נוק", vanes: "נוצות", crawls: "מרחקי פריטה", prep: "הכנה", exit: "לצאת מהאימון? המידע לא יישמר.", delSess: "למחוק את האימון?", wipe: "למחוק את כל ההיסטוריה למצב זה?", arrowsS: "חיצים", heatmap: "מפת פגיעות", stamina: "יציבות אימון", hits: "פילוח פגיעות" }
     };
 
-    let state = { current: [], history: [], arrows: 2, ends: 24, mode: '', editingIndex: -1, lang: 'en', scoringType: 'pad', markers: [], participants: [], activeArcherIdx: 0 };
-    let timer = { interval: null, timeLeft: 0, totalTime: 0, active: false, phase: 'READY', startTime: null };
-    let targetSelectionState = { mode: '', arrows: 0, ends: 0 };
+    let state = { lang: 'en', mode: '', arrows: 3, ends: 10, history: [], current: [], markers: [], scoringType: 'pad', editingIndex: -1, participants: [], activeArcherIdx: 0 };
+    let timer = { active: false, phase: 'READY', timeLeft: 0, totalTime: 0, interval: null, startTime: 0 };
+    let audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     let wakeLock = null;
-    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    let targetSelectionState = null;
+    let facePendingScore = 0;
+    let lastMarkerPos = { x: 0, y: 0 };
 
     function setParticipantCount(num, btn) {
-        document.querySelectorAll('.p-count-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        const container = document.getElementById('participant-names-container');
+        document.querySelectorAll('#p-count-selector button').forEach(b => b.style.background = '#222');
+        btn.style.background = 'var(--accent)'; btn.style.color = '#000';
+        const container = document.getElementById('p-names-input');
         container.innerHTML = '';
+        state.participants = [];
         for(let i=0; i<num; i++) {
-            container.innerHTML += `<input type="text" class="gear-input participant-name-input" style="text-align:center" placeholder="Archer ${i+1}">`;
+            container.innerHTML += `<input type="text" placeholder="Archer ${i+1} Name" id="p-name-${i}" style="width:100%; padding:15px; background:#000; border:1px solid #333; color:#fff; border-radius:8px; margin-bottom:10px;">`;
         }
     }
 
-    function confirmParticipants() {
-        const inputs = document.querySelectorAll('.participant-name-input');
-        state.participants = Array.from(inputs).map((input, idx) => ({
-            name: input.value || `Archer ${idx + 1}`,
-            history: [],
-            current: [],
-            markers: []
-        }));
+    function proceedToTargetSelection() {
+        const inputs = document.querySelectorAll('#p-names-input input');
+        state.participants = Array.from(inputs).map(input => ({ name: input.value || "Archer", history: [], current: [], markers: [] }));
         document.getElementById('participant-modal').style.display = 'none';
-        if (targetSelectionState.mode.includes('TARGET')) {
-            document.getElementById('target-choice-modal').style.display = 'flex';
-        } else {
-            initScoring(targetSelectionState.mode, targetSelectionState.arrows, targetSelectionState.ends, 'pad');
-        }
-    }
-
-    function switchArcher(idx) {
-        // 1. SAVE current active archer's data
-        state.participants[state.activeArcherIdx].current = [...state.current];
-        state.participants[state.activeArcherIdx].history = [...state.history];
-        state.participants[state.activeArcherIdx].markers = [...state.markers];
-
-        // 2. CHANGE index
-        state.activeArcherIdx = idx;
-
-        // 3. LOAD new archer's data
-        const p = state.participants[idx];
-        state.history = [...p.history];
-        state.markers = [...p.markers];
-        state.editingIndex = -1;
-
-        // 4. IMPORTANT: If the archer doesn't have "current" arrows shot for this end yet, start fresh
-        // We only load 'p.current' if we are actually in the middle of shooting that end.
-        // If we just pushed to history, 'p.current' was saved as a full end, so we clear it for the next one.
-        if (p.current.length === state.arrows) {
-            state.current = [];
-            state.markers = [];
-        } else {
-            state.current = [...p.current];
-            state.markers = [...p.markers];
-        }
-
-        renderTabs();
-        if(state.scoringType === 'face') {
-            updateFaceMarkers();
-        }
-        renderUI();
-    }
-
-    function renderTabs() {
-        const container = document.getElementById('archer-tabs');
-        if (state.participants.length <= 1) { container.innerHTML = ''; return; }
-        container.innerHTML = state.participants.map((p, i) => 
-            `<div class="archer-tab ${i === state.activeArcherIdx ? 'active' : ''}" onclick="switchArcher(${i})">${p.name}</div>`
-        ).join('');
+        document.getElementById('target-choice-modal').style.display = 'flex';
     }
 
     function handleMainAction() {
@@ -252,11 +204,12 @@
                 state.history.push(newEnd); 
             }
 
-            // Immediately update the participant's history slot before switching
+            // Sync current state to active participant
             state.participants[state.activeArcherIdx].history = [...state.history];
-            state.participants[state.activeArcherIdx].current = []; // Clear current because end is done
+            state.participants[state.activeArcherIdx].current = []; 
             state.participants[state.activeArcherIdx].markers = []; 
 
+            // Logic for switching archers or moving to next end
             if (state.activeArcherIdx < state.participants.length - 1) {
                 switchArcher(state.activeArcherIdx + 1);
             } else {
@@ -270,106 +223,31 @@
         }
     }
 
-    function toggleLang(lang) {
-        state.lang = lang; const t = i18n[lang];
-        document.getElementById('l-tagline').innerText = t.tagline;
-        document.getElementById('l-gear-link').innerText = t.gear;
-        document.getElementById('l-avg').innerText = t.avg;
-        document.getElementById('l-total').innerText = t.total;
-        document.getElementById('l-clear').innerText = t.clear;
-        document.getElementById('l-setup-title').innerText = t.setup;
-        document.getElementById('l-save').innerText = t.save;
-        document.getElementById('l-riser-title').innerText = t.riser;
-        document.getElementById('l-r-make').innerText = t.riserMake;
-        document.getElementById('l-r-len').innerText = t.riserLen;
-        document.getElementById('l-limb-title').innerText = t.limbs;
-        document.getElementById('l-l-make').innerText = t.limbMake;
-        document.getElementById('l-l-len').innerText = t.limbLen;
-        document.getElementById('l-l-weight').innerText = t.limbWeight;
-        document.getElementById('l-arrow-title').innerText = t.arrows;
-        document.getElementById('l-a-make').innerText = t.arrMake;
-        document.getElementById('l-a-spine').innerText = t.arrSpine;
-        document.getElementById('l-a-len').innerText = t.arrLen;
-        document.getElementById('l-a-point').innerText = t.point;
-        document.getElementById('l-a-nock').innerText = t.nock;
-        document.getElementById('l-a-vanes').innerText = t.vanes;
-        document.getElementById('l-crawl-title').innerText = t.crawls;
-        renderMainMenu(); localStorage.setItem('archer_lang', lang);
+    function switchArcher(idx) {
+        // Save current progress of active archer
+        state.participants[state.activeArcherIdx].current = [...state.current];
+        state.participants[state.activeArcherIdx].history = [...state.history];
+        state.participants[state.activeArcherIdx].markers = [...state.markers];
+
+        // Load new archer
+        state.activeArcherIdx = idx;
+        const p = state.participants[idx];
+        state.history = [...p.history];
+        state.current = [...p.current];
+        state.markers = [...p.markers];
+
+        renderTabs();
+        if(state.scoringType === 'face') renderTargetFace(); 
+        else renderButtons();
+        renderUI();
     }
 
-    function renderMainMenu() {
-        const menu = document.getElementById('main-menu'); menu.innerHTML = '';
-        const mNames = i18n[state.lang].modes; const rawNames = i18n.en.modes;
-        const configs = [[2, 24], [3, 24], [3, 20], [6, 12]];
-        rawNames.forEach((name, i) => {
-            menu.insertAdjacentHTML('beforeend', `<div class="menu-row"><button class="menu-btn" onclick="startApp('${name}', ${configs[i][0]}, ${configs[i][1]})">${mNames[i]}</button><button class="history-btn" onclick="showHistory('${name}')">📜</button></div>`);
-        });
-    }
-
-    async function requestWakeLock() { try { if ('wakeLock' in navigator) wakeLock = await navigator.wakeLock.request('screen'); } catch (err) {} }
-    function releaseWakeLock() { if (wakeLock !== null) { wakeLock.release().then(() => wakeLock = null); } }
-
-    function playBip(count) {
-        if (!state.mode.includes('TARGET')) return;
-        for(let i=0; i<count; i++) {
-            setTimeout(() => {
-                const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
-                osc.type = "square"; osc.frequency.setValueAtTime(800, audioCtx.currentTime);
-                gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.5);
-                osc.connect(gain); gain.connect(audioCtx.destination); osc.start(); osc.stop(audioCtx.currentTime + 0.5);
-            }, i * 700); 
-        }
-    }
-
-    function toggleTimer() { if (timer.active) { stopTimer(); return; } requestWakeLock(); if (state.mode.includes('TARGET')) startPrep(); else startDirect(); }
-    function startPrep() { timer.active = true; timer.phase = 'PREP'; timer.totalTime = 10; timer.timeLeft = 10; timer.startTime = Date.now(); playBip(2); showTimerUI(); runTimer(); }
-    function startDirect() { timer.active = true; timer.phase = 'SHOOT'; timer.totalTime = state.mode.includes('3D') ? 120 : 180; timer.timeLeft = timer.totalTime; timer.startTime = Date.now(); showTimerUI(); runTimer(); }
-    function runTimer() {
-        clearInterval(timer.interval);
-        timer.interval = setInterval(() => {
-            const elapsed = Math.floor((Date.now() - timer.startTime) / 1000);
-            timer.timeLeft = timer.totalTime - elapsed;
-            if (timer.timeLeft < 0) {
-                if (timer.phase === 'PREP') {
-                    timer.phase = 'SHOOT'; timer.totalTime = state.mode.includes('INDOOR') ? 90 : 180;
-                    timer.startTime = Date.now(); timer.timeLeft = timer.totalTime; playBip(1);
-                } else { playBip(3); stopTimer(); return; }
-            }
-            updateTimerDisplay();
-        }, 200);
-    }
-
-    function stopTimer() {
-        clearInterval(timer.interval); timer.active = false; timer.phase = 'READY'; releaseWakeLock();
-        document.getElementById('t-cont').style.display = 'none'; document.getElementById('t-text').innerText = '';
-        document.getElementById('timer-btn').style.color = 'var(--gray)';
-    }
-
-    function showTimerUI() { document.getElementById('t-cont').style.display = 'block'; document.getElementById('timer-btn').style.color = 'var(--accent)'; updateTimerDisplay(); }
-    function updateTimerDisplay() {
-        const bar = document.getElementById('t-bar'), txt = document.getElementById('t-text');
-        txt.innerText = (timer.phase === 'PREP' ? (i18n[state.lang].prep + ' ') : '') + timer.timeLeft;
-        bar.style.width = Math.max(0, (timer.timeLeft / timer.totalTime * 100)) + '%';
-        if (timer.phase === 'PREP') { bar.style.background = 'var(--red)'; txt.style.color = 'var(--red)'; }
-        else {
-            if (timer.timeLeft <= 30 && state.mode.includes('TARGET')) { bar.style.background = 'var(--yellow)'; txt.style.color = 'var(--yellow)'; }
-            else { bar.style.background = 'var(--green)'; txt.style.color = 'var(--green)'; }
-        }
-    }
-
-    function showScreen(id) { document.querySelectorAll('.screen').forEach(s => s.classList.remove('active-screen')); document.getElementById(id).classList.add('active-screen'); }
-
-    function startApp(mode, arrows, ends) { 
-        if (audioCtx.state === 'suspended') audioCtx.resume();
-        targetSelectionState = { mode, arrows, ends };
-        document.getElementById('participant-modal').style.display = 'flex';
-        setParticipantCount(1, document.querySelector('.p-count-btn'));
-    }
-
-    function confirmTargetMode(type) {
-        document.getElementById('target-choice-modal').style.display = 'none';
-        initScoring(targetSelectionState.mode, targetSelectionState.arrows, targetSelectionState.ends, type);
+    function renderTabs() {
+        const container = document.getElementById('archer-tabs');
+        if (state.participants.length <= 1) { container.innerHTML = ''; return; }
+        container.innerHTML = state.participants.map((p, i) => 
+            `<div class="archer-tab ${i === state.activeArcherIdx ? 'active' : ''}" onclick="switchArcher(${i})">${p.name}</div>`
+        ).join('');
     }
 
     function initScoring(mode, arrows, ends, type) {
@@ -377,28 +255,9 @@
         state.arrows = arrows; state.ends = ends; state.mode = mode; state.editingIndex = -1; state.scoringType = type;
         state.activeArcherIdx = 0;
         stopTimer(); 
-        if (type === 'face') { document.getElementById('back-btn').style.display = 'block'; renderTargetFace(); } 
-        else { document.getElementById('back-btn').style.display = 'none'; renderButtons(); }
+        if (type === 'face') renderTargetFace(); 
+        else renderButtons();
         renderTabs(); renderUI(); showScreen('scoring'); 
-    }
-
-    let facePendingScore = 0; let lastMarkerPos = { x: 0, y: 0 };
-
-    function getTargetSvg(idPrefix, hasX) {
-        return `
-            <circle cx="50" cy="50" r="50" fill="#fff" stroke="#000" stroke-width="0.1"/>
-            <circle cx="50" cy="50" r="45" fill="#fff" stroke="#000" stroke-width="0.1"/>
-            <circle cx="50" cy="50" r="40" fill="#000" stroke="#fff" stroke-width="0.1"/>
-            <circle cx="50" cy="50" r="35" fill="#000" stroke="#fff" stroke-width="0.1"/>
-            <circle cx="50" cy="50" r="30" fill="#007AFF" stroke="#000" stroke-width="0.1"/>
-            <circle cx="50" cy="50" r="25" fill="#007AFF" stroke="#000" stroke-width="0.1"/>
-            <circle cx="50" cy="50" r="20" fill="#FF3B30" stroke="#000" stroke-width="0.1"/>
-            <circle cx="50" cy="50" r="15" fill="#FF3B30" stroke="#000" stroke-width="0.1"/>
-            <circle cx="50" cy="50" r="10" fill="#FFD700" stroke="#000" stroke-width="0.1"/>
-            <circle cx="50" cy="50" r="5" fill="#FFD700" stroke="#000" stroke-width="0.1"/>
-            ${hasX ? '<circle cx="50" cy="50" r="2.5" fill="#FFD700" stroke="#000" stroke-width="0.1"/>' : ''}
-            <g id="${idPrefix}-markers"></g>
-        `;
     }
 
     function renderTargetFace() {
@@ -407,8 +266,9 @@
         grid.innerHTML = `<div id="face-container"><div id="magnifier"><svg viewBox="0 0 100 100">${getTargetSvg('mag', hasX)}</svg><div id="crosshair"><div id="float-score"></div></div></div><svg id="main-svg" viewBox="0 0 100 100">${getTargetSvg('main', hasX)}</svg></div>`;
         updateFaceMarkers();
         const container = document.getElementById('face-container'), mag = document.getElementById('magnifier'), magSvg = mag.querySelector('svg'), floatScore = document.getElementById('float-score');
+        
         const updatePos = (e) => {
-            if(state.current.length >= state.arrows) return;
+            if(state.current.length >= state.arrows && state.editingIndex === -1) return;
             const touch = e.touches[0], rect = container.getBoundingClientRect();
             let x = touch.clientX - rect.left, y = touch.clientY - rect.top;
             x = Math.max(0, Math.min(x, rect.width)); y = Math.max(0, Math.min(y, rect.height));
@@ -423,26 +283,117 @@
             else if (dist <= 35) s = 4; else if (dist <= 40) s = 3; else if (dist <= 45) s = 2; else if (dist <= 50) s = 1;
             facePendingScore = s; lastMarkerPos = { x: px, y: py }; floatScore.innerText = s === 0 ? 'M' : s;
         };
+
         container.addEventListener('touchstart', (e) => { updatePos(e); e.preventDefault(); }, {passive: false});
         container.addEventListener('touchmove', (e) => { updatePos(e); e.preventDefault(); }, {passive: false});
-        container.addEventListener('touchend', () => { mag.style.display = 'none'; if(state.current.length < state.arrows) { state.current.push(facePendingScore); state.markers.push({...lastMarkerPos}); updateFaceMarkers(); renderUI(); } });
+        container.addEventListener('touchend', () => { 
+            mag.style.display = 'none'; 
+            if(state.current.length < state.arrows || state.editingIndex !== -1) { 
+                if(state.editingIndex !== -1) { state.current = []; state.markers = []; }
+                state.current.push(facePendingScore); 
+                state.markers.push({...lastMarkerPos}); 
+                updateFaceMarkers(); 
+                renderUI(); 
+            } 
+        });
     }
 
-    function updateFaceMarkers() {
-        const mG = document.getElementById('main-markers'), mgG = document.getElementById('mag-markers');
-        if(!mG || !mgG) return;
-        const html = state.markers.map(m => `<circle cx="${m.x}" cy="${m.y}" r="0.8" fill="white" stroke="black" stroke-width="0.2" />`).join('');
-        mG.innerHTML = html; mgG.innerHTML = html;
+    function saveSession() {
+        // Final sync for the last archer
+        state.participants[state.activeArcherIdx].history = [...state.history];
+        
+        const session = {
+            id: Date.now(),
+            date: new Date().toLocaleDateString('en-GB'),
+            mode: state.mode,
+            archers: state.participants.map(p => ({
+                name: p.name,
+                score: p.history.reduce((a, b) => a + b.total, 0),
+                avg: (p.history.reduce((a, b) => a + b.total, 0) / (p.history.length * state.arrows)).toFixed(1),
+                ends: [...p.history]
+            })),
+            arrowsPerEnd: state.arrows,
+            scoringType: state.scoringType
+        };
+
+        let allHist = JSON.parse(localStorage.getItem(state.mode) || "[]");
+        allHist.unshift(session);
+        localStorage.setItem(state.mode, JSON.stringify(allHist));
+        showScreen('home');
     }
 
-    function undoLastMarker() { state.current.pop(); if(state.scoringType === 'face') { state.markers.pop(); updateFaceMarkers(); } renderUI(); }
+    function showHistory(mode) {
+        state.mode = mode; showScreen('history-screen');
+        const list = document.getElementById('history-list'); list.innerHTML = '';
+        const data = JSON.parse(localStorage.getItem(mode) || "[]");
+        if(data.length === 0) { list.innerHTML = `<p style="text-align:center; color:var(--gray); margin-top:40px;">No History found.</p>`; return; }
+        
+        data.forEach(s => {
+            const archerNames = s.archers.map(a => a.name).join(', ');
+            const row = document.createElement('div'); row.className = 'history-row';
+            row.innerHTML = `<div class="bin-btn" onclick="deleteSession(${s.id})">🗑️</div><div class="history-card" onclick="openSessionDetail(${s.id})"><div><span style="margin-right:15px; font-size:13px; color:var(--gray);">${s.date}</span><br><span style="color:var(--accent); font-weight:bold; font-size:10px">${archerNames}</span></div><div style="display:flex; align-items:center; gap:8px;"><div class="hist-total" style="font-weight:900; font-size:20px;">${s.archers[0].score}</div><span style="color:var(--gray); font-size:18px;">›</span></div></div>`;
+            list.appendChild(row);
+        });
+    }
+
+    function openSessionDetail(sessionId) {
+        const data = JSON.parse(localStorage.getItem(state.mode) || "[]");
+        const session = data.find(s => s.id === sessionId); if(!session) return;
+        const t = i18n[state.lang]; showScreen('detail-screen');
+        const container = document.getElementById('detail-list'); container.innerHTML = '';
+        
+        const renderArcherInDetail = (idx) => {
+            const a = session.archers[idx];
+            let html = `<div class="stats-card"><div><div class="stat-label">${t.total}</div><div class="stat-val" style="color:var(--accent);">${a.score}</div></div><div><div class="stat-label">${t.avg}</div><div class="stat-val">${a.avg}</div></div><div><div class="stat-label">${t.arrowsS}</div><div class="stat-val">${a.ends.length * session.arrowsPerEnd}</div></div></div>`;
+            a.ends.forEach((e, i) => html += `<div class="end-card"><div><div class="stat-label">END ${i+1}</div><b>${e.displayScores.join(' · ')}</b></div><div style="color:var(--accent); font-weight:900;">${e.total}</div></div>`);
+            container.innerHTML = html;
+        };
+        
+        if (session.archers.length > 1) {
+            const tabs = `<div class="archer-tabs" style="margin-bottom:15px;">${session.archers.map((a, i) => `<div class="archer-tab ${i===0?'active':''}" onclick="document.querySelectorAll('.detail-tab').forEach(t=>t.classList.remove('active')); this.classList.add('active'); renderArcherInDetail(${i})">${a.name}</div>`).join('')}</div>`;
+            container.insertAdjacentHTML('beforebegin', tabs);
+        }
+        window.renderArcherInDetail = renderArcherInDetail;
+        renderArcherInDetail(0);
+    }
+
+    /* UTILITY FUNCTIONS (COMBINED FROM PARTS 1-3) */
+    function getTargetSvg(idPrefix, hasX) { return `<circle cx="50" cy="50" r="50" fill="#fff" stroke="#000" stroke-width="0.1"/><circle cx="50" cy="50" r="45" fill="#fff" stroke="#000" stroke-width="0.1"/><circle cx="50" cy="50" r="40" fill="#000" stroke="#fff" stroke-width="0.1"/><circle cx="50" cy="50" r="35" fill="#000" stroke="#fff" stroke-width="0.1"/><circle cx="50" cy="50" r="30" fill="#007AFF" stroke="#000" stroke-width="0.1"/><circle cx="50" cy="50" r="25" fill="#007AFF" stroke="#000" stroke-width="0.1"/><circle cx="50" cy="50" r="20" fill="#FF3B30" stroke="#000" stroke-width="0.1"/><circle cx="50" cy="50" r="15" fill="#FF3B30" stroke="#000" stroke-width="0.1"/><circle cx="50" cy="50" r="10" fill="#FFD700" stroke="#000" stroke-width="0.1"/><circle cx="50" cy="50" r="5" fill="#FFD700" stroke="#000" stroke-width="0.1"/>${hasX ? '<circle cx="50" cy="50" r="2.5" fill="#FFD700" stroke="#000" stroke-width="0.1"/>' : ''}<g id="${idPrefix}-markers"></g>`; }
+    function updateFaceMarkers() { const mG = document.getElementById('main-markers'), mgG = document.getElementById('mag-markers'); if(!mG || !mgG) return; const html = state.markers.map(m => `<circle cx="${m.x}" cy="${m.y}" r="0.8" fill="white" stroke="black" stroke-width="0.2" />`).join(''); mG.innerHTML = html; mgG.innerHTML = html; }
+    function showScreen(id) { document.querySelectorAll('.screen').forEach(s => s.classList.remove('active-screen')); document.getElementById(id).classList.add('active-screen'); }
+    function getVal(s) { return s === 'X' ? 10 : (parseInt(s) || 0); }
     function exitScoring() { if(confirm(i18n[state.lang].exit)) { stopTimer(); showScreen('home'); } }
+    function confirmTargetMode(type) { document.getElementById('target-choice-modal').style.display = 'none'; initScoring(targetSelectionState.mode, targetSelectionState.arrows, targetSelectionState.ends, type); }
+    function startApp(mode, arrows, ends) { if (audioCtx.state === 'suspended') audioCtx.resume(); targetSelectionState = { mode, arrows, ends }; document.getElementById('participant-modal').style.display = 'flex'; setParticipantCount(1, document.querySelector('#p-count-selector button')); }
+    
+    // Timer Logic
+    function toggleTimer() { if (timer.active) { stopTimer(); return; } requestWakeLock(); if (state.mode.includes('TARGET')) startPrep(); else startDirect(); }
+    function startPrep() { timer.active = true; timer.phase = 'PREP'; timer.totalTime = 10; timer.timeLeft = 10; timer.startTime = Date.now(); playBip(2); showTimerUI(); runTimer(); }
+    function startDirect() { timer.active = true; timer.phase = 'SHOOT'; timer.totalTime = state.mode.includes('3D') ? 120 : 180; timer.timeLeft = timer.totalTime; timer.startTime = Date.now(); showTimerUI(); runTimer(); }
+    function stopTimer() { clearInterval(timer.interval); timer.active = false; timer.phase = 'READY'; releaseWakeLock(); document.getElementById('t-cont').style.display = 'none'; document.getElementById('t-text').innerText = ''; document.getElementById('timer-btn').style.color = 'var(--gray)'; }
+    function runTimer() { clearInterval(timer.interval); timer.interval = setInterval(() => { const elapsed = Math.floor((Date.now() - timer.startTime) / 1000); timer.timeLeft = timer.totalTime - elapsed; if (timer.timeLeft < 0) { if (timer.phase === 'PREP') { timer.phase = 'SHOOT'; timer.totalTime = state.mode.includes('INDOOR') ? 90 : 180; timer.startTime = Date.now(); timer.timeLeft = timer.totalTime; playBip(1); } else { playBip(3); stopTimer(); return; } } updateTimerDisplay(); }, 200); }
+    function updateTimerDisplay() { const bar = document.getElementById('t-bar'), txt = document.getElementById('t-text'); txt.innerText = (timer.phase === 'PREP' ? (i18n[state.lang].prep + ' ') : '') + timer.timeLeft; bar.style.width = Math.max(0, (timer.timeLeft / timer.totalTime * 100)) + '%'; if (timer.phase === 'PREP') { bar.style.background = 'var(--red)'; txt.style.color = 'var(--red)'; } else { if (timer.timeLeft <= 30 && state.mode.includes('TARGET')) { bar.style.background = 'var(--yellow)'; txt.style.color = 'var(--yellow)'; } else { bar.style.background = 'var(--green)'; txt.style.color = 'var(--green)'; } } }
+    async function requestWakeLock() { try { if ('wakeLock' in navigator) wakeLock = await navigator.wakeLock.request('screen'); } catch (err) {} }
+    function releaseWakeLock() { if (wakeLock !== null) { wakeLock.release().then(() => wakeLock = null); } }
+    function playBip(count) { if (!state.mode.includes('TARGET')) return; for(let i=0; i<count; i++) { setTimeout(() => { const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain(); osc.type = "square"; osc.frequency.setValueAtTime(800, audioCtx.currentTime); gain.gain.setValueAtTime(0.1, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.5); osc.connect(gain); gain.connect(audioCtx.destination); osc.start(); osc.stop(audioCtx.currentTime + 0.5); }, i * 700); } }
+    function showTimerUI() { document.getElementById('t-cont').style.display = 'block'; document.getElementById('timer-btn').style.color = 'var(--accent)'; updateTimerDisplay(); }
 
-    function getArrowColor(s) {
-        if (state.mode.includes('TARGET')) { if (s === 'X' || s >= 9) return '#FFD700'; if (s >= 7) return '#FF3B30'; if (s >= 5) return '#007AFF'; if (s >= 3) return '#333'; if (s >= 1) return '#FFF'; }
-        else if (state.mode.includes('3D')) { if (s === 11) return '#FFD700'; if (s === 10) return '#FFF176'; if (s === 8) return '#FF3B30'; if (s === 5) return '#007AFF'; }
-        else if (state.mode.includes('FIELD')) { if (s >= 5) return '#FFD700'; if (s >= 1) return '#333'; }
-        return '#34C759';
+    function toggleLang(lang) {
+        state.lang = lang; const t = i18n[lang];
+        document.getElementById('l-tagline').innerText = t.tagline;
+        document.getElementById('l-setup-title').innerText = t.setup;
+        document.getElementById('l-save').innerText = t.save;
+        document.getElementById('l-riser-title').innerText = t.riser;
+        renderMainMenu(); localStorage.setItem('archer_lang', lang);
+    }
+
+    function renderMainMenu() {
+        const menu = document.getElementById('main-menu'); menu.innerHTML = '';
+        const mNames = i18n[state.lang].modes; const rawNames = i18n.en.modes;
+        const configs = [[2, 24], [3, 24], [3, 20], [6, 12]];
+        rawNames.forEach((name, i) => {
+            menu.insertAdjacentHTML('beforeend', `<div class="menu-row" style="display:flex; gap:10px; margin-bottom:10px;"><button class="score-btn" style="flex:1; background:#222; color:#fff; border:1px solid #333; text-align:left; padding-left:20px;" onclick="startApp('${name}', ${configs[i][0]}, ${configs[i][1]})">${mNames[i]}</button><button class="score-btn" style="width:60px; background:#111; color:var(--accent); border:1px solid #333;" onclick="showHistory('${name}')">📜</button></div>`);
+        });
     }
 
     function renderButtons() {
@@ -451,15 +402,14 @@
         grid.style.gridTemplateColumns = scores.length > 5 ? 'repeat(4, 1fr)' : 'repeat(3, 1fr)';
         scores.forEach(s => {
             const b = document.createElement('button'); b.className = 'score-btn'; 
-            const color = getArrowColor(s === 'X' ? 10 : s);
-            Object.assign(b.style, { backgroundColor: color, color: (color === '#FFF' || color === '#FFD700' || color === '#FFF176') ? '#000' : '#fff' });
+            b.style.background = '#222'; b.style.color = '#fff'; b.style.border = '1px solid #333';
             b.innerText = s === 0 ? 'M' : s; b.onclick = () => { if(state.current.length < state.arrows) { state.current.push(s); renderUI(); } };
             grid.appendChild(b);
         });
-        const del = document.createElement('button'); del.className = 'score-btn'; del.innerText = '⌫'; del.style.background = '#444'; del.onclick = () => undoLastMarker(); grid.appendChild(del);
+        const del = document.createElement('button'); del.className = 'score-btn'; del.innerText = '⌫'; del.style.background = '#444'; del.style.color = '#fff'; del.onclick = () => undoLastMarker(); grid.appendChild(del);
     }
 
-    function getVal(s) { return s === 'X' ? 10 : (parseInt(s) || 0); }
+    function undoLastMarker() { state.current.pop(); if(state.scoringType === 'face') { state.markers.pop(); updateFaceMarkers(); } renderUI(); }
     function editEnd(index) { state.editingIndex = index; state.current = [...state.history[index].rawScores]; state.markers = [...(state.history[index].markers || [])]; renderUI(); if(state.scoringType === 'face') renderTargetFace(); else renderButtons(); }
 
     function renderUI() {
@@ -486,86 +436,13 @@
         list.scrollTop = list.scrollHeight;
     }
 
-    function saveSession() {
-        state.participants[state.activeArcherIdx].history = [...state.history];
-        state.participants.forEach(p => {
-            const histTot = p.history.reduce((a, b) => a + b.total, 0);
-            const avg = (histTot / (p.history.length * state.arrows)).toFixed(1);
-            const session = { id: Date.now() + Math.random(), date: new Date().toLocaleDateString('en-GB'), archer: p.name, score: histTot, avg: avg, ends: [...p.history], arrowsPerEnd: state.arrows, totalEndsPlanned: state.ends, scoringType: state.scoringType };
-            let allHist = JSON.parse(localStorage.getItem(state.mode) || "[]"); allHist.unshift(session); localStorage.setItem(state.mode, JSON.stringify(allHist));
-        });
-        showScreen('home');
-    }
-
-    function showHistory(mode) {
-        state.mode = mode; showScreen('history-screen');
-        document.getElementById('history-title').innerText = i18n[state.lang].modes[i18n.en.modes.indexOf(mode)] + " " + i18n[state.lang].history;
-        const list = document.getElementById('history-list'); list.innerHTML = '';
-        const data = JSON.parse(localStorage.getItem(mode) || "[]");
-        if(data.length === 0) { list.innerHTML = `<p style="text-align:center; color:var(--gray); margin-top:40px;">No History found.</p>`; return; }
-        const maxS = Math.max(...data.map(s => s.score));
-        data.forEach(s => {
-            const isPB = s.score === maxS && maxS > 0;
-            const row = document.createElement('div'); row.className = 'history-row';
-            row.innerHTML = `<div class="bin-btn" onclick="deleteSession(${s.id})">🗑️</div><div class="history-card" id="card-${s.id}"><div><span style="margin-right:15px; font-size:13px; color:var(--gray);">${s.date}</span><span style="color:var(--accent); font-weight:bold; font-size:10px">${s.archer || ''}</span><br><span class="hist-avg">${i18n[state.lang].avg}: ${s.avg}</span></div><div style="display:flex; align-items:center; gap:8px;">${isPB ? '<span style="color:var(--red); font-weight:900; font-size:14px; margin-right:4px;">PB</span>' : ''}<div class="hist-total" style="font-weight:900; font-size:20px;">${s.score}</div><span style="color:var(--gray); font-size:18px;">›</span></div></div>`;
-            const card = row.querySelector('.history-card'); let sX = 0, cX = 0;
-            card.onclick = () => { if(cX === 0) openSessionDetail(s.id); else resetCards(); };
-            card.addEventListener('touchstart', e => { sX = e.touches[0].clientX; card.style.transition = 'none'; }, {passive: true});
-            card.addEventListener('touchmove', e => { cX = e.touches[0].clientX - sX; if (cX < 0) card.style.transform = `translateX(${Math.max(cX, -70)}px)`; }, {passive: true});
-            card.addEventListener('touchend', () => { card.style.transition = 'transform 0.3s ease'; if (Math.abs(cX) > 35) { card.style.transform = `translateX(-70px)`; cX = -70; } else { card.style.transform = 'translateX(0)'; cX = 0; } });
-            list.appendChild(row);
-        });
-    }
-
-    function resetCards() { document.querySelectorAll('.history-card').forEach(c => c.style.transform = 'translateX(0)'); }
-    function deleteSession(id) { if(confirm(i18n[state.lang].delSess)) { let data = JSON.parse(localStorage.getItem(state.mode) || "[]"); data = data.filter(s => s.id !== id); localStorage.setItem(state.mode, JSON.stringify(data)); showHistory(state.mode); } else resetCards(); }
-
-    function openSessionDetail(sessionId) {
-        const data = JSON.parse(localStorage.getItem(state.mode) || "[]");
-        const session = data.find(s => s.id === sessionId); if(!session) return;
-        const t = i18n[state.lang]; showScreen('detail-screen'); document.getElementById('detail-title').innerText = `${t.detail}`;
-        const list = document.getElementById('detail-list'); list.innerHTML = '';
-        list.insertAdjacentHTML('beforeend', `<div class="stats-card"><div><div class="stat-label">${t.total}</div><div class="stat-val" style="color:var(--accent);">${session.score}</div></div><div><div class="stat-label">${t.avg}</div><div class="stat-val">${session.avg}</div></div><div><div class="stat-label">${t.arrowsS}</div><div class="stat-val">${session.ends.length * session.arrowsPerEnd}</div></div></div>`);
-        if (session.scoringType === 'face') {
-            const hasX = state.mode.includes('OUTDOOR');
-            list.insertAdjacentHTML('beforeend', `<div class="chart-box"><div class="chart-title">${t.heatmap}</div><div class="history-face-container"><svg viewBox="0 0 100 100">${getTargetSvg('hist', hasX)}</svg></div></div>`);
-            document.getElementById('hist-markers').innerHTML = session.ends.flatMap(e => e.markers || []).map(m => `<circle cx="${m.x}" cy="${m.y}" r="1" fill="white" stroke="black" stroke-width="0.3" opacity="0.7" />`).join('');
-        }
-        const maxE = state.mode.includes('TARGET') ? (session.arrowsPerEnd * 10) : (session.arrowsPerEnd * 11);
-        const pts = session.ends.map((e, i) => `${(i / (session.ends.length - 1)) * 100},${75 - (e.total / maxE) * 65}`).join(' ');
-        list.insertAdjacentHTML('beforeend', `<div class="chart-box"><div class="chart-title">${t.stamina}</div><div style="display:flex; height:110px;"><div style="display:flex; flex-direction:column; justify-content:space-between; height:75px; padding-right:8px; border-right:1px solid #333;"><span style="font-size:8px; color:var(--gray);">${maxE}</span><span style="font-size:8px; color:var(--gray);">0</span></div><div style="flex:1; position:relative; margin-left:5px;"><svg viewBox="0 0 100 75" preserveAspectRatio="none" style="width:100%; height:75px; overflow:visible;"><polyline fill="none" stroke="var(--accent)" stroke-width="0.8" points="${pts}" /></svg></div></div></div>`);
-        const hits = {}; session.ends.flatMap(e => e.rawScores).forEach(s => hits[s] = (hits[s] || 0) + 1);
-        let poss = state.mode.includes('3D') ? [11, 10, 8, 5, 0] : state.mode.includes('TARGET') ? ['X', 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0] : [6,5,4,3,2,1,0];
-        let maxH = Math.max(...Object.values(hits), 1);
-        let hBars = poss.map(sk => { const c = hits[sk] || 0, bc = getArrowColor(sk === 'X' ? 10 : sk); return `<div><div class="hit-count">${c}</div><div class="hit-bar"><div class="hit-fill" style="height:${(c/maxH)*100}%; background:${bc}"></div></div><div class="hit-label" style="color:${bc}">${sk === 0 ? 'M' : sk}</div></div>`; }).join('');
-        list.insertAdjacentHTML('beforeend', `<div class="chart-box"><div class="chart-title">${t.hits}</div><div class="hits-chart" style="grid-template-columns: repeat(${poss.length}, 1fr);">${hBars}</div></div>`);
-        session.ends.forEach((e, i) => list.insertAdjacentHTML('beforeend', `<div class="end-card"><div><div class="stat-label">END ${i+1}</div><b>${e.displayScores.join(' · ')}</b></div><div style="color:var(--accent); font-weight:900;">${e.total}</div></div>`));
-    }
-
-    function showGearScreen() {
-        const g = JSON.parse(localStorage.getItem('archer_gear') || "{}");
-        document.getElementById('lang-select').value = state.lang;
-        document.getElementById('g-r-make').value = g.r_make || ""; document.getElementById('g-r-len').value = g.r_len || "";
-        document.getElementById('g-l-make').value = g.l_make || ""; document.getElementById('g-l-len').value = g.l_len || ""; document.getElementById('g-l-weight').value = g.l_weight || "";
-        document.getElementById('g-a-make').value = g.a_make || ""; document.getElementById('g-a-spine').value = g.a_spine || ""; document.getElementById('g-a-len').value = g.a_len || "";
-        document.getElementById('g-a-point').value = g.a_point || ""; document.getElementById('g-a-nock').value = g.a_nock || ""; 
-        if(document.getElementById('g-a-vanes')) document.getElementById('g-a-vanes').value = g.a_vanes || "";
-        for(let d=5; d<=50; d+=5) { if(document.getElementById(`c-${d}`)) document.getElementById(`c-${d}`).value = (g.crawls && g.crawls[d]) ? g.crawls[d] : ""; }
-        showScreen('gear-screen');
-    }
-
-    function saveGear() {
-        const crawls = {}; for(let d=5; d<=50; d+=5) { if(document.getElementById(`c-${d}`)) crawls[d] = document.getElementById(`c-${d}`).value; }
-        const gear = { r_make: document.getElementById('g-r-make').value, r_len: document.getElementById('g-r-len').value, l_make: document.getElementById('g-l-make').value, l_len: document.getElementById('g-l-len').value, l_weight: document.getElementById('g-l-weight').value, a_make: document.getElementById('g-a-make').value, a_spine: document.getElementById('g-a-spine').value, a_len: document.getElementById('g-a-len').value, a_point: document.getElementById('g-a-point').value, a_nock: document.getElementById('g-a-nock').value, a_vanes: document.getElementById('g-a-vanes') ? document.getElementById('g-a-vanes').value : "", crawls: crawls };
-        localStorage.setItem('archer_gear', JSON.stringify(gear)); showScreen('home');
-    }
-
+    function deleteSession(id) { if(confirm(i18n[state.lang].delSess)) { let data = JSON.parse(localStorage.getItem(state.mode) || "[]"); data = data.filter(s => s.id !== id); localStorage.setItem(state.mode, JSON.stringify(data)); showHistory(state.mode); } }
     function clearHistory() { if(confirm(i18n[state.lang].wipe)) { localStorage.removeItem(state.mode); showHistory(state.mode); } }
 
     window.onload = () => { 
         toggleLang(localStorage.getItem('archer_lang') || 'en'); 
         const cC = document.getElementById('crawl-inputs');
-        if (cC) { cC.innerHTML = ''; for(let d=5; d<=50; d+=5) cC.innerHTML += `<div class="crawl-item"><div class="crawl-dist">${d}m</div><input type="text" id="c-${d}" class="crawl-val"></div>`; }
+        if (cC) { cC.innerHTML = ''; for(let d=5; d<=50; d+=5) cC.innerHTML += `<div class="crawl-item" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;"><div class="crawl-dist">${d}m</div><input type="text" id="c-${d}" class="crawl-val" style="width:60%; padding:10px; background:#000; border:1px solid #333; color:#fff;"></div>`; }
     };
 </script>
 </body>
