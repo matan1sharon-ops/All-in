@@ -517,7 +517,8 @@
 
     function clearHistory() { if(confirm(i18n[state.lang].wipe)) { localStorage.removeItem(state.mode); showHistory(state.mode); } }
 
-  window.onload = () => { 
+  // This part was moved inside window.onload to prevent the script from breaking
+    window.onload = () => { 
         const savedLang = localStorage.getItem('archer_lang') || 'en'; 
         toggleLang(savedLang); 
 
