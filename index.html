@@ -46,7 +46,15 @@
         .p-count-row { display: flex; gap: 10px; margin-bottom: 10px; width: 100%; }
         .p-count-btn { flex: 1; background: #222; border: 1px solid #444; color: #fff; padding: 15px; border-radius: 10px; font-weight: 900; }
         .p-count-btn.active { background: var(--accent); color: #000; border-color: var(--accent); }
-        .archer-tabs { display: flex; gap: 5px; margin-top: 10px; overflow-x: auto; padding-bottom: 5px; }
+       .archer-tabs { 
+            display: flex; 
+            gap: 5px; 
+            padding: 10px 0; 
+            overflow-x: auto; 
+            background: var(--bg); 
+            z-index: 10; 
+            flex-shrink: 0;
+        }
         .archer-tab { flex: 1; min-width: 70px; background: #1a1a1a; padding: 8px; border-radius: 8px; text-align: center; font-size: 10px; font-weight: 800; color: var(--gray); border: 1px solid #333; white-space: nowrap; }
         .archer-tab.active { background: #333; color: var(--accent); border-color: var(--accent); }
 
@@ -114,6 +122,27 @@
                 <div id="mode-display" style="color:#fff; font-weight:800; text-transform:uppercase; font-size:11px;"></div>
                 <div id="t-text" class="timer-text"></div>
             </div>
+            <div class="header-right">
+                <button id="timer-btn" onclick="toggleTimer()" style="background:none; border:none; color:var(--gray); font-size:20px;">⏰</button>
+                <div style="display:flex; flex-direction:column;"><span id="l-avg" class="stat-label"></span><span id="avg-score" class="stat-val">0.0</span></div>
+                <div style="display:flex; flex-direction:column;"><span id="l-total" class="stat-label"></span><span id="total-score" class="stat-val" style="color:var(--accent);">0</span></div>
+            </div>
+        </header>
+
+        <div id="archer-tabs" class="archer-tabs"></div>
+        
+        <div class="timer-container" id="t-cont"><div class="timer-bar" id="t-bar"></div></div>
+        
+        <div id="score-list"></div>
+
+        <div style="padding-bottom:30px; border-top: 1px solid #222; background: var(--bg);">
+            <div class="control-row">
+                <button id="back-btn" class="back-btn" onclick="undoLastMarker()">⌫</button>
+                <button id="next-btn" class="next-btn" style="margin-top:0;" onclick="handleMainAction()"></button>
+            </div>
+            <div id="button-grid" class="btn-grid"></div>
+        </div>
+    </div>
             <div class="header-right">
                 <button id="timer-btn" onclick="toggleTimer()" style="background:none; border:none; color:var(--gray); font-size:20px;">⏰</button>
                 <div style="display:flex; flex-direction:column;"><span id="l-avg" class="stat-label"></span><span id="avg-score" class="stat-val">0.0</span></div>
