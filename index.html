@@ -194,21 +194,35 @@
     }
 
     function switchArcher(idx) {
-        // SAVE current state into the participant's slot
+        // 1. SAVE current active archer's data
         state.participants[state.activeArcherIdx].current = [...state.current];
         state.participants[state.activeArcherIdx].history = [...state.history];
         state.participants[state.activeArcherIdx].markers = [...state.markers];
 
-        // LOAD new archer's data
+        // 2. CHANGE index
         state.activeArcherIdx = idx;
+
+        // 3. LOAD new archer's data
         const p = state.participants[idx];
-        state.current = [...p.current];
         state.history = [...p.history];
         state.markers = [...p.markers];
         state.editingIndex = -1;
 
+        // 4. IMPORTANT: If the archer doesn't have "current" arrows shot for this end yet, start fresh
+        // We only load 'p.current' if we are actually in the middle of shooting that end.
+        // If we just pushed to history, 'p.current' was saved as a full end, so we clear it for the next one.
+        if (p.current.length === state.arrows) {
+            state.current = [];
+            state.markers = [];
+        } else {
+            state.current = [...p.current];
+            state.markers = [...p.markers];
+        }
+
         renderTabs();
-        if(state.scoringType === 'face') updateFaceMarkers();
+        if(state.scoringType === 'face') {
+            updateFaceMarkers();
+        }
         renderUI();
     }
 
@@ -232,21 +246,24 @@
             if (state.editingIndex !== -1) { 
                 state.history[state.editingIndex] = newEnd; 
                 state.editingIndex = -1; 
-                renderUI(); 
-                return; 
+                renderUI();
+                return;
             } else { 
                 state.history.push(newEnd); 
             }
 
-            // Logic: Move to next archer OR finish end for everyone
+            // Immediately update the participant's history slot before switching
+            state.participants[state.activeArcherIdx].history = [...state.history];
+            state.participants[state.activeArcherIdx].current = []; // Clear current because end is done
+            state.participants[state.activeArcherIdx].markers = []; 
+
             if (state.activeArcherIdx < state.participants.length - 1) {
                 switchArcher(state.activeArcherIdx + 1);
             } else {
-                // Last archer finished this end
                 if(state.history.length >= state.ends) {
                     saveSession(); 
                 } else {
-                    switchArcher(0); // Back to first archer for next end
+                    switchArcher(0);
                     stopTimer(); 
                 }
             }
