@@ -498,21 +498,52 @@
     const crawlContainer = document.getElementById('crawl-inputs');
     for(let d=5; d<=50; d+=5) { crawlContainer.innerHTML += `<div class="crawl-item"><div class="crawl-dist">${d}m</div><input type="text" id="c-${d}" class="crawl-val"></div>`; }
 
-    function showGearScreen() {
+   function showGearScreen() {
         const g = JSON.parse(localStorage.getItem('archer_gear') || "{}");
         document.getElementById('lang-select').value = state.lang;
-        document.getElementById('g-r-make').value = g.r_make || ""; document.getElementById('g-r-len').value = g.r_len || "";
-        document.getElementById('g-l-make').value = g.l_make || ""; document.getElementById('g-l-len').value = g.l_len || ""; document.getElementById('g-l-weight').value = g.l_weight || "";
-        document.getElementById('g-a-make').value = g.a_make || ""; document.getElementById('g-a-spine').value = g.a_spine || ""; document.getElementById('g-a-len').value = g.a_len || "";
-        document.getElementById('g-a-point').value = g.a_point || ""; document.getElementById('g-a-nock').value = g.a_nock || ""; document.getElementById('g-a-vanes').value = g.a_vanes || "";
-        for(let d=5; d<=50; d+=5) { document.getElementById(`c-${d}`).value = (g.crawls && g.crawls[d]) ? g.crawls[d] : ""; }
+        document.getElementById('g-r-make').value = g.r_make || ""; 
+        document.getElementById('g-r-len').value = g.r_len || "";
+        document.getElementById('g-l-make').value = g.l_make || ""; 
+        document.getElementById('g-l-len').value = g.l_len || ""; 
+        document.getElementById('g-l-weight').value = g.l_weight || "";
+        document.getElementById('g-a-make').value = g.a_make || ""; 
+        document.getElementById('g-a-spine').value = g.a_spine || ""; 
+        document.getElementById('g-a-len').value = g.a_len || "";
+        document.getElementById('g-a-point').value = g.a_point || ""; 
+        document.getElementById('g-a-nock').value = g.a_nock || ""; 
+        // Fixed: This ID now matches your HTML
+        const vanesInput = document.getElementById('g-a-vanes');
+        if(vanesInput) vanesInput.value = g.a_vanes || "";
+
+        for(let d=5; d<=50; d+=5) { 
+            const cInput = document.getElementById(`c-${d}`);
+            if(cInput) cInput.value = (g.crawls && g.crawls[d]) ? g.crawls[d] : ""; 
+        }
         showScreen('gear-screen');
     }
 
     function saveGear() {
-        const crawls = {}; for(let d=5; d<=50; d+=5) { crawls[d] = document.getElementById(`c-${d}`).value; }
-        const gear = { r_make: document.getElementById('g-r-make').value, r_len: document.getElementById('g-r-len').value, l_make: document.getElementById('g-l-make').value, l_len: document.getElementById('g-l-len').value, l_weight: document.getElementById('g-l-weight').value, a_make: document.getElementById('g-a-make').value, a_spine: document.getElementById('g-a-spine').value, a_len: document.getElementById('g-a-len').value, a_point: document.getElementById('g-a-point').value, a_nock: document.getElementById('g-a-nock').value, a_vanes: document.getElementById('g-a-vanes').value, crawls: crawls };
-        localStorage.setItem('archer_gear', JSON.stringify(gear)); showScreen('home');
+        const crawls = {}; 
+        for(let d=5; d<=50; d+=5) { 
+            const cInput = document.getElementById(`c-${d}`);
+            if(cInput) crawls[d] = cInput.value; 
+        }
+        const gear = { 
+            r_make: document.getElementById('g-r-make').value, 
+            r_len: document.getElementById('g-r-len').value, 
+            l_make: document.getElementById('g-l-make').value, 
+            l_len: document.getElementById('g-l-len').value, 
+            l_weight: document.getElementById('g-l-weight').value, 
+            a_make: document.getElementById('g-a-make').value, 
+            a_spine: document.getElementById('g-a-spine').value, 
+            a_len: document.getElementById('g-a-len').value, 
+            a_point: document.getElementById('g-a-point').value, 
+            a_nock: document.getElementById('g-a-nock').value, 
+            a_vanes: document.getElementById('g-a-vanes') ? document.getElementById('g-a-vanes').value : "", 
+            crawls: crawls 
+        };
+        localStorage.setItem('archer_gear', JSON.stringify(gear)); 
+        showScreen('home');
     }
 
     function clearHistory() { if(confirm(i18n[state.lang].wipe)) { localStorage.removeItem(state.mode); showHistory(state.mode); } }
