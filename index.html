@@ -683,6 +683,7 @@ function openSessionDetail(sessionId) {
 
     function showGearScreen() {
         const g = JSON.parse(localStorage.getItem('archer_gear') || "{}");
+        document.getElementById('g-owner-name').value = g.ownerName || "";
         document.getElementById('lang-select').value = state.lang;
         document.getElementById('g-r-make').value = g.r_make || ""; document.getElementById('g-r-len').value = g.r_len || "";
         document.getElementById('g-l-make').value = g.l_make || ""; document.getElementById('g-l-len').value = g.l_len || ""; document.getElementById('g-l-weight').value = g.l_weight || "";
