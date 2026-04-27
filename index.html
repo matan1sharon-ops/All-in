@@ -400,18 +400,23 @@
     if (audioCtx.state === 'suspended') audioCtx.resume();
     targetSelectionState = { mode, arrows, ends };
     
-    // 1. Open the modal
     document.getElementById('participant-modal').style.display = 'flex';
-    
-    // 2. Set default to 1 archer
     setParticipantCount(1, document.querySelector('.p-count-btn'));
 
-    // 3. NEW: Auto-fill the owner name if it exists
-    const owner = state.gear.ownerName;
-    const firstInput = document.getElementById('archer-name-0');
-    if (owner && firstInput) {
-        firstInput.value = owner;
-    }
+    // Get the name from state.gear (which we just saved)
+    const savedGear = JSON.parse(localStorage.getItem('archer_gear'));
+    const owner = savedGear ? savedGear.ownerName : "";
+
+    // Wait a tiny bit for the HTML to be created, then fill the name
+    setTimeout(() => {
+        const firstInput = document.getElementById('archer-name-0');
+        if (owner && firstInput) {
+            firstInput.value = owner;
+        const savedGear = JSON.parse(localStorage.getItem('archer_gear'));
+if (savedGear && savedGear.ownerName) {
+    document.getElementById('g-owner-name').value = savedGear.ownerName;    
+        }
+    }, 50);
 }
 
     function confirmTargetMode(type) {
@@ -693,12 +698,37 @@ function openSessionDetail(sessionId) {
         showScreen('gear-screen');
     }
 
-    function saveGear() {
-        const crawls = {}; for(let d=5; d<=50; d+=5) { if(document.getElementById(`c-${d}`)) crawls[d] = document.getElementById(`c-${d}`).value; }
-        const gear = { r_make: document.getElementById('g-r-make').value, r_len: document.getElementById('g-r-len').value, l_make: document.getElementById('g-l-make').value, l_len: document.getElementById('g-l-len').value, l_weight: document.getElementById('g-l-weight').value, a_make: document.getElementById('g-a-make').value, a_spine: document.getElementById('g-a-spine').value, a_len: document.getElementById('g-a-len').value, a_point: document.getElementById('g-a-point').value, a_nock: document.getElementById('g-a-nock').value, a_vanes: document.getElementById('g-a-vanes') ? document.getElementById('g-a-vanes').value : "", crawls: crawls };
-        localStorage.setItem('archer_gear', JSON.stringify(gear)); showScreen('home'); state.gear.ownerName = document.getElementById('g-owner-name').value;
-// Ensure your existing save code (localStorage.setItem) runs after this
+  function saveGear() {
+    const crawls = {}; 
+    for(let d=5; d<=50; d+=5) { 
+        if(document.getElementById(`c-${d}`)) crawls[d] = document.getElementById(`c-${d}`).value; 
     }
+
+    // Create the gear object and INCLUDE the owner name here
+    const gear = { 
+        ownerName: document.getElementById('g-owner-name').value, // Added this
+        r_make: document.getElementById('g-r-make').value, 
+        r_len: document.getElementById('g-r-len').value, 
+        l_make: document.getElementById('g-l-make').value, 
+        l_len: document.getElementById('g-l-len').value, 
+        l_weight: document.getElementById('g-l-weight').value, 
+        a_make: document.getElementById('g-a-make').value, 
+        a_spine: document.getElementById('g-a-spine').value, 
+        a_len: document.getElementById('g-a-len').value, 
+        a_point: document.getElementById('g-a-point').value, 
+        a_nock: document.getElementById('g-a-nock').value, 
+        a_vanes: document.getElementById('g-a-vanes') ? document.getElementById('g-a-vanes').value : "", 
+        crawls: crawls 
+    };
+
+    // Save to memory
+    localStorage.setItem('archer_gear', JSON.stringify(gear)); 
+    
+    // Update the live state so the app knows the name immediately
+    state.gear = gear; 
+
+    showScreen('home'); 
+}
 
     function clearHistory() { if(confirm(i18n[state.lang].wipe)) { localStorage.removeItem(state.mode); showHistory(state.mode); } }
 
