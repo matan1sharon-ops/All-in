@@ -204,14 +204,15 @@
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
     function setParticipantCount(num, btn) {
-        document.querySelectorAll('.p-count-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        const container = document.getElementById('participant-names-container');
-        container.innerHTML = '';
-        for(let i=0; i<num; i++) {
-            container.innerHTML += `<input type="text" class="gear-input participant-name-input" style="text-align:center" placeholder="Archer ${i+1}">`;
-        }
+    document.querySelectorAll('.p-count-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const container = document.getElementById('participant-names-container');
+    container.innerHTML = '';
+    for(let i=0; i<num; i++) {
+        // We added the ID here: id="archer-name-${i}"
+        container.innerHTML += `<input type="text" id="archer-name-${i}" class="gear-input participant-name-input" style="text-align:center" placeholder="Archer ${i+1}">`;
     }
+}
 
     function confirmParticipants() {
         const inputs = document.querySelectorAll('.participant-name-input');
