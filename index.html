@@ -186,8 +186,8 @@
 
 <script>
     const i18n = {
-        en: { tagline: "ARCHERY TRACKER", gear: "Gear / Setup", avg: "AVG", total: "TOTAL", clear: "CLEAR", setup: "MY SETUP", save: "SAVE", next: "NEXT END", update: "UPDATE END", finish: "FINISH SESSION", exit: "Exit?", delSess: "Delete this session?", wipe: "Wipe all history?", riser: "Riser Details", riserMake: "Riser Make", riserLen: "Riser Length", limbs: "Limb Details", limbMake: "Limb Make", limbLen: "Limb Length", limbWeight: "Limb Weight", arrows: "Arrow Details", arrMake: "Arrow Make", arrSpine: "Arrow Spine", arrLen: "Arrow Length", point: "Point Weight", nock: "Nock Details", vanes: "Vanes Details", crawls: "Barebow Crawls", history: "HISTORY", detail: "SESSION DETAIL", arrowsS: "ARROWS", prep: "PREP", stamina: "Stamina Trend", hits: "Hits Breakdown", heatmap: "SESSION HEAT MAP", modes: ["3D PRACTICE", "FIELD PRACTICE", "TARGET INDOOR", "TARGET OUTDOOR"] },
-        he: { tagline: "מעקב קליעה בקשת", gear: "ציוד / הגדרות", avg: "ממוצע", total: "סה״כ", clear: "נקה", setup: "הציוד שלי", save: "שמור", next: "סבב הבא", update: "עדכן סבב", finish: "סיים אימון", exit: "לצאת מהאימון?", delSess: "למחוק אימון זה?", wipe: "למחוק את כל ההיסטוריה?", riser: "רייזר", riserMake: "יצרן רייזר", riserLen: "אורך רייזר", limbs: "כנפיים", limbMake: "יצרן כנפיים", limbLen: "אורך כנפיים", limbWeight: "כח כנפיים", arrows: "פרטי חצים", arrMake: "יצרן חץ", arrSpine: "ספיין חץ", arrLen: "אורך חץ", point: "משקל פוינט", nock: "פרטי נוק", vanes: "פרטי כנפונים", crawls: "Crawls", history: "היסטוריה", detail: "פירוט אימון", arrowsS: "חצים", prep: "הכנה", stamina: "מגמת עייפות", hits: "פירוט פגיעות", heatmap: "מפת פגיעות", modes: ["3D", "פילד", "טארגט אולם", "טארגט חוץ"] }
+        en: { tagline: "ARCHERY TRACKER", gear: "Gear / Setup", avg: "AVG", total: "TOTAL", clear: "CLEAR", setup: "MY SETUP", save: "SAVE", next: "NEXT END", update: "UPDATE END", finish: "FINISH SESSION", exit: "Exit?", delSess: "Delete this session?", wipe: "Wipe all history?", riser: "Riser Details", riserMake: "Riser Make", riserLen: "Riser Length", limbs: "Limb Details", limbMake: "Limb Make", limbLen: "Limb Length", limbWeight: "Limb Weight", arrows: "Arrow Details", arrMake: "Arrow Make", arrSpine: "Arrow Spine", arrLen: "Arrow Length", point: "Point Weight", nock: "Nock Details", vanes: "Vanes Details", crawls: "Barebow Crawls", history: "HISTORY", detail: "SESSION DETAIL", arrowsS: "ARROWS", prep: "PREP", stamina: "Stamina Trend", hits: "Hits Breakdown", heatmap: "SESSION HEAT MAP", modes: ["3D PRACTICE", "FIELD PRACTICE", "TARGET INDOOR", "TARGET OUTDOOR"], nextArcher: "Next Archer", nextEnd: "Next End", },
+        he: { tagline: "מעקב קליעה בקשת", gear: "ציוד / הגדרות", avg: "ממוצע", total: "סה״כ", clear: "נקה", setup: "הציוד שלי", save: "שמור", next: "סבב הבא", update: "עדכן סבב", finish: "סיים אימון", exit: "לצאת מהאימון?", delSess: "למחוק אימון זה?", wipe: "למחוק את כל ההיסטוריה?", riser: "רייזר", riserMake: "יצרן רייזר", riserLen: "אורך רייזר", limbs: "כנפיים", limbMake: "יצרן כנפיים", limbLen: "אורך כנפיים", limbWeight: "כח כנפיים", arrows: "פרטי חצים", arrMake: "יצרן חץ", arrSpine: "ספיין חץ", arrLen: "אורך חץ", point: "משקל פוינט", nock: "פרטי נוק", vanes: "פרטי כנפונים", crawls: "Crawls", history: "היסטוריה", detail: "פירוט אימון", arrowsS: "חצים", prep: "הכנה", stamina: "מגמת עייפות", hits: "פירוט פגיעות", heatmap: "מפת פגיעות", modes: ["3D", "פילד", "טארגט אולם", "טארגט חוץ"], nextArcher: "קשת הבא", nextEnd: "מקצה הבא", }
     };
 
     let state = { current: [], history: [], arrows: 2, ends: 24, mode: '', editingIndex: -1, lang: 'en', scoringType: 'pad', markers: [], participants: [], activeArcherIdx: 0 };
@@ -509,8 +509,20 @@
             const actDisp = state.current.map(s => s === 0 ? 'M' : s).join(' · ') || '---';
             list.insertAdjacentHTML('beforeend', `<div class="end-card" style="border:1px solid var(--accent); background: #1a1500;"><div><div class="stat-label">END ${state.history.length + 1}</div><b>${actDisp}</b></div><div style="color:var(--accent); font-weight:900; font-size:20px;">${curTot}</div></div>`);
         }
-        const btn = document.getElementById('next-btn'); btn.disabled = state.current.length < state.arrows;
-        btn.innerText = state.editingIndex !== -1 ? t.update : (state.history.length === state.ends - 1 && state.activeArcherIdx === state.participants.length - 1 ? t.finish : t.next);
+       const btn = document.getElementById('next-btn');
+        btn.disabled = state.current.length < state.arrows;
+        
+        // New Logic for Button Text
+        if (state.editingIndex !== -1) {
+            btn.innerText = t.update;
+        } else if (state.history.length === state.ends - 1 && state.activeArcherIdx === state.participants.length - 1) {
+            btn.innerText = t.finish;
+        } else {
+            // Check if we are moving to the next archer or the next end
+            const isLastArcher = state.activeArcherIdx === state.participants.length - 1;
+            btn.innerText = isLastArcher ? t.nextEnd : t.nextArcher;
+        }
+
         btn.style.background = state.editingIndex !== -1 ? "#fff" : "var(--accent)";
         list.scrollTop = list.scrollHeight;
     }
