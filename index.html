@@ -693,12 +693,41 @@ function openSessionDetail(sessionId) {
         showScreen('gear-screen');
     }
 
-    function saveGear() {
-        const crawls = {}; for(let d=5; d<=50; d+=5) { if(document.getElementById(`c-${d}`)) crawls[d] = document.getElementById(`c-${d}`).value; }
-        const gear = { r_make: document.getElementById('g-r-make').value, r_len: document.getElementById('g-r-len').value, l_make: document.getElementById('g-l-make').value, l_len: document.getElementById('g-l-len').value, l_weight: document.getElementById('g-l-weight').value, a_make: document.getElementById('g-a-make').value, a_spine: document.getElementById('g-a-spine').value, a_len: document.getElementById('g-a-len').value, a_point: document.getElementById('g-a-point').value, a_nock: document.getElementById('g-a-nock').value, a_vanes: document.getElementById('g-a-vanes') ? document.getElementById('g-a-vanes').value : "", crawls: crawls };
-        localStorage.setItem('archer_gear', JSON.stringify(gear)); showScreen('home'); state.gear.ownerName = document.getElementById('g-owner-name').value;
-// Ensure your existing save code (localStorage.setItem) runs after this
+   function saveGear() {
+    // 1. Handle Crawls (keeping your existing logic)
+    const crawls = {}; 
+    for(let d=5; d<=50; d+=5) { 
+        const el = document.getElementById(`c-${d}`);
+        if(el) crawls[d] = el.value; 
     }
+
+    // 2. Create the Gear Object with Safety Checks
+    // We check if each element exists before grabbing the value
+    const gear = {
+        ownerName: document.getElementById('g-owner-name') ? document.getElementById('g-owner-name').value : "",
+        r_make: document.getElementById('g-r-make') ? document.getElementById('g-r-make').value : "",
+        r_len: document.getElementById('g-r-len') ? document.getElementById('g-r-len').value : "",
+        l_make: document.getElementById('g-l-make') ? document.getElementById('g-l-make').value : "",
+        l_len: document.getElementById('g-l-len') ? document.getElementById('g-l-len').value : "",
+        l_weight: document.getElementById('g-l-weight') ? document.getElementById('g-l-weight').value : "",
+        a_make: document.getElementById('g-a-make') ? document.getElementById('g-a-make').value : "",
+        a_spine: document.getElementById('g-a-spine') ? document.getElementById('g-a-spine').value : "",
+        a_len: document.getElementById('g-a-len') ? document.getElementById('g-a-len').value : "",
+        a_point: document.getElementById('g-a-point') ? document.getElementById('g-a-point').value : "",
+        a_nock: document.getElementById('g-a-nock') ? document.getElementById('g-a-nock').value : "",
+        a_vanes: document.getElementById('g-a-vanes') ? document.getElementById('g-a-vanes').value : "", // Fixed Vanes
+        crawls: crawls
+    };
+
+    // 3. Save to Permanent Storage
+    localStorage.setItem('archer_gear', JSON.stringify(gear)); 
+
+    // 4. Update the live "state" so the app uses the new data immediately
+    state.gear = gear;
+
+    // 5. Go back to Home
+    showScreen('home');
+}
 
     function clearHistory() { if(confirm(i18n[state.lang].wipe)) { localStorage.removeItem(state.mode); showHistory(state.mode); } }
 
