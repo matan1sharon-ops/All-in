@@ -174,6 +174,13 @@
     <div id="gear-screen" class="screen">
         <header><button onclick="showScreen('home')" style="background:none; border:none; color:var(--gray); font-size:22px;">✕</button><div class="header-center"><div id="l-setup-title" class="stat-label" style="color:#fff;"></div></div><button id="l-save" onclick="saveGear()" style="background:none; border:none; color:var(--accent); font-weight:bold;"></button></header>
         <div id="gear-list" style="padding-bottom: 40px;">
+         <div class="gear-section-title">Profile / פרופיל</div>
+<div class="gear-grid" style="grid-template-columns: 1fr;">
+    <div class="gear-input-group">
+        <label class="gear-label">Owner Name / שם בעל המכשיר</label>
+        <input type="text" id="g-owner-name" class="gear-input" placeholder="Your Name">
+    </div>
+</div>   
             <div class="gear-section-title">Language / שפה</div>
             <div class="gear-grid" style="grid-template-columns: 1fr;"><select id="lang-select" class="gear-input" onchange="toggleLang(this.value)"><option value="en">English</option><option value="he">עברית</option></select></div>
             <div class="gear-section-title" id="l-riser-title"></div><div class="gear-grid"><div class="gear-input-group"><label id="l-r-make" class="gear-label"></label><input type="text" id="g-r-make" class="gear-input"></div><div class="gear-input-group"><label id="l-r-len" class="gear-label"></label><input type="text" id="g-r-len" class="gear-input"></div></div>
@@ -389,12 +396,23 @@
 
     function showScreen(id) { document.querySelectorAll('.screen').forEach(s => s.classList.remove('active-screen')); document.getElementById(id).classList.add('active-screen'); }
 
-    function startApp(mode, arrows, ends) { 
-        if (audioCtx.state === 'suspended') audioCtx.resume();
-        targetSelectionState = { mode, arrows, ends };
-        document.getElementById('participant-modal').style.display = 'flex';
-        setParticipantCount(1, document.querySelector('.p-count-btn'));
+   function startApp(mode, arrows, ends) { 
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    targetSelectionState = { mode, arrows, ends };
+    
+    // 1. Open the modal
+    document.getElementById('participant-modal').style.display = 'flex';
+    
+    // 2. Set default to 1 archer
+    setParticipantCount(1, document.querySelector('.p-count-btn'));
+
+    // 3. NEW: Auto-fill the owner name if it exists
+    const owner = state.gear.ownerName;
+    const firstInput = document.getElementById('archer-name-0');
+    if (owner && firstInput) {
+        firstInput.value = owner;
     }
+}
 
     function confirmTargetMode(type) {
         document.getElementById('target-choice-modal').style.display = 'none';
@@ -678,7 +696,8 @@ function openSessionDetail(sessionId) {
     function saveGear() {
         const crawls = {}; for(let d=5; d<=50; d+=5) { if(document.getElementById(`c-${d}`)) crawls[d] = document.getElementById(`c-${d}`).value; }
         const gear = { r_make: document.getElementById('g-r-make').value, r_len: document.getElementById('g-r-len').value, l_make: document.getElementById('g-l-make').value, l_len: document.getElementById('g-l-len').value, l_weight: document.getElementById('g-l-weight').value, a_make: document.getElementById('g-a-make').value, a_spine: document.getElementById('g-a-spine').value, a_len: document.getElementById('g-a-len').value, a_point: document.getElementById('g-a-point').value, a_nock: document.getElementById('g-a-nock').value, a_vanes: document.getElementById('g-a-vanes') ? document.getElementById('g-a-vanes').value : "", crawls: crawls };
-        localStorage.setItem('archer_gear', JSON.stringify(gear)); showScreen('home');
+        localStorage.setItem('archer_gear', JSON.stringify(gear)); showScreen('home'); state.gear.ownerName = document.getElementById('g-owner-name').value;
+// Ensure your existing save code (localStorage.setItem) runs after this
     }
 
     function clearHistory() { if(confirm(i18n[state.lang].wipe)) { localStorage.removeItem(state.mode); showHistory(state.mode); } }
@@ -687,6 +706,10 @@ function openSessionDetail(sessionId) {
         toggleLang(localStorage.getItem('archer_lang') || 'en'); 
         const cC = document.getElementById('crawl-inputs');
         if (cC) { cC.innerHTML = ''; for(let d=5; d<=50; d+=5) cC.innerHTML += `<div class="crawl-item"><div class="crawl-dist">${d}m</div><input type="text" id="c-${d}" class="crawl-val"></div>`; }
+   // This makes sure the input on the gear page isn't empty when you open it
+if (state.gear && state.gear.ownerName) {
+    document.getElementById('g-owner-name').value = state.gear.ownerName;
+}
     };
 </script>
 </body>
