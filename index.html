@@ -203,14 +203,31 @@
     let wakeLock = null;
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
-    function setParticipantCount(num, btn) {
+   function setParticipantCount(num, btn) {
+    // 1. Handle the button colors
     document.querySelectorAll('.p-count-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
+    
+    // 2. Get your name from the "Locker"
+    const g = JSON.parse(localStorage.getItem('archer_gear') || "{}");
+    const owner = g.ownerName || "";
+
     const container = document.getElementById('participant-names-container');
     container.innerHTML = '';
+
+    // 3. Loop through and create the boxes
     for(let i=0; i<num; i++) {
-        // We added the ID here: id="archer-name-${i}"
-        container.innerHTML += `<input type="text" id="archer-name-${i}" class="gear-input participant-name-input" style="text-align:center" placeholder="Archer ${i+1}">`;
+        // This is the "Push name in Box 1" rule:
+        // If i is 0 (Box 1), use the owner name. Otherwise, keep it blank.
+        const nameToUse = (i === 0) ? owner : "";
+        
+        container.innerHTML += `
+            <input type="text" 
+                   id="archer-name-${i}" 
+                   class="gear-input participant-name-input" 
+                   style="text-align:center" 
+                   placeholder="Archer ${i+1}" 
+                   value="${nameToUse}">`;
     }
 }
 
