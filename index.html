@@ -403,23 +403,29 @@
     // 1. Open the modal
     document.getElementById('participant-modal').style.display = 'flex';
     
-    // 2. Set default to 1 archer
+    // 2. Create the archer inputs (default to 1)
     setParticipantCount(1, document.querySelector('.p-count-btn'));
 
-    // 3. AUTO-FILL (With a tiny delay to wait for the HTML)
+    // 3. FORCE the name into the box after the UI finishes loading
     setTimeout(() => {
-        // Grab the name from the storage we just fixed
+        // Grab directly from storage to ensure it's fresh
         const g = JSON.parse(localStorage.getItem('archer_gear') || "{}");
         const owner = g.ownerName || "";
         
         const firstInput = document.getElementById('archer-name-0');
         
         if (owner && firstInput) {
+            // Fill the visual box
             firstInput.value = owner;
-            // Ensure the app state also records the name for the session
-            if (state.participants) state.participants[0] = owner;
+            
+            // Sync with the app's internal data so it doesn't forget the name
+            // when you click "Start"
+            if (!state.participants) state.participants = [];
+            state.participants[0] = owner;
+            
+            console.log("Owner name auto-filled:", owner); // Debugging
         }
-    }, 50); // This 50ms delay makes all the difference!
+    }, 150); // Increased delay to 150ms to ensure the UI is ready
 }
 
     function confirmTargetMode(type) {
