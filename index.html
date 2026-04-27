@@ -396,7 +396,7 @@
 
     function showScreen(id) { document.querySelectorAll('.screen').forEach(s => s.classList.remove('active-screen')); document.getElementById(id).classList.add('active-screen'); }
 
-   function startApp(mode, arrows, ends) { 
+ function startApp(mode, arrows, ends) { 
     if (audioCtx.state === 'suspended') audioCtx.resume();
     targetSelectionState = { mode, arrows, ends };
     
@@ -406,12 +406,20 @@
     // 2. Set default to 1 archer
     setParticipantCount(1, document.querySelector('.p-count-btn'));
 
-    // 3. NEW: Auto-fill the owner name if it exists
-    const owner = state.gear.ownerName;
-    const firstInput = document.getElementById('archer-name-0');
-    if (owner && firstInput) {
-        firstInput.value = owner;
-    }
+    // 3. AUTO-FILL (With a tiny delay to wait for the HTML)
+    setTimeout(() => {
+        // Grab the name from the storage we just fixed
+        const g = JSON.parse(localStorage.getItem('archer_gear') || "{}");
+        const owner = g.ownerName || "";
+        
+        const firstInput = document.getElementById('archer-name-0');
+        
+        if (owner && firstInput) {
+            firstInput.value = owner;
+            // Ensure the app state also records the name for the session
+            if (state.participants) state.participants[0] = owner;
+        }
+    }, 50); // This 50ms delay makes all the difference!
 }
 
     function confirmTargetMode(type) {
@@ -733,14 +741,28 @@ function openSessionDetail(sessionId) {
     function clearHistory() { if(confirm(i18n[state.lang].wipe)) { localStorage.removeItem(state.mode); showHistory(state.mode); } }
 
     window.onload = () => { 
-        toggleLang(localStorage.getItem('archer_lang') || 'en'); 
-        const cC = document.getElementById('crawl-inputs');
-        if (cC) { cC.innerHTML = ''; for(let d=5; d<=50; d+=5) cC.innerHTML += `<div class="crawl-item"><div class="crawl-dist">${d}m</div><input type="text" id="c-${d}" class="crawl-val"></div>`; }
-   // This makes sure the input on the gear page isn't empty when you open it
-if (state.gear && state.gear.ownerName) {
-    document.getElementById('g-owner-name').value = state.gear.ownerName;
-}
-    };
+    // 1. Load the language
+    toggleLang(localStorage.getItem('archer_lang') || 'en'); 
+
+    // 2. Load the gear from storage into the app's "brain" (state)
+    const savedGear = localStorage.getItem('archer_gear');
+    state.gear = savedGear ? JSON.parse(savedGear) : { ownerName: "" };
+
+    // 3. Build the crawl inputs
+    const cC = document.getElementById('crawl-inputs');
+    if (cC) { 
+        cC.innerHTML = ''; 
+        for(let d=5; d<=50; d+=5) {
+            cC.innerHTML += `<div class="crawl-item"><div class="crawl-dist">${d}m</div><input type="text" id="c-${d}" class="crawl-val"></div>`; 
+        }
+    }
+
+    // 4. Fill the owner name in the Gear screen if it exists
+    const ownerInput = document.getElementById('g-owner-name');
+    if (ownerInput && state.gear.ownerName) {
+        ownerInput.value = state.gear.ownerName;
+    }
+};
 </script>
 </body>
 </html>
