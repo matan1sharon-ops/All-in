@@ -228,18 +228,23 @@
             archer.scores[archer.cursor] = val;
             archer.cursor++;
             
-            // 2. CHECK FOR AUTOMATIC JUMP (Reduced delay for faster flow)
+            // 2. CHECK FOR AUTOMATIC JUMP
+            // If the arrow just entered was the 6th arrow of an end (End complete)
             if (archer.cursor % 6 === 0) {
-                render(); 
+                render(); // Show the last arrow score first
                 
                 setTimeout(() => {
+                    // If it's the last archer, loop back to the first archer (0)
+                    // Otherwise, jump to the next one
                     let nextArcherIdx = (currentIdx + 1) % archers.length;
                     switchArcher(nextArcherIdx);
-                }, 100); // Shorter delay (0.1 seconds)
+                }, 100); // 400ms delay gives a nice visual confirmation of the last arrow
                 
-                return; 
+                return; // Exit so we don't render twice
             }
         }
+        render();
+    }
         render();
     }
         render();
