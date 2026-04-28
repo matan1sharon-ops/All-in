@@ -1,157 +1,100 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Tournament Scorecard Playground</title>
     <style>
-        :root { --bg: #1a1a1a; --text: #eee; --gold: #ffd700; --border: #444; }
-        body { font-family: sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 0; overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
+        body { font-family: sans-serif; margin: 0; background: #1a1a1a; color: white; display: flex; flex-direction: column; height: 100vh; }
+        #table-container { flex: 1; overflow: auto; background: white; color: black; padding: 5px; }
+        table { width: 100%; border-collapse: collapse; table-layout: fixed; font-size: 12px; }
+        th, td { border: 1px solid black; text-align: center; height: 22px; padding: 0; }
+        .header { background: #eee; font-weight: bold; font-size: 10px; }
+        .active { background: #fff9c4; border: 2px solid orange !important; }
         
-        /* THE TABLE AREA */
-        #scorecard-container { flex: 1; overflow-y: auto; padding: 10px; background: #fff; color: #000; }
-        .wa-table { width: 100%; border-collapse: collapse; table-layout: fixed; font-size: 13px; }
-        .wa-table td, .wa-table th { border: 1px solid #000; text-align: center; height: 30px; padding: 2px; }
-        .header-row { background: #ddd; font-weight: bold; font-size: 11px; }
-        .end-num { background: #eee; font-weight: bold; width: 40px; }
-        .sum-col { background: #f9f9f9; font-weight: bold; width: 45px; }
-        .total-col { background: #e0e0e0; font-weight: bold; width: 55px; }
-        .active-cell { background: #fffde7; border: 2px solid #fbc02d !important; }
-        
-        /* THE INPUT AREA */
-        #input-pad { background: #2a2a2a; padding: 15px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; border-top: 2px solid var(--gold); }
-        .btn { background: #444; color: white; border: none; padding: 15px 0; font-size: 18px; border-radius: 8px; font-weight: bold; }
-        .btn:active { background: var(--gold); color: black; }
-        .btn.x-btn { background: #d32f2f; }
-        .btn.m-btn { background: #555; }
-        
-        .status-bar { padding: 10px; background: #333; font-size: 14px; display: flex; justify-content: space-between; border-top: 1px solid #444; }
+        /* The "X" Box with diagonal lines */
+        .x-box {
+            background: linear-gradient(to top right, transparent 48%, black 48%, black 52%, transparent 52%),
+                        linear-gradient(to top left, transparent 48%, black 48%, black 52%, transparent 52%);
+        }
+
+        #pad { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; padding: 10px; background: #2a2a2a; }
+        button { padding: 15px 0; font-size: 18px; font-weight: bold; border-radius: 5px; border: none; background: #444; color: white; }
+        button:active { background: orange; }
     </style>
 </head>
 <body>
 
-<div id="scorecard-container">
-    <table class="wa-table" id="main-table">
-        </table>
+<div id="table-container">
+    <table>
+        <thead>
+            <tr class="header">
+                <th style="width:30px">end</th>
+                <th colspan="3">arrows</th>
+                <th>sum</th>
+                <th>add</th>
+                <th>10-X</th>
+                <th>X</th>
+            </tr>
+        </thead>
+        <tbody id="sheet-body"></tbody>
+    </table>
 </div>
 
-<div class="status-bar">
-    <span id="stat-info">End 1 | Arrow 1</span>
-    <span id="running-total" style="color:var(--gold); font-weight:bold;">Total: 0</span>
-</div>
-
-<div id="input-pad">
-    <button class="btn x-btn" onclick="addScore('X')">X</button>
-    <button class="btn" onclick="addScore(10)">10</button>
-    <button class="btn" onclick="addScore(9)">9</button>
-    <button class="btn" onclick="addScore(8)">8</button>
-    <button class="btn" onclick="addScore(7)">7</button>
-    <button class="btn" onclick="addScore(6)">6</button>
-    <button class="btn" onclick="addScore(5)">5</button>
-    <button class="btn" onclick="addScore(4)">4</button>
-    <button class="btn" onclick="addScore(3)">3</button>
-    <button class="btn" onclick="addScore(2)">2</button>
-    <button class="btn" onclick="addScore(1)">1</button>
-    <button class="btn m-btn" onclick="addScore('M')">M</button>
+<div id="pad">
+    <button onclick="add('X')">X</button><button onclick="add(10)">10</button><button onclick="add(9)">9</button><button onclick="add(8)">8</button>
+    <button onclick="add(7)">7</button><button onclick="add(6)">6</button><button onclick="add(5)">5</button><button onclick="add(4)">4</button>
+    <button onclick="add(3)">3</button><button onclick="add(2)">2</button><button onclick="add(1)">1</button><button onclick="add('M')">M</button>
 </div>
 
 <script>
     let scores = [];
-    const totalEnds = 12;
-    let currentArrowIndex = 0;
+    const body = document.getElementById('sheet-body');
 
-    function initTable() {
-        const table = document.getElementById('main-table');
+    function render() {
         let html = '';
-        for (let i = 1; i <= totalEnds; i++) {
-            // Row 1: Arrows 1-3 + Sum 1 + 10+X
+        let runningTotal = 0;
+        for(let e=1; e<=12; e++) {
+            let start = (e-1)*6;
+            let a = [0,1,2,3,4,5].map(i => scores[start+i] || "");
+            
+            // Calc Math
+            let s1 = a.slice(0,3).reduce((s,v)=>s+(v==='X'||v===10?10:v==='M'?0:Number(v)||0),0);
+            let s2 = a.slice(3,6).reduce((s,v)=>s+(v==='X'||v===10?10:v==='M'?0:Number(v)||0),0);
+            let endTotal = (a[2]!=="" && a[5]!=="") ? s1 + s2 : "";
+            if(endTotal !== "") runningTotal += endTotal;
+            
+            let c10x = a.filter(v => v===10 || v==='X').length;
+            let cx = a.filter(v => v==='X').length;
+
             html += `
-                <tr class="header-row"><td class="end-num" rowspan="2">${i}</td><td>1</td><td>2</td><td>3</td><td class="sum-col">Sum</td><td class="sum-col">10+X</td></tr>
-                <tr><td id="a-${i}-1"></td><td id="a-${i}-2"></td><td id="a-${i}-3"></td><td id="s-${i}-1" class="sum-col"></td><td id="c-${i}-10" rowspan="2"></td></tr>
-                <tr class="header-row"><td></td><td>4</td><td>5</td><td>6</td><td class="sum-col">Sum</td><td class="sum-col">X</td></tr>
-                <tr><td class="end-num">Total</td><td id="a-${i}-4"></td><td id="a-${i}-5"></td><td id="a-${i}-6"></td><td id="s-${i}-2" class="sum-col"></td><td id="c-${i}-x"></td></tr>
-                <tr class="total-row"><td colspan="4" style="text-align:right; padding-right:10px;">End Total:</td><td id="et-${i}" class="total-col"></td><td colspan="2" id="rt-${i}" style="background:#fff9c4; font-weight:bold;">Add: </td></tr>
-                <tr style="height:10px; background:#1a1a1a;"><td colspan="7"></td></tr>
+                <tr>
+                    <td rowspan="2">${e}</td>
+                    <td id="cell-${start}">${a[0]}</td><td id="cell-${start+1}">${a[1]}</td><td id="cell-${start+2}">${a[2]}</td>
+                    <td>${a[2]!==""?s1:""}</td>
+                    <td rowspan="2">${runningTotal || ""}</td>
+                    <td rowspan="2">${a[5]!==""?c10x:""}</td>
+                    <td rowspan="2">${a[5]!==""?cx:""}</td>
+                </tr>
+                <tr>
+                    <td id="cell-${start+3}">${a[3]}</td><td id="cell-${start+4}">${a[4]}</td><td id="cell-${start+5}">${a[5]}</td>
+                    <td class="${endTotal!==""?'x-box':''}">${endTotal}</td>
+                </tr>
             `;
         }
-        table.innerHTML = html;
-        highlightCell();
-    }
-
-    function addScore(val) {
-        if (currentArrowIndex >= totalEnds * 6) return;
-        
-        scores.push(val);
-        updateDisplay();
-        currentArrowIndex++;
-        highlightCell();
-    }
-
-    function updateDisplay() {
-        let runningTotal = 0;
-        let total10X = 0;
-        let totalX = 0;
-
-        for (let e = 1; e <= totalEnds; e++) {
-            let endScore = 0;
-            let end10X = 0;
-            let endX = 0;
-            
-            // Arrows 1-3
-            let sum1 = 0;
-            for (let a = 1; a <= 3; a++) {
-                let idx = (e - 1) * 6 + (a - 1);
-                if (scores[idx] !== undefined) {
-                    let v = scores[idx];
-                    document.getElementById(`a-${e}-${a}`).innerText = v;
-                    let num = (v === 'X' || v === '10') ? 10 : (v === 'M' ? 0 : parseInt(v));
-                    sum1 += num;
-                    if (v === 'X' || v === '10') end10X++;
-                    if (v === 'X') endX++;
-                }
-            }
-            if (scores[(e-1)*6 + 2] !== undefined) document.getElementById(`s-${e}-1`).innerText = sum1;
-
-            // Arrows 4-6
-            let sum2 = 0;
-            for (let a = 4; a <= 6; a++) {
-                let idx = (e - 1) * 6 + (a - 1);
-                if (scores[idx] !== undefined) {
-                    let v = scores[idx];
-                    document.getElementById(`a-${e}-${a}`).innerText = v;
-                    let num = (v === 'X' || v === '10') ? 10 : (v === 'M' ? 0 : parseInt(v));
-                    sum2 += num;
-                    if (v === 'X' || v === '10') end10X++;
-                    if (v === 'X') endX++;
-                }
-            }
-            
-            if (scores[(e-1)*6 + 5] !== undefined) {
-                document.getElementById(`s-${e}-2`).innerText = sum2;
-                let endTotal = sum1 + sum2;
-                runningTotal += endTotal;
-                document.getElementById(`et-${e}`).innerText = endTotal;
-                document.getElementById(`rt-${e}`).innerText = "Add: " + runningTotal;
-                document.getElementById(`c-${e}-10`).innerText = end10X;
-                document.getElementById(`c-${e}-x`).innerText = endX;
-            }
-        }
-        document.getElementById('running-total').innerText = "Total: " + runningTotal;
-    }
-
-    function highlightCell() {
-        document.querySelectorAll('.active-cell').forEach(c => c.classList.remove('active-cell'));
-        let end = Math.floor(currentArrowIndex / 6) + 1;
-        let arrow = (currentArrowIndex % 6) + 1;
-        let target = document.getElementById(`a-${end}-${arrow}`);
-        if (target) {
-            target.classList.add('active-cell');
-            target.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            document.getElementById('stat-info').innerText = `End ${end} | Arrow ${arrow}`;
+        body.innerHTML = html;
+        let next = document.getElementById('cell-'+scores.length);
+        if(next) {
+            next.classList.add('active');
+            next.scrollIntoView({behavior:'smooth', block:'center'});
         }
     }
 
-    initTable();
+    function add(v) {
+        if(scores.length < 72) {
+            scores.push(v);
+            render();
+        }
+    }
+    render();
 </script>
 </body>
 </html>
