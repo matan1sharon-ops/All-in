@@ -4,31 +4,32 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <style>
         body { font-family: sans-serif; margin: 0; background: #1a1a1a; color: white; display: flex; flex-direction: column; height: 100vh; }
-        
         #table-container { flex: 1; overflow: auto; background: white; color: black; padding: 5px; }
         
         .table-title { background: #333; color: white; font-size: 11px; padding: 6px; font-weight: bold; text-align: center; text-transform: uppercase; }
         
-        table { width: 100%; border-collapse: collapse; table-layout: fixed; font-size: 13px; margin-bottom: 20px; border: 1px solid black; }
+        table { width: 100%; border-collapse: collapse; table-layout: fixed; font-size: 13px; margin-bottom: 20px; border: 1.5px solid black; }
         
-        /* Box sizes - making arrow cells feel like your drawing */
         th, td { border: 1px solid #ccc; text-align: center; height: 32px; padding: 0; position: relative; }
-        .row-label { background: #f0f0f0; width: 30px; font-weight: bold; font-size: 10px; border-right: 1px solid black; }
+        
+        /* Merged End Label */
+        .end-label { background: #f0f0f0; width: 45px; font-weight: bold; font-size: 11px; border-right: 1.5px solid black; }
+        
         .sum-box { background: #f9f9f9; width: 45px; border-left: 1px solid black; }
-        .end-total-box { background: #e3f2fd; font-weight: bold; width: 50px; border-left: 1px solid black; }
-        .running-sum-box { background: #fffde7; font-weight: bold; color: #d32f2f; width: 55px; border-left: 1px solid black; border-right: 1px solid black; }
+        .end-total-box { background: #e3f2fd; font-weight: bold; width: 50px; border-left: 1.5px solid black; }
+        .running-sum-box { background: #fffde7; font-weight: bold; color: #d32f2f; width: 55px; border-left: 1.5px solid black; border-right: 1.5px solid black; }
         .stat-box { width: 35px; font-size: 11px; }
 
         .active-cell { background: #fff9c4 !important; border: 2px solid orange !important; z-index: 10; }
 
-        /* The Diagonal X Box */
+        /* Diagonal X Box */
         .no-entry { 
             background-image: 
                 linear-gradient(to bottom right, transparent calc(50% - 0.5px), #ddd, transparent calc(50% + 0.5px)),
                 linear-gradient(to bottom left, transparent calc(50% - 0.5px), #ddd, transparent calc(50% + 0.5px));
         }
 
-        /* Narrow Black Separator between Ends */
+        /* Black Separator Line between Ends */
         .end-sep td { border-bottom: 1.5px solid black !important; }
 
         .half-total-row { background: #444; color: white; font-weight: bold; height: 35px; font-size: 12px; }
@@ -51,18 +52,18 @@
 
 <div id="table-container">
     <div class="table-title">1st Half (Ends 1-6)</div>
-    <table id="table-1">
+    <table>
         <tbody id="body-1"></tbody>
     </table>
 
     <div class="table-title">2nd Half (Ends 7-12)</div>
-    <table id="table-2">
+    <table>
         <tbody id="body-2"></tbody>
     </table>
 </div>
 
 <div id="session-footer">
-    <span>SESSION:</span>
+    <span>SESSION TOTAL:</span>
     <span id="gt-score">0</span>
     <span id="gt-10x">0</span>
     <span id="gt-x">0</span>
@@ -124,10 +125,9 @@
             half10s += (a[0]!==""?r1_10x:0) + (a[3]!==""?r2_10x:0);
             halfXs += (a[0]!==""?r1_x:0) + (a[3]!==""?r2_x:0);
 
-            // Using class "end-sep" on the second row of each end to create the black line
             html += `
                 <tr>
-                    <td class="row-label">${e*2-1}</td>
+                    <td rowspan="2" class="end-label">End ${e}</td>
                     <td id="c-${start}" class="${scores.length===start?'active-cell':''}">${a[0]}</td>
                     <td id="c-${start+1}" class="${scores.length===start+1?'active-cell':''}">${a[1]}</td>
                     <td id="c-${start+2}" class="${scores.length===start+2?'active-cell':''}">${a[2]}</td>
@@ -136,7 +136,6 @@
                     <td class="stat-box">${a[0]!==""?r1_10x:""}</td><td class="stat-box">${a[0]!==""?r1_x:""}</td>
                 </tr>
                 <tr class="end-sep">
-                    <td class="row-label">${e*2}</td>
                     <td id="c-${start+3}" class="${scores.length===start+3?'active-cell':''}">${a[3]}</td>
                     <td id="c-${start+4}" class="${scores.length===start+4?'active-cell':''}">${a[4]}</td>
                     <td id="c-${start+5}" class="${scores.length===start+5?'active-cell':''}">${a[5]}</td>
