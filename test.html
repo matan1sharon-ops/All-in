@@ -5,19 +5,19 @@
     <style>
         body { font-family: sans-serif; margin: 0; background: #1a1a1a; color: white; display: flex; flex-direction: column; height: 100vh; }
         #table-container { flex: 1; overflow: auto; background: white; color: black; padding: 5px; }
-        table { width: 100%; border-collapse: collapse; table-layout: fixed; font-size: 12px; }
-        th, td { border: 1px solid black; text-align: center; height: 22px; padding: 0; }
-        .header { background: #eee; font-weight: bold; font-size: 10px; }
-        .active { background: #fff9c4; border: 2px solid orange !important; }
+        table { width: 100%; border-collapse: collapse; table-layout: fixed; font-size: 13px; }
+        th, td { border: 1px solid black; text-align: center; height: 28px; padding: 0; }
+        .header { background: #333; color: white; font-weight: bold; font-size: 11px; }
+        .active { background: #fff9c4 !important; border: 2px solid orange !important; }
         
-        /* The "X" Box with diagonal lines */
-        .x-box {
-            background: linear-gradient(to top right, transparent 48%, black 48%, black 52%, transparent 52%),
-                        linear-gradient(to top left, transparent 48%, black 48%, black 52%, transparent 52%);
-        }
+        /* Row Styling */
+        .end-total-row { background: #e3f2fd; font-weight: bold; } /* Light blue for the Sum of Sums */
+        .add-row { background: #fff9c4; font-weight: bold; }       /* Light yellow for Running Total */
+        .end-number { background: #eee; font-weight: bold; width: 40px; }
+        .stat-col { width: 45px; font-size: 11px; }
 
         #pad { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; padding: 10px; background: #2a2a2a; }
-        button { padding: 15px 0; font-size: 18px; font-weight: bold; border-radius: 5px; border: none; background: #444; color: white; }
+        button { padding: 15px 0; font-size: 20px; font-weight: bold; border-radius: 5px; border: none; background: #444; color: white; }
         button:active { background: orange; }
     </style>
 </head>
@@ -27,12 +27,11 @@
     <table>
         <thead>
             <tr class="header">
-                <th style="width:30px">end</th>
-                <th colspan="3">arrows</th>
-                <th>sum</th>
-                <th>add</th>
-                <th>10-X</th>
-                <th>X</th>
+                <th>End</th>
+                <th colspan="3">Arrows</th>
+                <th class="stat-col">Sum</th>
+                <th class="stat-col">10+X</th>
+                <th class="stat-col">X</th>
             </tr>
         </thead>
         <tbody id="sheet-body"></tbody>
@@ -56,10 +55,14 @@
             let start = (e-1)*6;
             let a = [0,1,2,3,4,5].map(i => scores[start+i] || "");
             
-            // Calc Math
+            // Math Logic
             let s1 = a.slice(0,3).reduce((s,v)=>s+(v==='X'||v===10?10:v==='M'?0:Number(v)||0),0);
             let s2 = a.slice(3,6).reduce((s,v)=>s+(v==='X'||v===10?10:v==='M'?0:Number(v)||0),0);
-            let endTotal = (a[2]!=="" && a[5]!=="") ? s1 + s2 : "";
+            
+            let showSum1 = a[0]!=="" && a[1]!=="" && a[2]!=="";
+            let showSum2 = a[3]!=="" && a[4]!=="" && a[5]!=="";
+            
+            let endTotal = (showSum1 && showSum2) ? s1 + s2 : "";
             if(endTotal !== "") runningTotal += endTotal;
             
             let c10x = a.filter(v => v===10 || v==='X').length;
@@ -67,17 +70,27 @@
 
             html += `
                 <tr>
-                    <td rowspan="2">${e}</td>
+                    <td rowspan="4" class="end-number">${e}</td>
                     <td id="cell-${start}">${a[0]}</td><td id="cell-${start+1}">${a[1]}</td><td id="cell-${start+2}">${a[2]}</td>
-                    <td>${a[2]!==""?s1:""}</td>
-                    <td rowspan="2">${runningTotal || ""}</td>
-                    <td rowspan="2">${a[5]!==""?c10x:""}</td>
-                    <td rowspan="2">${a[5]!==""?cx:""}</td>
+                    <td>${showSum1 ? s1 : ""}</td>
+                    <td rowspan="2">${showSum2 ? c10x : ""}</td>
+                    <td rowspan="2">${showSum2 ? cx : ""}</td>
                 </tr>
                 <tr>
                     <td id="cell-${start+3}">${a[3]}</td><td id="cell-${start+4}">${a[4]}</td><td id="cell-${start+5}">${a[5]}</td>
-                    <td class="${endTotal!==""?'x-box':''}">${endTotal}</td>
+                    <td>${showSum2 ? s2 : ""}</td>
                 </tr>
+                <tr class="end-total-row">
+                    <td colspan="3" style="text-align:right; padding-right:10px; font-size:11px;">END TOTAL:</td>
+                    <td>${endTotal}</td>
+                    <td colspan="2" style="background:#eee"></td>
+                </tr>
+                <tr class="add-row">
+                    <td colspan="3" style="text-align:right; padding-right:10px; font-size:11px;">ADD:</td>
+                    <td>${runningTotal || ""}</td>
+                    <td colspan="2" style="background:#eee"></td>
+                </tr>
+                <tr style="height:8px; background:#1a1a1a;"><td colspan="7"></td></tr>
             `;
         }
         body.innerHTML = html;
