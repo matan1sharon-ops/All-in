@@ -217,37 +217,10 @@
     }
 
     function selectCell(idx) { editIndex = (editIndex === idx) ? null : idx; render(); }
-  function handleInput(val) {
+    function handleInput(val) {
         let archer = archers[currentIdx];
-        
-        // 1. Handle the input for the current archer
-        if (editIndex !== null) {
-            archer.scores[editIndex] = val;
-            editIndex = null;
-        } else if (archer.cursor < 72) {
-            archer.scores[archer.cursor] = val;
-            archer.cursor++;
-            
-            // 2. CHECK FOR AUTOMATIC JUMP
-            // If the arrow just entered was the 6th arrow of an end
-            // and there is another archer in the list...
-            if (archer.cursor % 6 === 0 && currentIdx < archers.length - 1) {
-                render(); // Render current archer's last arrow first
-                
-                // Small delay so you can see the last score hit the table 
-                // before it jumps to the next person
-                setTimeout(() => {
-                    switchArcher(currentIdx + 1);
-                }, 100); 
-                return; // Exit early so we don't render twice
-            }
-        }
-        render();
-    }
-        render();
-    }
-        render();
-    }
+        if (editIndex !== null) { archer.scores[editIndex] = val; editIndex = null; }
+        else if (archer.cursor < 72) { archer.scores[archer.cursor] = val; archer.cursor++; }
         render();
     }
     function backspace() {
