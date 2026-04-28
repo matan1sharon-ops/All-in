@@ -6,27 +6,29 @@
         body { font-family: sans-serif; margin: 0; background: #1a1a1a; color: white; display: flex; flex-direction: column; height: 100vh; }
         #table-container { flex: 1; overflow: auto; background: white; color: black; padding: 2px; }
         
-        .table-title { background: #444; color: white; font-size: 10px; padding: 4px; font-weight: bold; text-align: center; }
-        table { width: 100%; border-collapse: collapse; table-layout: fixed; font-size: 10px; margin-bottom: 15px; }
-        th, td { border: 1px solid #444; text-align: center; height: 26px; padding: 0; position: relative; }
+        .table-title { background: #444; color: white; font-size: 9px; padding: 3px; font-weight: bold; text-align: center; }
+        table { width: 100%; border-collapse: collapse; table-layout: fixed; font-size: 10px; margin-bottom: 10px; }
+        th, td { border: 1px solid #ddd; text-align: center; height: 24px; padding: 0; position: relative; }
         
         .active-cell { background: #fff9c4 !important; border: 2px solid orange !important; z-index: 10; }
-        .row-label { background: #eee; width: 30px; font-weight: bold; font-size: 8px; }
+        .row-label { background: #eee; width: 25px; font-weight: bold; font-size: 8px; }
         .sum-box { background: #f9f9f9; width: 35px; }
-        .end-total-box { background: #e3f2fd; font-weight: bold; width: 40px; font-size: 10px; }
-        .running-sum-box { background: #fffde7; font-weight: bold; color: #d32f2f; width: 45px; font-size: 10px; }
-        .stat-box { width: 28px; color: #666; }
+        .end-total-box { background: #e3f2fd; font-weight: bold; width: 40px; }
+        .running-sum-box { background: #fffde7; font-weight: bold; color: #d32f2f; width: 45px; }
+        .stat-box { width: 28px; color: #666; font-size: 9px; }
 
-        .half-total-row { background: #333; color: white; font-weight: bold; height: 30px; }
+        .half-total-row { background: #eee; color: black; font-weight: bold; height: 28px; font-size: 11px; }
 
         .no-entry { 
             background-image: 
-                linear-gradient(to bottom right, transparent calc(50% - 0.5px), #ddd, transparent calc(50% + 0.5px)),
-                linear-gradient(to bottom left, transparent calc(50% - 0.5px), #ddd, transparent calc(50% + 0.5px));
+                linear-gradient(to bottom right, transparent calc(50% - 0.5px), #eee, transparent calc(50% + 0.5px)),
+                linear-gradient(to bottom left, transparent calc(50% - 0.5px), #eee, transparent calc(50% + 0.5px));
         }
 
+        #session-footer { background: #d32f2f; color: white; display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; padding: 8px; font-weight: bold; font-size: 13px; text-align: center; border-top: 2px solid white; }
+        
         #pad { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; padding: 8px; background: #2a2a2a; }
-        button { padding: 14px 0; font-size: 20px; font-weight: bold; border-radius: 6px; border: none; box-shadow: 0 2px 0 #111; }
+        button { padding: 12px 0; font-size: 20px; font-weight: bold; border-radius: 6px; border: none; box-shadow: 0 2px 0 #000; }
         button:active { transform: translateY(1px); box-shadow: none; opacity: 0.8; }
         
         .gold { background: #FFD700; color: black; }
@@ -36,31 +38,28 @@
         .white { background: #FFFFFF; color: black; }
         .miss  { background: #888888; color: white; }
 
-        .sep { height: 3px; background: #1a1a1a; }
+        .sep { height: 2px; background: #000; } /* Narrower separator */
     </style>
 </head>
 <body>
 
 <div id="table-container">
-    <div class="table-title">FIRST HALF (ENDS 1-6)</div>
-    <table id="table-1">
-        <thead>
-            <tr style="background:#ddd; font-size:8px; height: 18px;">
-                <th style="width:30px">R</th><th>1</th><th>2</th><th>3</th><th style="width:35px">S</th><th style="width:40px">T</th><th style="width:45px">Run</th><th style="width:28px">10</th><th style="width:28px">X</th>
-            </tr>
-        </thead>
+    <div class="table-title">1st HALF (ENDS 1-6)</div>
+    <table>
         <tbody id="body-1"></tbody>
     </table>
 
-    <div class="table-title">SECOND HALF (ENDS 7-12)</div>
-    <table id="table-2">
-        <thead>
-            <tr style="background:#ddd; font-size:8px; height: 18px;">
-                <th style="width:30px">R</th><th>1</th><th>2</th><th>3</th><th style="width:35px">S</th><th style="width:40px">T</th><th style="width:45px">Run</th><th style="width:28px">10</th><th style="width:28px">X</th>
-            </tr>
-        </thead>
+    <div class="table-title">2nd HALF (ENDS 7-12)</div>
+    <table>
         <tbody id="body-2"></tbody>
     </table>
+</div>
+
+<div id="session-footer">
+    <span>TOTAL SESSION:</span>
+    <span id="gt-score">0</span>
+    <span id="gt-10x">0</span>
+    <span id="gt-x">0</span>
 </div>
 
 <div id="pad">
@@ -82,26 +81,21 @@
     let scores = [];
     
     function render() {
-        renderHalf(1, 0, 6, "body-1");
-        renderHalf(2, 6, 12, "body-2");
+        let h1 = renderHalf(0, 6, "body-1");
+        let h2 = renderHalf(6, 12, "body-2");
+
+        document.getElementById('gt-score').innerText = h1.score + h2.score;
+        document.getElementById('gt-10x').innerText = h1.tenX + h2.tenX;
+        document.getElementById('gt-x').innerText = h1.xOnly + h2.xOnly;
 
         let next = document.querySelector('.active-cell');
         if(next) next.scrollIntoView({behavior:'smooth', block:'center'});
     }
 
-    function renderHalf(halfNum, startEnd, endEnd, bodyId) {
+    function renderHalf(startEnd, endEnd, bodyId) {
         const targetBody = document.getElementById(bodyId);
         let html = '';
-        let globalRunningTotal = 0;
-        
-        // Calculate the running total up to the start of this half for the "Run" column
-        for(let prev = 0; prev < startEnd * 6; prev += 6) {
-            let s1 = scores.slice(prev, prev+3).reduce((s,v)=>s+(v==='X'||v===10?10:v==='M'?0:Number(v)||0),0);
-            let s2 = scores.slice(prev+3, prev+6).reduce((s,v)=>s+(v==='X'||v===10?10:v==='M'?0:Number(v)||0),0);
-            if(scores[prev+5] !== undefined) globalRunningTotal += (s1 + s2);
-        }
-
-        let halfTotal = 0;
+        let halfRunning = 0;
         let half10s = 0;
         let halfXs = 0;
 
@@ -114,10 +108,7 @@
             let s2 = a[5]!=="" ? v[3]+v[4]+v[5] : "";
             let endTotal = s2 !== "" ? s1 + s2 : "";
             
-            if(endTotal !== "") {
-                globalRunningTotal += endTotal;
-                halfTotal += endTotal;
-            }
+            if(endTotal !== "") halfRunning += endTotal;
 
             let r1_10x = a.slice(0,3).filter(x => x===10 || x==='X').length;
             let r1_x   = a.slice(0,3).filter(x => x==='X').length;
@@ -134,7 +125,7 @@
                     <td id="c-${start+1}" class="${scores.length===start+1?'active-cell':''}">${a[1]}</td>
                     <td id="c-${start+2}" class="${scores.length===start+2?'active-cell':''}">${a[2]}</td>
                     <td class="sum-box">${s1}</td><td class="no-entry"></td>
-                    <td rowspan="2" class="running-sum-box">${endTotal !== "" ? globalRunningTotal : ""}</td>
+                    <td rowspan="2" class="running-sum-box">${endTotal !== "" ? halfRunning : ""}</td>
                     <td class="stat-box">${a[0]!==""?r1_10x:""}</td><td class="stat-box">${a[0]!==""?r1_x:""}</td>
                 </tr>
                 <tr>
@@ -149,16 +140,9 @@
             `;
         }
         
-        html += `
-            <tr class="half-total-row">
-                <td colspan="5">HALF ${halfNum} TOTAL</td>
-                <td>${halfTotal}</td>
-                <td></td>
-                <td>${half10s}</td>
-                <td>${halfXs}</td>
-            </tr>
-        `;
+        html += `<tr class="half-total-row"><td colspan="5">HALF TOTAL</td><td>${halfRunning}</td><td></td><td>${half10s}</td><td>${halfXs}</td></tr>`;
         targetBody.innerHTML = html;
+        return { score: halfRunning, tenX: half10s, xOnly: halfXs };
     }
 
     function add(v) {
