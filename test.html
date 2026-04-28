@@ -37,11 +37,11 @@
         .running-sum-box { background: #fffde7; font-weight: bold; color: #d32f2f; border-left: 1.5px solid black; border-right: 1.5px solid black; }
         .stat-box { font-size: 11px; }
 
-        /* ADISHION: Highlight for X, 10, 9 */
+        /* Highlight Logic */
         .gold-hit { background-color: #fff9c4 !important; font-weight: bold; }
-
         .active-cell { border: 2px solid orange !important; z-index: 10; }
         .editing-cell { border: 2.5px solid #2196f3 !important; z-index: 11; background-color: #e3f2fd !important; }
+        
         .no-entry { background-image: linear-gradient(to bottom right, transparent 49%, #ddd 50%, transparent 51%), linear-gradient(to bottom left, transparent 49%, #ddd 50%, transparent 51%); }
         .end-sep td { border-bottom: 1.5px solid black !important; }
         .half-total-row { background: #444; color: white; font-weight: bold; height: 32px; }
@@ -59,8 +59,6 @@
         .white { background: #FFFFFF; color: black; }
         .miss { background: #888888; color: white; }
         .backspace { background: #555; color: white; }
-        
-        /* ADISHION: Export Button Style */
         .export-btn { background: #4CAF50 !important; color: white !important; grid-column: span 4; font-size: 16px !important; margin-top: 4px; padding: 10px 0 !important; }
     </style>
 </head>
@@ -132,7 +130,7 @@
         <button class="pad-btn white" onclick="handleInput(1)">1</button>
         <button class="pad-btn miss" onclick="handleInput('M')">M</button>
         <button class="pad-btn backspace" style="grid-column: span 4;" onclick="backspace()">BACKSPACE ←</button>
-        <button class="pad-btn export-btn" onclick="exportCSV()">EXPORT SESSION (CSV)</button>
+        <button class="pad-btn export-btn" onclick="exportCSV()">EXPORT CURRENT ARCHER (CSV)</button>
     </div>
 </div>
 
@@ -219,13 +217,9 @@
     function cellHtml(idx, val) {
         let archer = archers[currentIdx];
         let classList = [];
-        
-        // ADISHION: Highlight Logic
         if (val === 'X' || val === 10 || val === 9) classList.push("gold-hit");
-        
         if (editIndex === idx) classList.push("editing-cell");
         else if (editIndex === null && archer.cursor === idx) classList.push("active-cell");
-        
         return `<td class="${classList.join(' ')}" onclick="selectCell(${idx})">${val}</td>`;
     }
 
@@ -233,14 +227,12 @@
 
     function handleInput(val) {
         let archer = archers[currentIdx];
-        
         if (editIndex !== null) {
             archer.scores[editIndex] = val;
             editIndex = null;
         } else if (archer.cursor < 72) {
             archer.scores[archer.cursor] = val;
             archer.cursor++;
-            
             if (archer.cursor % 6 === 0) {
                 render(); 
                 setTimeout(() => {
@@ -260,28 +252,45 @@
         render();
     }
 
-    // ADISHION: Separate Export for each Archer
     function exportCSV() {
-        archers.forEach(archer => {
-            let csvContent = "data:text/csv;charset=utf-8,";
-            csvContent += "Archer Name: " + archer.name + "\n";
-            csvContent += "End,A1,A2,A3,A4,A5,A6,End Total\n";
-
-            for(let i=0; i<12; i++) {
-                let start = i * 6;
-                let row = archer.scores.slice(start, start + 6);
-                let total = row.reduce((acc, curr) => acc + (curr==='X'||curr===10?10:curr==='M'?0:Number(curr)||0), 0);
-                csvContent += (i+1) + "," + row.join(",") + "," + total + "\n";
+        let archer = archers[currentIdx];
+        let csvContent = "data:text/csv;charset=utf-8,";
+        csvContent += "ARCHER: " + archer.name.toUpperCase() + "\n";
+        csvContent += "DATE: " + new Date().toLocaleDateString() + "\n\n";
+        
+        const generateHalf = (startEnd, endEnd) => {
+            let section = (startEnd === 0 ? "1ST HALF" : "2ND HALF") + "\n";
+            section += "End,A1,A2,A3,Sum1,A4,A5,A6,Sum2,End Total,10+X,X\n";
+            let hTotal = 0, h10 = 0, hX = 0;
+            for(let i = startEnd; i < endEnd; i++) {
+                let s = i * 6;
+                let row = archer.scores.slice(s, s + 6);
+                let v = row.map(val => (val==='X'||val===10?10:val==='M'?0:Number(val)||0));
+                let sum1 = (row[0]!=="" && row[1]!=="" && row[2]!=="") ? v[0]+v[1]+v[2] : "";
+                let sum2 = (row[3]!=="" && row[4]!=="" && row[5]!=="") ? v[3]+v[4]+v[5] : "";
+                let eTotal = sum2 !== "" ? (Number(sum1)||0) + sum2 : "";
+                if(eTotal !== "") hTotal += eTotal;
+                let r10 = row.filter(x => x===10 || x==='X').length;
+                let rX = row.filter(x => x==='X').length;
+                h10 += r10; hX += rX;
+                section += `${i+1},${row[0]},${row[1]},${row[2]},${sum1},${row[3]},${row[4]},${row[5]},${sum2},${eTotal},${r10},${rX}\n`;
             }
+            section += `,,,HALF TOTAL,,,,,,${hTotal},${h10},${hX}\n\n`;
+            return section;
+        };
 
-            let encodedUri = encodeURI(csvContent);
-            let link = document.createElement("a");
-            link.setAttribute("href", encodedUri);
-            link.setAttribute("download", archer.name + "_Scorecard.csv");
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        });
+        csvContent += generateHalf(0, 6);
+        csvContent += generateHalf(6, 12);
+        let totalScore = archer.scores.reduce((a, b) => a + (b==='X'||b===10?10:b==='M'?0:Number(b)||0), 0);
+        csvContent += `,,,GRAND TOTAL,,,,,,${totalScore}\n`;
+
+        let encodedUri = encodeURI(csvContent);
+        let link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", `Scorecard_${archer.name.replace(/\s+/g, '_')}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
     }
 </script>
 </body>
