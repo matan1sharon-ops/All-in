@@ -37,8 +37,11 @@
         .running-sum-box { background: #fffde7; font-weight: bold; color: #d32f2f; border-left: 1.5px solid black; border-right: 1.5px solid black; }
         .stat-box { font-size: 11px; }
 
-        .active-cell { background: #fff9c4 !important; border: 2px solid orange !important; z-index: 10; }
-        .editing-cell { background: #fff176 !important; border: 2.5px solid #2196f3 !important; z-index: 11; }
+        /* ADISHION: Highlight for X, 10, 9 */
+        .gold-hit { background-color: #fff9c4 !important; font-weight: bold; }
+
+        .active-cell { border: 2px solid orange !important; z-index: 10; }
+        .editing-cell { border: 2.5px solid #2196f3 !important; z-index: 11; background-color: #e3f2fd !important; }
         .no-entry { background-image: linear-gradient(to bottom right, transparent 49%, #ddd 50%, transparent 51%), linear-gradient(to bottom left, transparent 49%, #ddd 50%, transparent 51%); }
         .end-sep td { border-bottom: 1.5px solid black !important; }
         .half-total-row { background: #444; color: white; font-weight: bold; height: 32px; }
@@ -56,6 +59,9 @@
         .white { background: #FFFFFF; color: black; }
         .miss { background: #888888; color: white; }
         .backspace { background: #555; color: white; }
+        
+        /* ADISHION: Export Button Style */
+        .export-btn { background: #4CAF50 !important; color: white !important; grid-column: span 4; font-size: 16px !important; margin-top: 4px; padding: 10px 0 !important; }
     </style>
 </head>
 <body>
@@ -126,6 +132,7 @@
         <button class="pad-btn white" onclick="handleInput(1)">1</button>
         <button class="pad-btn miss" onclick="handleInput('M')">M</button>
         <button class="pad-btn backspace" style="grid-column: span 4;" onclick="backspace()">BACKSPACE ←</button>
+        <button class="pad-btn export-btn" onclick="exportCSV()">EXPORT SESSION (CSV)</button>
     </div>
 </div>
 
@@ -138,7 +145,7 @@
         archers = [];
         for(let i=0; i<4; i++) {
             let nameVal = document.getElementById(`name-${i}`).value.trim();
-            if(nameVal !== "" || i === 0) { // Always keep at least Archer 1
+            if(nameVal !== "" || i === 0) { 
                 archers.push({
                     name: nameVal || `Archer ${i+1}`,
                     scores: Array(72).fill(""),
@@ -147,7 +154,6 @@
             }
         }
         
-        // Build Tabs
         let tabsHtml = '';
         archers.forEach((a, i) => {
             tabsHtml += `<button id="tab-${i}" class="tab-btn ${i===0?'active':''}" onclick="switchArcher(${i})">${a.name.toUpperCase()}</button>`;
@@ -212,8 +218,15 @@
 
     function cellHtml(idx, val) {
         let archer = archers[currentIdx];
-        let cls = (editIndex === idx) ? "editing-cell" : (editIndex === null && archer.cursor === idx) ? "active-cell" : "";
-        return `<td class="${cls}" onclick="selectCell(${idx})">${val}</td>`;
+        let classList = [];
+        
+        // ADISHION: Highlight Logic
+        if (val === 'X' || val === 10 || val === 9) classList.push("gold-hit");
+        
+        if (editIndex === idx) classList.push("editing-cell");
+        else if (editIndex === null && archer.cursor === idx) classList.push("active-cell");
+        
+        return `<td class="${classList.join(' ')}" onclick="selectCell(${idx})">${val}</td>`;
     }
 
     function selectCell(idx) { editIndex = (editIndex === idx) ? null : idx; render(); }
@@ -221,7 +234,6 @@
     function handleInput(val) {
         let archer = archers[currentIdx];
         
-        // 1. Handle the input/correction for the current archer
         if (editIndex !== null) {
             archer.scores[editIndex] = val;
             editIndex = null;
@@ -229,28 +241,47 @@
             archer.scores[archer.cursor] = val;
             archer.cursor++;
             
-            // 2. CHECK FOR AUTOMATIC JUMP
-            // If the arrow just entered was the 6th arrow of an end (End complete)
             if (archer.cursor % 6 === 0) {
-                render(); // Show the last arrow score first
-                
+                render(); 
                 setTimeout(() => {
-                    // If it's the last archer, loop back to the first archer (0)
-                    // Otherwise, jump to the next one
                     let nextArcherIdx = (currentIdx + 1) % archers.length;
                     switchArcher(nextArcherIdx);
-                }, 100); // 400ms delay gives a nice visual confirmation of the last arrow
-                
-                return; // Exit so we don't render twice
+                }, 100); 
+                return; 
             }
         }
         render();
     }
+
     function backspace() {
         let archer = archers[currentIdx];
         if (editIndex !== null) { archer.scores[editIndex] = ""; editIndex = null; }
         else if (archer.cursor > 0) { archer.cursor--; archer.scores[archer.cursor] = ""; }
         render();
+    }
+
+    // ADISHION: Separate Export for each Archer
+    function exportCSV() {
+        archers.forEach(archer => {
+            let csvContent = "data:text/csv;charset=utf-8,";
+            csvContent += "Archer Name: " + archer.name + "\n";
+            csvContent += "End,A1,A2,A3,A4,A5,A6,End Total\n";
+
+            for(let i=0; i<12; i++) {
+                let start = i * 6;
+                let row = archer.scores.slice(start, start + 6);
+                let total = row.reduce((acc, curr) => acc + (curr==='X'||curr===10?10:curr==='M'?0:Number(curr)||0), 0);
+                csvContent += (i+1) + "," + row.join(",") + "," + total + "\n";
+            }
+
+            let encodedUri = encodeURI(csvContent);
+            let link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", archer.name + "_Scorecard.csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        });
     }
 </script>
 </body>
