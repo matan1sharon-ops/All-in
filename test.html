@@ -5,7 +5,6 @@
     <style>
         body { font-family: sans-serif; margin: 0; background: #1a1a1a; color: white; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
         
-        /* Mode & Setup Screens */
         .screen { position: absolute; top:0; left:0; width: 100%; height:100%; background: #1a1a1a; z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; box-sizing: border-box; }
         .setup-card { background: #2a2a2a; padding: 20px; border-radius: 12px; width: 100%; max-width: 350px; border: 1px solid #444; }
         .setup-card h2 { margin-top: 0; text-align: center; color: #FFD700; }
@@ -19,7 +18,6 @@
         .input-group input { width: 100%; padding: 10px; border-radius: 6px; border: 1px solid #444; background: #1a1a1a; color: white; box-sizing: border-box; }
         .start-btn { width: 100%; padding: 15px; background: #4CAF50; color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 16px; margin-top: 10px; }
 
-        /* Main App Interface */
         #main-app { display: none; flex-direction: column; height: 100vh; width: 100%; }
         #archer-tabs { display: flex; background: #333; padding: 5px; gap: 5px; overflow-x: auto; }
         .tab-btn { flex: 1; min-width: 80px; padding: 10px 0; border: none; border-radius: 4px; background: #555; color: white; font-weight: bold; font-size: 11px; white-space: nowrap; }
@@ -27,12 +25,9 @@
         .settings-btn { width: 40px; background: #444; color: white; border: none; border-radius: 4px; font-size: 18px; }
 
         #table-container { flex: 1; overflow: auto; background: white; color: black; padding: 5px; }
-        .header-row { background: #444; color: white; display: grid; font-size: 10px; font-weight: bold; text-align: center; padding: 4px 0; text-transform: uppercase; border-bottom: 1px solid black; }
-        
         table { width: 100%; border-collapse: collapse; table-layout: fixed; font-size: 13px; margin-bottom: 20px; border: 1.5px solid black; }
         th, td { border: 1px solid #ccc; text-align: center; height: 32px; padding: 0; position: relative; }
         
-        /* Column Widths */
         .col-end { width: 45px; } .col-arr { width: auto; } .col-sum { width: 45px; }
         .col-tot { width: 50px; } .col-run { width: 55px; } .col-stat { width: 35px; }
 
@@ -52,7 +47,7 @@
 
         #session-footer { background: #b71c1c; color: white; display: flex; padding: 0 5px; font-weight: bold; font-size: 14px; height: 45px; align-items: center; border-top: 2px solid white; }
         .foot-label { flex: 1; text-align: left; padding-left: 10px; font-size: 11px; overflow: hidden; text-overflow: ellipsis; }
-        .foot-sum { width: 45px; } .foot-tot { width: 50px; text-align: center; } .foot-run { width: 55px; } .foot-stat { width: 35px; text-align: center; }
+        .foot-tot { width: 50px; text-align: center; } .foot-stat { width: 35px; text-align: center; }
 
         #pad { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; padding: 10px; background: #2a2a2a; }
         button.pad-btn { padding: 14px 0; font-size: 22px; font-weight: bold; border-radius: 8px; border: none; box-shadow: 0 3px 0 #000; color: inherit; }
@@ -88,38 +83,25 @@
 <div id="main-app">
     <div id="archer-tabs"></div>
     <div id="table-container">
-        <div class="header-row" id="h1-full-label"></div>
         <div id="h1-stat-labels" style="display: grid; grid-template-columns: 1fr 35px 35px; background: #555; color: white; font-size: 9px; text-align: center; padding: 2px 0;">
             <div id="h1-main-title" style="text-align:left; padding-left:10px;">1st HALF</div>
-            <div id="h1-s1"></div>
-            <div id="h1-s2"></div>
+            <div id="h1-s1"></div><div id="h1-s2"></div>
         </div>
-        <table>
-            <colgroup id="col-group-1"></colgroup>
-            <tbody id="body-1"></tbody>
-        </table>
-        
-        <div class="header-row" id="h2-full-label"></div>
+        <table><colgroup id="col-group-1"></colgroup><tbody id="body-1"></tbody></table>
         <div id="h2-stat-labels" style="display: grid; grid-template-columns: 1fr 35px 35px; background: #555; color: white; font-size: 9px; text-align: center; padding: 2px 0;">
             <div id="h2-main-title" style="text-align:left; padding-left:10px;">2nd HALF</div>
-            <div id="h2-s1"></div>
-            <div id="h2-s2"></div>
+            <div id="h2-s1"></div><div id="h2-s2"></div>
         </div>
-        <table>
-            <colgroup id="col-group-2"></colgroup>
-            <tbody id="body-2"></tbody>
-        </table>
+        <table><colgroup id="col-group-2"></colgroup><tbody id="body-2"></tbody></table>
     </div>
     <div id="session-footer">
         <div class="foot-label" id="footer-name">TOTAL:</div>
-        <div class="foot-sum"></div>
         <div class="foot-tot" id="gt-score">0</div>
-        <div class="foot-run"></div>
         <div class="foot-stat" id="gt-stat1">0</div>
         <div class="foot-stat" id="gt-stat2">0</div>
     </div>
     <div id="pad">
-        <button class="pad-btn gold" onclick="handleInput('X')">X</button>
+        <button id="btn-x" class="pad-btn gold" onclick="handleInput('X')">X</button>
         <button class="pad-btn gold" onclick="handleInput(10)">10</button>
         <button class="pad-btn gold" onclick="handleInput(9)">9</button>
         <button class="pad-btn red" onclick="handleInput(8)">8</button>
@@ -137,15 +119,14 @@
 </div>
 
 <script>
-    let archers = [];
-    let currentIdx = 0;
-    let editIndex = null;
-    let sessionMode = 'outdoor';
+    let archers = [], currentIdx = 0, editIndex = null, sessionMode = 'outdoor';
 
     function selectMode(m) {
         sessionMode = m;
         document.getElementById('mode-screen').style.display = 'none';
         document.getElementById('setup-screen').style.display = 'flex';
+        // Hide X button for Indoor
+        document.getElementById('btn-x').style.display = (m === 'indoor' ? 'none' : 'block');
     }
 
     function startSession() {
@@ -158,14 +139,11 @@
         
         const outCols = '<col class="col-end"><col class="col-arr"><col class="col-arr"><col class="col-arr"><col class="col-sum"><col class="col-tot"><col class="col-run"><col class="col-stat"><col class="col-stat">';
         const inCols = '<col class="col-end"><col class="col-arr"><col class="col-arr"><col class="col-arr"><col class="col-tot"><col class="col-run"><col class="col-stat"><col class="col-stat">';
-        document.getElementById('col-group-1').innerHTML = (sessionMode === 'outdoor' ? outCols : inCols);
-        document.getElementById('col-group-2').innerHTML = (sessionMode === 'outdoor' ? outCols : inCols);
+        document.getElementById('col-group-1').innerHTML = document.getElementById('col-group-2').innerHTML = (sessionMode === 'outdoor' ? outCols : inCols);
 
-        // Header Labels
-        const s1Lab = (sessionMode === 'outdoor' ? '10+X' : '10');
-        const s2Lab = (sessionMode === 'outdoor' ? 'X' : '9');
-        document.getElementById('h1-s1').innerText = s1Lab; document.getElementById('h1-s2').innerText = s2Lab;
-        document.getElementById('h2-s1').innerText = s1Lab; document.getElementById('h2-s2').innerText = s2Lab;
+        const s1Lab = (sessionMode === 'outdoor' ? '10+X' : '10'), s2Lab = (sessionMode === 'outdoor' ? 'X' : '9');
+        document.getElementById('h1-s1').innerText = document.getElementById('h2-s1').innerText = s1Lab;
+        document.getElementById('h1-s2').innerText = document.getElementById('h2-s2').innerText = s2Lab;
         document.getElementById('h1-main-title').innerText = (sessionMode === 'outdoor' ? "1st HALF (Ends 1-6)" : "1st HALF (Ends 1-10)");
         document.getElementById('h2-main-title').innerText = (sessionMode === 'outdoor' ? "2nd HALF (Ends 7-12)" : "2nd HALF (Ends 11-20)");
 
@@ -185,14 +163,11 @@
     }
 
     function render() {
-        let archer = archers[currentIdx];
-        let h1, h2;
+        let archer = archers[currentIdx], h1, h2;
         if(sessionMode === 'outdoor') {
-            h1 = renderOutdoor(0, 6, "body-1", archer);
-            h2 = renderOutdoor(6, 12, "body-2", archer);
+            h1 = renderOutdoor(0, 6, "body-1", archer); h2 = renderOutdoor(6, 12, "body-2", archer);
         } else {
-            h1 = renderIndoor(0, 10, "body-1", archer);
-            h2 = renderIndoor(10, 20, "body-2", archer);
+            h1 = renderIndoor(0, 10, "body-1", archer); h2 = renderIndoor(10, 20, "body-2", archer);
         }
         document.getElementById('gt-score').innerText = h1.score + h2.score;
         document.getElementById('gt-stat1').innerText = h1.s1 + h2.s1;
@@ -204,18 +179,15 @@
     function renderOutdoor(startEnd, endEnd, bodyId, archer) {
         let html = '', running = 0, tens = 0, xs = 0;
         for(let e = startEnd + 1; e <= endEnd; e++) {
-            let sIdx = (e-1)*6; let a = archer.scores.slice(sIdx, sIdx + 6);
+            let sIdx = (e-1)*6, a = archer.scores.slice(sIdx, sIdx + 6);
             let v = a.map(val => (val==='X'||val===10?10:val==='M'?0:Number(val)||0));
-            let s1 = (a[0]!=="" && a[1]!=="" && a[2]!=="") ? v[0]+v[1]+v[2] : "";
-            let s2 = (a[3]!=="" && a[4]!=="" && a[5]!=="") ? v[3]+v[4]+v[5] : "";
-            let endTotal = s2 !== "" ? (Number(s1)||0) + s2 : "";
-            if(endTotal !== "") running += endTotal;
-            let countStats = (arr) => ({ tenX: arr.filter(x => x===10 || x==='X').length, xOnly: arr.filter(x => x==='X').length });
-            let r1 = countStats(a.slice(0,3)); let r2 = countStats(a.slice(3,6));
-            if(a[0]!=="") { tens += r1.tenX; xs += r1.xOnly; }
-            if(a[3]!=="") { tens += r2.tenX; xs += r2.xOnly; }
-
-            html += `<tr><td rowspan="2" class="end-label">End ${e}</td>${cellHtml(sIdx, a[0])}${cellHtml(sIdx+1, a[1])}${cellHtml(sIdx+2, a[2])}<td class="sum-box">${s1}</td><td class="no-entry"></td><td rowspan="2" class="running-sum-box">${endTotal !== "" ? running : ""}</td><td class="stat-box">${(a[0]!=="")?r1.tenX:""}</td><td class="stat-box">${(a[0]!=="")?r1.xOnly:""}</td></tr><tr class="end-sep">${cellHtml(sIdx+3, a[3])}${cellHtml(sIdx+4, a[4])}${cellHtml(sIdx+5, a[5])}<td class="sum-box">${s2}</td><td class="end-total-box">${endTotal}</td><td class="stat-box">${(a[3]!=="")?r2.tenX:""}</td><td class="stat-box">${(a[3]!=="")?r2.xOnly:""}</td></tr>`;
+            let s1 = (a[0]!==""&&a[1]!==""&&a[2]!=="") ? v[0]+v[1]+v[2] : "";
+            let s2 = (a[3]!==""&&a[4]!==""&&a[5]!=="") ? v[3]+v[4]+v[5] : "";
+            let et = s2 !== "" ? (Number(s1)||0) + s2 : "";
+            if(et !== "") running += et;
+            let c10 = a.filter(x => x===10 || x==='X').length, cx = a.filter(x => x==='X').length;
+            if(a[0]!=="") { tens += c10; xs += cx; }
+            html += `<tr><td rowspan="2" class="end-label">End ${e}</td>${cellHtml(sIdx, a[0])}${cellHtml(sIdx+1, a[1])}${cellHtml(sIdx+2, a[2])}<td class="sum-box">${s1}</td><td class="no-entry"></td><td rowspan="2" class="running-sum-box">${et!==""?running:""}</td><td class="stat-box">${a[0]!==""?c10:""}</td><td class="stat-box">${a[0]!==""?cx:""}</td></tr><tr class="end-sep">${cellHtml(sIdx+3, a[3])}${cellHtml(sIdx+4, a[4])}${cellHtml(sIdx+5, a[5])}<td class="sum-box">${s2}</td><td class="end-total-box">${et}</td><td class="stat-box"></td><td class="stat-box"></td></tr>`;
         }
         html += `<tr class="half-total-row"><td colspan="5">HALF TOTAL</td><td>${running}</td><td></td><td>${tens}</td><td>${xs}</td></tr>`;
         document.getElementById(bodyId).innerHTML = html;
@@ -225,14 +197,13 @@
     function renderIndoor(startEnd, endEnd, bodyId, archer) {
         let html = '', running = 0, tens = 0, nines = 0;
         for(let e = startEnd + 1; e <= endEnd; e++) {
-            let sIdx = (e-1)*3; let a = archer.scores.slice(sIdx, sIdx + 3);
+            let sIdx = (e-1)*3, a = archer.scores.slice(sIdx, sIdx + 3);
             let v = a.map(val => (val==='X'||val===10?10:val==='M'?0:Number(val)||0));
-            let endTotal = (a[0]!=="" && a[1]!=="" && a[2]!=="") ? v[0]+v[1]+v[2] : "";
-            if(endTotal !== "") running += endTotal;
+            let et = (a[0]!==""&&a[1]!==""&&a[2]!=="") ? v[0]+v[1]+v[2] : "";
+            if(et !== "") running += et;
             let c10 = a.filter(x => x===10 || x==='X').length, c9 = a.filter(x => x===9).length;
             if(a[0]!=="") { tens += c10; nines += c9; }
-
-            html += `<tr class="end-sep"><td class="end-label">End ${e}</td>${cellHtml(sIdx, a[0])}${cellHtml(sIdx+1, a[1])}${cellHtml(sIdx+2, a[2])}<td class="end-total-box">${endTotal}</td><td class="running-sum-box">${endTotal !== "" ? running : ""}</td><td class="stat-box">${a[0]!==""?c10:""}</td><td class="stat-box">${a[0]!==""?c9:""}</td></tr>`;
+            html += `<tr class="end-sep"><td class="end-label">End ${e}</td>${cellHtml(sIdx, a[0])}${cellHtml(sIdx+1, a[1])}${cellHtml(sIdx+2, a[2])}<td class="end-total-box">${et}</td><td class="running-sum-box">${et!==""?running:""}</td><td class="stat-box">${a[0]!==""?c10:""}</td><td class="stat-box">${a[0]!==""?c9:""}</td></tr>`;
         }
         html += `<tr class="half-total-row"><td colspan="4">HALF TOTAL</td><td>${running}</td><td></td><td>${tens}</td><td>${nines}</td></tr>`;
         document.getElementById(bodyId).innerHTML = html;
@@ -240,8 +211,7 @@
     }
 
     function cellHtml(idx, val) {
-        let archer = archers[currentIdx];
-        let classList = [];
+        let archer = archers[currentIdx], classList = [];
         if (val === 'X' || val === 10 || val === 9) classList.push("gold-hit");
         if (editIndex === idx) classList.push("editing-cell");
         else if (editIndex === null && archer.cursor === idx) classList.push("active-cell");
@@ -251,15 +221,12 @@
     function selectCell(idx) { editIndex = (editIndex === idx) ? null : idx; render(); }
 
     function handleInput(val) {
-        let archer = archers[currentIdx];
-        const step = (sessionMode === 'outdoor' ? 6 : 3);
+        let archer = archers[currentIdx], step = (sessionMode === 'outdoor' ? 6 : 3);
         if (editIndex !== null) { archer.scores[editIndex] = val; editIndex = null; }
         else if (archer.cursor < archer.scores.length) {
             archer.scores[archer.cursor] = val; archer.cursor++;
             if (archer.cursor % step === 0) {
-                render();
-                setTimeout(() => { switchArcher((currentIdx + 1) % archers.length); }, 100);
-                return;
+                render(); setTimeout(() => { switchArcher((currentIdx + 1) % archers.length); }, 100); return;
             }
         }
         render();
@@ -273,26 +240,22 @@
     }
 
     function exportCSV() {
-        let archer = archers[currentIdx];
-        let csv = "data:text/csv;charset=utf-8,ARCHER: " + archer.name.toUpperCase() + "\n\n";
+        let archer = archers[currentIdx], csv = "data:text/csv;charset=utf-8,ARCHER: " + archer.name.toUpperCase() + "\n\n";
         if(sessionMode === 'outdoor') {
             csv += "End,A1,A2,A3,Sum1,A4,A5,A6,Sum2,Total,10+X,X\n";
             for(let i=0; i<12; i++) {
-                let r = archer.scores.slice(i*6, i*6+6);
-                let v = r.map(x => (x==='X'||x===10?10:x==='M'?0:Number(x)||0));
+                let r = archer.scores.slice(i*6, i*6+6), v = r.map(x => (x==='X'||x===10?10:x==='M'?0:Number(x)||0));
                 csv += `${i+1},${r[0]},${r[1]},${r[2]},${v[0]+v[1]+v[2]},${r[3]},${r[4]},${r[5]},${v[3]+v[4]+v[5]},${v.reduce((a,b)=>a+b,0)},${r.filter(x=>x===10||x==='X').length},${r.filter(x=>x==='X').length}\n`;
             }
         } else {
             csv += "End,A1,A2,A3,Total,10s,9s\n";
             for(let i=0; i<20; i++) {
-                let r = archer.scores.slice(i*3, i*3+3);
-                let v = r.map(x => (x==='X'||x===10?10:x==='M'?0:Number(x)||0));
+                let r = archer.scores.slice(i*3, i*3+3), v = r.map(x => (x==='X'||x===10?10:x==='M'?0:Number(x)||0));
                 csv += `${i+1},${r[0]},${r[1]},${r[2]},${v[0]+v[1]+v[2]},${r.filter(x=>x===10||x==='X').length},${r.filter(x=>x===9).length}\n`;
             }
         }
         let link = document.createElement("a"); link.setAttribute("href", encodeURI(csv));
-        link.setAttribute("download", `${archer.name}_Scorecard.csv`);
-        link.click();
+        link.setAttribute("download", `${archer.name}_Scorecard.csv`); link.click();
     }
 </script>
 </body>
