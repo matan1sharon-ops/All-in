@@ -27,11 +27,12 @@
         .settings-btn { width: 40px; background: #444; color: white; border: none; border-radius: 4px; font-size: 18px; }
 
         #table-container { flex: 1; overflow: auto; background: white; color: black; padding: 5px; }
-        .table-title { background: #444; color: white; font-size: 11px; padding: 6px; font-weight: bold; text-align: center; text-transform: uppercase; }
+        .header-row { background: #444; color: white; display: grid; font-size: 10px; font-weight: bold; text-align: center; padding: 4px 0; text-transform: uppercase; border-bottom: 1px solid black; }
         
         table { width: 100%; border-collapse: collapse; table-layout: fixed; font-size: 13px; margin-bottom: 20px; border: 1.5px solid black; }
         th, td { border: 1px solid #ccc; text-align: center; height: 32px; padding: 0; position: relative; }
         
+        /* Column Widths */
         .col-end { width: 45px; } .col-arr { width: auto; } .col-sum { width: 45px; }
         .col-tot { width: 50px; } .col-run { width: 55px; } .col-stat { width: 35px; }
 
@@ -81,19 +82,29 @@
             <div class="input-group"><label>Archer 4 Name</label><input type="text" id="name-3" placeholder="Optional"></div>
         </div>
         <button class="start-btn" onclick="startSession()">START SESSION</button>
-        <button style="background:none; border:none; color:#aaa; width:100%; margin-top:10px;" onclick="location.reload()">← Back</button>
     </div>
 </div>
 
 <div id="main-app">
     <div id="archer-tabs"></div>
     <div id="table-container">
-        <div class="table-title" id="title-h1">1st Half</div>
+        <div class="header-row" id="h1-full-label"></div>
+        <div id="h1-stat-labels" style="display: grid; grid-template-columns: 1fr 35px 35px; background: #555; color: white; font-size: 9px; text-align: center; padding: 2px 0;">
+            <div id="h1-main-title" style="text-align:left; padding-left:10px;">1st HALF</div>
+            <div id="h1-s1"></div>
+            <div id="h1-s2"></div>
+        </div>
         <table>
             <colgroup id="col-group-1"></colgroup>
             <tbody id="body-1"></tbody>
         </table>
-        <div class="table-title" id="title-h2">2nd Half</div>
+        
+        <div class="header-row" id="h2-full-label"></div>
+        <div id="h2-stat-labels" style="display: grid; grid-template-columns: 1fr 35px 35px; background: #555; color: white; font-size: 9px; text-align: center; padding: 2px 0;">
+            <div id="h2-main-title" style="text-align:left; padding-left:10px;">2nd HALF</div>
+            <div id="h2-s1"></div>
+            <div id="h2-s2"></div>
+        </div>
         <table>
             <colgroup id="col-group-2"></colgroup>
             <tbody id="body-2"></tbody>
@@ -135,29 +146,29 @@
         sessionMode = m;
         document.getElementById('mode-screen').style.display = 'none';
         document.getElementById('setup-screen').style.display = 'flex';
-        document.getElementById('setup-title').innerText = m.toUpperCase() + " SETUP";
     }
 
     function startSession() {
         archers = [];
-        const arrowCount = (sessionMode === 'outdoor' ? 72 : 60);
+        const count = (sessionMode === 'outdoor' ? 72 : 60);
         for(let i=0; i<4; i++) {
-            let nameVal = document.getElementById(`name-${i}`).value.trim();
-            if(nameVal !== "" || i === 0) { 
-                archers.push({ name: nameVal || `Archer ${i+1}`, scores: Array(arrowCount).fill(""), cursor: 0 });
-            }
+            let n = document.getElementById(`name-${i}`).value.trim();
+            if(n !== "" || i === 0) archers.push({ name: n || `Archer ${i+1}`, scores: Array(count).fill(""), cursor: 0 });
         }
         
-        // Define Column Groups
         const outCols = '<col class="col-end"><col class="col-arr"><col class="col-arr"><col class="col-arr"><col class="col-sum"><col class="col-tot"><col class="col-run"><col class="col-stat"><col class="col-stat">';
         const inCols = '<col class="col-end"><col class="col-arr"><col class="col-arr"><col class="col-arr"><col class="col-tot"><col class="col-run"><col class="col-stat"><col class="col-stat">';
         document.getElementById('col-group-1').innerHTML = (sessionMode === 'outdoor' ? outCols : inCols);
         document.getElementById('col-group-2').innerHTML = (sessionMode === 'outdoor' ? outCols : inCols);
 
-        // Titles
-        document.getElementById('title-h1').innerText = (sessionMode === 'outdoor' ? "1st Half (Ends 1-6)" : "1st Half (Ends 1-10)");
-        document.getElementById('title-h2').innerText = (sessionMode === 'outdoor' ? "2nd Half (Ends 7-12)" : "2nd Half (Ends 11-20)");
-        
+        // Header Labels
+        const s1Lab = (sessionMode === 'outdoor' ? '10+X' : '10');
+        const s2Lab = (sessionMode === 'outdoor' ? 'X' : '9');
+        document.getElementById('h1-s1').innerText = s1Lab; document.getElementById('h1-s2').innerText = s2Lab;
+        document.getElementById('h2-s1').innerText = s1Lab; document.getElementById('h2-s2').innerText = s2Lab;
+        document.getElementById('h1-main-title').innerText = (sessionMode === 'outdoor' ? "1st HALF (Ends 1-6)" : "1st HALF (Ends 1-10)");
+        document.getElementById('h2-main-title').innerText = (sessionMode === 'outdoor' ? "2nd HALF (Ends 7-12)" : "2nd HALF (Ends 11-20)");
+
         document.getElementById('setup-screen').style.display = 'none';
         document.getElementById('main-app').style.display = 'flex';
         switchArcher(0);
@@ -165,10 +176,10 @@
 
     function switchArcher(idx) {
         currentIdx = idx; editIndex = null;
-        let tabsHtml = '';
-        archers.forEach((a, i) => { tabsHtml += `<button class="tab-btn ${i===idx?'active':''}" onclick="switchArcher(${i})">${a.name.toUpperCase()}</button>`; });
-        tabsHtml += `<button class="settings-btn" onclick="location.reload()">⚙</button>`;
-        document.getElementById('archer-tabs').innerHTML = tabsHtml;
+        let tabs = '';
+        archers.forEach((a, i) => { tabs += `<button class="tab-btn ${i===idx?'active':''}" onclick="switchArcher(${i})">${a.name.toUpperCase()}</button>`; });
+        tabs += `<button class="settings-btn" onclick="location.reload()">⚙</button>`;
+        document.getElementById('archer-tabs').innerHTML = tabs;
         document.getElementById('footer-name').innerText = archers[idx].name.toUpperCase() + " TOTAL:";
         render();
     }
@@ -186,57 +197,45 @@
         document.getElementById('gt-score').innerText = h1.score + h2.score;
         document.getElementById('gt-stat1').innerText = h1.s1 + h2.s1;
         document.getElementById('gt-stat2').innerText = h1.s2 + h2.s2;
-        
         let target = document.querySelector('.editing-cell') || document.querySelector('.active-cell');
         if(target) target.scrollIntoView({behavior:'smooth', block:'center'});
     }
 
-    // EXACT OUTDOOR RENDERER FROM YOUR GOOD CODE
     function renderOutdoor(startEnd, endEnd, bodyId, archer) {
-        const targetBody = document.getElementById(bodyId);
         let html = '', running = 0, tens = 0, xs = 0;
-
         for(let e = startEnd + 1; e <= endEnd; e++) {
-            let sIdx = (e-1)*6;
-            let a = archer.scores.slice(sIdx, sIdx + 6);
+            let sIdx = (e-1)*6; let a = archer.scores.slice(sIdx, sIdx + 6);
             let v = a.map(val => (val==='X'||val===10?10:val==='M'?0:Number(val)||0));
             let s1 = (a[0]!=="" && a[1]!=="" && a[2]!=="") ? v[0]+v[1]+v[2] : "";
             let s2 = (a[3]!=="" && a[4]!=="" && a[5]!=="") ? v[3]+v[4]+v[5] : "";
             let endTotal = s2 !== "" ? (Number(s1)||0) + s2 : "";
             if(endTotal !== "") running += endTotal;
-            
             let countStats = (arr) => ({ tenX: arr.filter(x => x===10 || x==='X').length, xOnly: arr.filter(x => x==='X').length });
             let r1 = countStats(a.slice(0,3)); let r2 = countStats(a.slice(3,6));
-            if(a[0]!==""||a[1]!==""||a[2]!=="") { tens += r1.tenX; xs += r1.xOnly; }
-            if(a[3]!==""||a[4]!==""||a[5]!=="") { tens += r2.tenX; xs += r2.xOnly; }
+            if(a[0]!=="") { tens += r1.tenX; xs += r1.xOnly; }
+            if(a[3]!=="") { tens += r2.tenX; xs += r2.xOnly; }
 
-            html += `<tr><td rowspan="2" class="end-label">End ${e}</td>${cellHtml(sIdx, a[0])}${cellHtml(sIdx+1, a[1])}${cellHtml(sIdx+2, a[2])}<td class="sum-box">${s1}</td><td class="no-entry"></td><td rowspan="2" class="running-sum-box">${endTotal !== "" ? running : ""}</td><td class="stat-box">${(a[0]!==""||a[1]!==""||a[2]!=="")?r1.tenX:""}</td><td class="stat-box">${(a[0]!==""||a[1]!==""||a[2]!=="")?r1.xOnly:""}</td></tr><tr class="end-sep">${cellHtml(sIdx+3, a[3])}${cellHtml(sIdx+4, a[4])}${cellHtml(sIdx+5, a[5])}<td class="sum-box">${s2}</td><td class="end-total-box">${endTotal}</td><td class="stat-box">${(a[3]!==""||a[4]!==""||a[5]!=="")?r2.tenX:""}</td><td class="stat-box">${(a[3]!==""||a[4]!==""||a[5]!=="")?r2.xOnly:""}</td></tr>`;
+            html += `<tr><td rowspan="2" class="end-label">End ${e}</td>${cellHtml(sIdx, a[0])}${cellHtml(sIdx+1, a[1])}${cellHtml(sIdx+2, a[2])}<td class="sum-box">${s1}</td><td class="no-entry"></td><td rowspan="2" class="running-sum-box">${endTotal !== "" ? running : ""}</td><td class="stat-box">${(a[0]!=="")?r1.tenX:""}</td><td class="stat-box">${(a[0]!=="")?r1.xOnly:""}</td></tr><tr class="end-sep">${cellHtml(sIdx+3, a[3])}${cellHtml(sIdx+4, a[4])}${cellHtml(sIdx+5, a[5])}<td class="sum-box">${s2}</td><td class="end-total-box">${endTotal}</td><td class="stat-box">${(a[3]!=="")?r2.tenX:""}</td><td class="stat-box">${(a[3]!=="")?r2.xOnly:""}</td></tr>`;
         }
         html += `<tr class="half-total-row"><td colspan="5">HALF TOTAL</td><td>${running}</td><td></td><td>${tens}</td><td>${xs}</td></tr>`;
-        targetBody.innerHTML = html;
+        document.getElementById(bodyId).innerHTML = html;
         return { score: running, s1: tens, s2: xs };
     }
 
-    // INDOOR RENDERER (1 ROW PER END)
     function renderIndoor(startEnd, endEnd, bodyId, archer) {
-        const targetBody = document.getElementById(bodyId);
         let html = '', running = 0, tens = 0, nines = 0;
-
         for(let e = startEnd + 1; e <= endEnd; e++) {
-            let sIdx = (e-1)*3;
-            let a = archer.scores.slice(sIdx, sIdx + 3);
+            let sIdx = (e-1)*3; let a = archer.scores.slice(sIdx, sIdx + 3);
             let v = a.map(val => (val==='X'||val===10?10:val==='M'?0:Number(val)||0));
             let endTotal = (a[0]!=="" && a[1]!=="" && a[2]!=="") ? v[0]+v[1]+v[2] : "";
             if(endTotal !== "") running += endTotal;
-            
-            let c10 = a.filter(x => x===10 || x==='X').length;
-            let c9 = a.filter(x => x===9).length;
+            let c10 = a.filter(x => x===10 || x==='X').length, c9 = a.filter(x => x===9).length;
             if(a[0]!=="") { tens += c10; nines += c9; }
 
             html += `<tr class="end-sep"><td class="end-label">End ${e}</td>${cellHtml(sIdx, a[0])}${cellHtml(sIdx+1, a[1])}${cellHtml(sIdx+2, a[2])}<td class="end-total-box">${endTotal}</td><td class="running-sum-box">${endTotal !== "" ? running : ""}</td><td class="stat-box">${a[0]!==""?c10:""}</td><td class="stat-box">${a[0]!==""?c9:""}</td></tr>`;
         }
         html += `<tr class="half-total-row"><td colspan="4">HALF TOTAL</td><td>${running}</td><td></td><td>${tens}</td><td>${nines}</td></tr>`;
-        targetBody.innerHTML = html;
+        document.getElementById(bodyId).innerHTML = html;
         return { score: running, s1: tens, s2: nines };
     }
 
@@ -275,7 +274,7 @@
 
     function exportCSV() {
         let archer = archers[currentIdx];
-        let csv = "data:text/csv;charset=utf-8,ARCHER: " + archer.name.toUpperCase() + " (" + sessionMode.toUpperCase() + ")\n\n";
+        let csv = "data:text/csv;charset=utf-8,ARCHER: " + archer.name.toUpperCase() + "\n\n";
         if(sessionMode === 'outdoor') {
             csv += "End,A1,A2,A3,Sum1,A4,A5,A6,Sum2,Total,10+X,X\n";
             for(let i=0; i<12; i++) {
