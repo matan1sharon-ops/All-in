@@ -11,7 +11,6 @@
         table { width: 100%; border-collapse: collapse; table-layout: fixed; font-size: 13px; margin-bottom: 20px; border: 1.5px solid black; }
         th, td { border: 1px solid #ccc; text-align: center; height: 32px; padding: 0; position: relative; }
         
-        /* Column Width definitions (Total must equal 100%) */
         .col-end   { width: 45px; }
         .col-arr   { width: auto; }
         .col-sum   { width: 45px; }
@@ -26,6 +25,8 @@
         .stat-box { font-size: 11px; }
 
         .active-cell { background: #fff9c4 !important; border: 2px solid orange !important; z-index: 10; }
+        .editing-cell { background: #fff176 !important; border: 2.5px solid #2196f3 !important; z-index: 11; }
+
         .no-entry { 
             background-image: linear-gradient(to bottom right, transparent 49%, #ddd 50%, transparent 51%), 
                               linear-gradient(to bottom left, transparent 49%, #ddd 50%, transparent 51%);
@@ -33,34 +34,27 @@
         .end-sep td { border-bottom: 1.5px solid black !important; }
         .half-total-row { background: #444; color: white; font-weight: bold; height: 32px; }
 
-        /* SESSION FOOTER - ALIGNED TO COLUMNS */
         #session-footer { 
-            background: #b71c1c; 
-            color: white; 
-            display: flex; 
-            padding: 0 5px; /* Matches table container padding */
-            font-weight: bold; 
-            font-size: 14px; 
-            height: 45px;
-            align-items: center;
-            border-top: 2px solid white;
+            background: #b71c1c; color: white; display: flex; padding: 0 5px; 
+            font-weight: bold; font-size: 14px; height: 45px; align-items: center; border-top: 2px solid white;
         }
-
-        /* Footer Spacing logic to align with table */
-        .foot-label { flex: 1; text-align: left; padding-left: 10px; } /* Occupies End + Arrows space */
-        .foot-sum   { width: 45px; } /* Space under Sum */
-        .foot-tot   { width: 50px; text-align: center; } /* Aligns with End Total */
-        .foot-run   { width: 55px; } /* Space under Running Sum */
-        .foot-stat  { width: 35px; text-align: center; } /* Aligns with 10s and Xs */
+        .foot-label { flex: 1; text-align: left; padding-left: 10px; }
+        .foot-sum   { width: 45px; }
+        .foot-tot   { width: 50px; text-align: center; }
+        .foot-run   { width: 55px; }
+        .foot-stat  { width: 35px; text-align: center; }
 
         #pad { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; padding: 10px; background: #2a2a2a; }
         button { padding: 16px 0; font-size: 22px; font-weight: bold; border-radius: 8px; border: none; box-shadow: 0 3px 0 #000; }
+        button:active { transform: translateY(2px); box-shadow: none; opacity: 0.9; }
+        
         .gold { background: #FFD700; color: black; }
         .red  { background: #FF4444; color: white; }
         .blue { background: #33AAFF; color: white; }
         .black { background: #333333; color: white; }
         .white { background: #FFFFFF; color: black; }
         .miss  { background: #888888; color: white; }
+        .backspace { background: #555; color: white; }
     </style>
 </head>
 <body>
@@ -68,45 +62,46 @@
 <div id="table-container">
     <div class="table-title">1st Half (Ends 1-6)</div>
     <table>
-        <colgroup>
-            <col class="col-end"><col class="col-arr"><col class="col-arr"><col class="col-arr">
-            <col class="col-sum"><col class="col-tot"><col class="col-run"><col class="col-stat"><col class="col-stat">
-        </colgroup>
+        <colgroup><col class="col-end"><col class="col-arr"><col class="col-arr"><col class="col-arr"><col class="col-sum"><col class="col-tot"><col class="col-run"><col class="col-stat"><col class="col-stat"></colgroup>
         <tbody id="body-1"></tbody>
     </table>
-
     <div class="table-title">2nd Half (Ends 7-12)</div>
     <table>
-        <colgroup>
-            <col class="col-end"><col class="col-arr"><col class="col-arr"><col class="col-arr">
-            <col class="col-sum"><col class="col-tot"><col class="col-run"><col class="col-stat"><col class="col-stat">
-        </colgroup>
+        <colgroup><col class="col-end"><col class="col-arr"><col class="col-arr"><col class="col-arr"><col class="col-sum"><col class="col-tot"><col class="col-run"><col class="col-stat"><col class="col-stat"></colgroup>
         <tbody id="body-2"></tbody>
     </table>
 </div>
 
 <div id="session-footer">
     <div class="foot-label">SESSION TOTAL:</div>
-    <div class="foot-sum"></div> <div class="foot-tot" id="gt-score">0</div> <div class="foot-run"></div> <div class="foot-stat" id="gt-10x">0</div> <div class="foot-stat" id="gt-x">0</div>   </div>
+    <div class="foot-sum"></div>
+    <div class="foot-tot" id="gt-score">0</div>
+    <div class="foot-run"></div>
+    <div class="foot-stat" id="gt-10x">0</div>
+    <div class="foot-stat" id="gt-x">0</div>
+</div>
 
 <div id="pad">
-    <button class="gold" onclick="add('X')">X</button>
-    <button class="gold" onclick="add(10)">10</button>
-    <button class="gold" onclick="add(9)">9</button>
-    <button class="red" onclick="add(8)">8</button>
-    <button class="red" onclick="add(7)">7</button>
-    <button class="blue" onclick="add(6)">6</button>
-    <button class="blue" onclick="add(5)">5</button>
-    <button class="black" onclick="add(4)">4</button>
-    <button class="black" onclick="add(3)">3</button>
-    <button class="white" onclick="add(2)">2</button>
-    <button class="white" onclick="add(1)">1</button>
-    <button class="miss" onclick="add('M')">M</button>
+    <button class="gold" onclick="handleInput('X')">X</button>
+    <button class="gold" onclick="handleInput(10)">10</button>
+    <button class="gold" onclick="handleInput(9)">9</button>
+    <button class="red" onclick="handleInput(8)">8</button>
+    <button class="red" onclick="handleInput(7)">7</button>
+    <button class="blue" onclick="handleInput(6)">6</button>
+    <button class="blue" onclick="handleInput(5)">5</button>
+    <button class="black" onclick="handleInput(4)">4</button>
+    <button class="black" onclick="handleInput(3)">3</button>
+    <button class="white" onclick="handleInput(2)">2</button>
+    <button class="white" onclick="handleInput(1)">1</button>
+    <button class="miss" onclick="handleInput('M')">M</button>
+    <button class="backspace" style="grid-column: span 4;" onclick="backspace()">BACKSPACE ←</button>
 </div>
 
 <script>
-    let scores = [];
-    
+    let scores = Array(72).fill("");
+    let cursor = 0;
+    let editIndex = null;
+
     function render() {
         let h1 = renderHalf(0, 6, "body-1");
         let h2 = renderHalf(6, 12, "body-2");
@@ -115,8 +110,8 @@
         document.getElementById('gt-10x').innerText = h1.tenX + h2.tenX;
         document.getElementById('gt-x').innerText = h1.xOnly + h2.xOnly;
 
-        let next = document.querySelector('.active-cell');
-        if(next) next.scrollIntoView({behavior:'smooth', block:'center'});
+        let target = document.querySelector('.editing-cell') || document.querySelector('.active-cell');
+        if(target) target.scrollIntoView({behavior:'smooth', block:'center'});
     }
 
     function renderHalf(startEnd, endEnd, bodyId) {
@@ -125,36 +120,41 @@
         let halfRunning = 0, half10s = 0, halfXs = 0;
 
         for(let e = startEnd + 1; e <= endEnd; e++) {
-            let start = (e-1)*6;
-            let a = [0,1,2,3,4,5].map(i => scores[start+i] || "");
+            let startIdx = (e-1)*6;
+            let a = scores.slice(startIdx, startIdx + 6);
             let v = a.map(val => (val==='X'||val===10?10:val==='M'?0:Number(val)||0));
-            let s1 = a[2]!=="" ? v[0]+v[1]+v[2] : "";
-            let s2 = a[5]!=="" ? v[3]+v[4]+v[5] : "";
-            let endTotal = s2 !== "" ? s1 + s2 : "";
+            
+            let s1 = (a[0]!=="" && a[1]!=="" && a[2]!=="") ? v[0]+v[1]+v[2] : "";
+            let s2 = (a[3]!=="" && a[4]!=="" && a[5]!=="") ? v[3]+v[4]+v[5] : "";
+            let endTotal = s2 !== "" ? (Number(s1)||0) + s2 : "";
+            
             if(endTotal !== "") halfRunning += endTotal;
-            let r1_10x = a.slice(0,3).filter(x => x===10 || x==='X').length;
-            let r1_x   = a.slice(0,3).filter(x => x==='X').length;
-            let r2_10x = a.slice(3,6).filter(x => x===10 || x==='X').length;
-            let r2_x   = a.slice(3,6).filter(x => x==='X').length;
-            half10s += (a[0]!==""?r1_10x:0) + (a[3]!==""?r2_10x:0);
-            halfXs += (a[0]!==""?r1_x:0) + (a[3]!==""?r2_x:0);
+            
+            let countStats = (arr) => ({
+                tenX: arr.filter(x => x===10 || x==='X').length,
+                xOnly: arr.filter(x => x==='X').length
+            });
+
+            let r1 = countStats(a.slice(0,3));
+            let r2 = countStats(a.slice(3,6));
+            
+            if(a[0]!==""||a[1]!==""||a[2]!=="") { half10s += r1.tenX; halfXs += r1.xOnly; }
+            if(a[3]!==""||a[4]!==""||a[5]!=="") { half10s += r2.tenX; halfXs += r2.xOnly; }
 
             html += `
                 <tr>
                     <td rowspan="2" class="end-label">End ${e}</td>
-                    <td id="c-${start}" class="${scores.length===start?'active-cell':''}">${a[0]}</td>
-                    <td id="c-${start+1}" class="${scores.length===start+1?'active-cell':''}">${a[1]}</td>
-                    <td id="c-${start+2}" class="${scores.length===start+2?'active-cell':''}">${a[2]}</td>
+                    ${cellHtml(startIdx, a[0])}${cellHtml(startIdx+1, a[1])}${cellHtml(startIdx+2, a[2])}
                     <td class="sum-box">${s1}</td><td class="no-entry"></td>
                     <td rowspan="2" class="running-sum-box">${endTotal !== "" ? halfRunning : ""}</td>
-                    <td class="stat-box">${a[0]!==""?r1_10x:""}</td><td class="stat-box">${a[0]!==""?r1_x:""}</td>
+                    <td class="stat-box">${(a[0]!==""||a[1]!==""||a[2]!=="")?r1.tenX:""}</td>
+                    <td class="stat-box">${(a[0]!==""||a[1]!==""||a[2]!=="")?r1.xOnly:""}</td>
                 </tr>
                 <tr class="end-sep">
-                    <td id="c-${start+3}" class="${scores.length===start+3?'active-cell':''}">${a[3]}</td>
-                    <td id="c-${start+4}" class="${scores.length===start+4?'active-cell':''}">${a[4]}</td>
-                    <td id="c-${start+5}" class="${scores.length===start+5?'active-cell':''}">${a[5]}</td>
+                    ${cellHtml(startIdx+3, a[3])}${cellHtml(startIdx+4, a[4])}${cellHtml(startIdx+5, a[5])}
                     <td class="sum-box">${s2}</td><td class="end-total-box">${endTotal}</td>
-                    <td class="stat-box">${a[3]!==""?r2_10x:""}</td><td class="stat-box">${a[3]!==""?r2_x:""}</td>
+                    <td class="stat-box">${(a[3]!==""||a[4]!==""||a[5]!=="")?r2.tenX:""}</td>
+                    <td class="stat-box">${(a[3]!==""||a[4]!==""||a[5]!=="")?r2.xOnly:""}</td>
                 </tr>
             `;
         }
@@ -163,7 +163,40 @@
         return { score: halfRunning, tenX: half10s, xOnly: halfXs };
     }
 
-    function add(v) { if(scores.length < 72) { scores.push(v); render(); } }
+    function cellHtml(idx, val) {
+        let cls = "";
+        if (editIndex === idx) cls = "editing-cell";
+        else if (editIndex === null && cursor === idx) cls = "active-cell";
+        return `<td class="${cls}" onclick="selectCell(${idx})">${val}</td>`;
+    }
+
+    function selectCell(idx) {
+        editIndex = (editIndex === idx) ? null : idx; // Toggle edit mode
+        render();
+    }
+
+    function handleInput(val) {
+        if (editIndex !== null) {
+            scores[editIndex] = val;
+            editIndex = null;
+        } else if (cursor < 72) {
+            scores[cursor] = val;
+            cursor++;
+        }
+        render();
+    }
+
+    function backspace() {
+        if (editIndex !== null) {
+            scores[editIndex] = "";
+            editIndex = null;
+        } else if (cursor > 0) {
+            cursor--;
+            scores[cursor] = "";
+        }
+        render();
+    }
+
     render();
 </script>
 </body>
