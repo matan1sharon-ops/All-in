@@ -5,10 +5,15 @@
     <style>
         body { font-family: sans-serif; margin: 0; background: #1a1a1a; color: white; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
         
-        /* Setup Screen */
-        #setup-screen { position: absolute; top:0; left:0; width: 100%; height:100%; background: #1a1a1a; z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; box-sizing: border-box; }
+        /* Mode & Setup Screens */
+        .screen { position: absolute; top:0; left:0; width: 100%; height:100%; background: #1a1a1a; z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; box-sizing: border-box; }
         .setup-card { background: #2a2a2a; padding: 20px; border-radius: 12px; width: 100%; max-width: 350px; border: 1px solid #444; }
         .setup-card h2 { margin-top: 0; text-align: center; color: #FFD700; }
+        
+        .mode-btn { width: 100%; padding: 20px; margin: 10px 0; border-radius: 10px; border: none; font-size: 18px; font-weight: bold; cursor: pointer; color: white; }
+        .out-btn { background: #2e7d32; }
+        .in-btn { background: #1565c0; }
+
         .input-group { margin-bottom: 15px; }
         .input-group label { display: block; font-size: 12px; color: #aaa; margin-bottom: 5px; }
         .input-group input { width: 100%; padding: 10px; border-radius: 6px; border: 1px solid #444; background: #1a1a1a; color: white; box-sizing: border-box; }
@@ -16,7 +21,6 @@
 
         /* Main App Interface */
         #main-app { display: none; flex-direction: column; height: 100vh; width: 100%; }
-
         #archer-tabs { display: flex; background: #333; padding: 5px; gap: 5px; overflow-x: auto; }
         .tab-btn { flex: 1; min-width: 80px; padding: 10px 0; border: none; border-radius: 4px; background: #555; color: white; font-weight: bold; font-size: 11px; white-space: nowrap; }
         .tab-btn.active { background: #2196f3; }
@@ -37,7 +41,6 @@
         .running-sum-box { background: #fffde7; font-weight: bold; color: #d32f2f; border-left: 1.5px solid black; border-right: 1.5px solid black; }
         .stat-box { font-size: 11px; }
 
-        /* Highlight Logic */
         .gold-hit { background-color: #fff9c4 !important; font-weight: bold; }
         .active-cell { border: 2px solid orange !important; z-index: 10; }
         .editing-cell { border: 2.5px solid #2196f3 !important; z-index: 11; background-color: #e3f2fd !important; }
@@ -52,70 +55,58 @@
 
         #pad { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; padding: 10px; background: #2a2a2a; }
         button.pad-btn { padding: 14px 0; font-size: 22px; font-weight: bold; border-radius: 8px; border: none; box-shadow: 0 3px 0 #000; color: inherit; }
-        .gold { background: #FFD700; color: black; }
-        .red { background: #FF4444; color: white; }
-        .blue { background: #33AAFF; color: white; }
-        .black { background: #333333; color: white; }
-        .white { background: #FFFFFF; color: black; }
-        .miss { background: #888888; color: white; }
+        .gold { background: #FFD700; color: black; } .red { background: #FF4444; color: white; } .blue { background: #33AAFF; color: white; }
+        .black { background: #333333; color: white; } .white { background: #FFFFFF; color: black; } .miss { background: #888888; color: white; }
         .backspace { background: #555; color: white; }
         .export-btn { background: #4CAF50 !important; color: white !important; grid-column: span 4; font-size: 16px !important; margin-top: 4px; padding: 10px 0 !important; }
     </style>
 </head>
 <body>
 
-<div id="setup-screen">
+<div id="mode-screen" class="screen">
     <div class="setup-card">
-        <h2>SESSION SETUP</h2>
+        <h2>SELECT MODE</h2>
+        <button class="mode-btn out-btn" onclick="selectMode('outdoor')">OUTDOOR (72 arrows)</button>
+        <button class="mode-btn in-btn" onclick="selectMode('indoor')">INDOOR (60 arrows)</button>
+    </div>
+</div>
+
+<div id="setup-screen" class="screen" style="display:none;">
+    <div class="setup-card">
+        <h2 id="setup-title">ARCHER SETUP</h2>
         <div id="archer-inputs">
-            <div class="input-group">
-                <label>Archer 1 Name</label>
-                <input type="text" id="name-0" value="Archer 1">
-            </div>
-            <div class="input-group">
-                <label>Archer 2 Name (Optional)</label>
-                <input type="text" id="name-1" placeholder="Empty = Not shooting">
-            </div>
-            <div class="input-group">
-                <label>Archer 3 Name (Optional)</label>
-                <input type="text" id="name-2" placeholder="Empty = Not shooting">
-            </div>
-            <div class="input-group">
-                <label>Archer 4 Name (Optional)</label>
-                <input type="text" id="name-3" placeholder="Empty = Not shooting">
-            </div>
+            <div class="input-group"><label>Archer 1 Name</label><input type="text" id="name-0" value="Archer 1"></div>
+            <div class="input-group"><label>Archer 2 Name</label><input type="text" id="name-1" placeholder="Optional"></div>
+            <div class="input-group"><label>Archer 3 Name</label><input type="text" id="name-2" placeholder="Optional"></div>
+            <div class="input-group"><label>Archer 4 Name</label><input type="text" id="name-3" placeholder="Optional"></div>
         </div>
         <button class="start-btn" onclick="startSession()">START SESSION</button>
+        <button style="background:none; border:none; color:#aaa; width:100%; margin-top:10px;" onclick="location.reload()">← Back</button>
     </div>
 </div>
 
 <div id="main-app">
-    <div id="archer-tabs">
-        <button class="settings-btn" onclick="toggleSetup(true)">⚙</button>
-    </div>
-
+    <div id="archer-tabs"></div>
     <div id="table-container">
-        <div class="table-title">1st Half (Ends 1-6)</div>
+        <div class="table-title" id="title-h1">1st Half</div>
         <table>
-            <colgroup><col class="col-end"><col class="col-arr"><col class="col-arr"><col class="col-arr"><col class="col-sum"><col class="col-tot"><col class="col-run"><col class="col-stat"><col class="col-stat"></colgroup>
+            <colgroup id="col-group-1"></colgroup>
             <tbody id="body-1"></tbody>
         </table>
-        <div class="table-title">2nd Half (Ends 7-12)</div>
+        <div class="table-title" id="title-h2">2nd Half</div>
         <table>
-            <colgroup><col class="col-end"><col class="col-arr"><col class="col-arr"><col class="col-arr"><col class="col-sum"><col class="col-tot"><col class="col-run"><col class="col-stat"><col class="col-stat"></colgroup>
+            <colgroup id="col-group-2"></colgroup>
             <tbody id="body-2"></tbody>
         </table>
     </div>
-
     <div id="session-footer">
         <div class="foot-label" id="footer-name">TOTAL:</div>
         <div class="foot-sum"></div>
         <div class="foot-tot" id="gt-score">0</div>
         <div class="foot-run"></div>
-        <div class="foot-stat" id="gt-10x">0</div>
-        <div class="foot-stat" id="gt-x">0</div>
+        <div class="foot-stat" id="gt-stat1">0</div>
+        <div class="foot-stat" id="gt-stat2">0</div>
     </div>
-
     <div id="pad">
         <button class="pad-btn gold" onclick="handleInput('X')">X</button>
         <button class="pad-btn gold" onclick="handleInput(10)">10</button>
@@ -138,61 +129,72 @@
     let archers = [];
     let currentIdx = 0;
     let editIndex = null;
+    let sessionMode = 'outdoor';
+
+    function selectMode(m) {
+        sessionMode = m;
+        document.getElementById('mode-screen').style.display = 'none';
+        document.getElementById('setup-screen').style.display = 'flex';
+        document.getElementById('setup-title').innerText = m.toUpperCase() + " SETUP";
+    }
 
     function startSession() {
         archers = [];
+        const arrowCount = (sessionMode === 'outdoor' ? 72 : 60);
         for(let i=0; i<4; i++) {
             let nameVal = document.getElementById(`name-${i}`).value.trim();
             if(nameVal !== "" || i === 0) { 
-                archers.push({
-                    name: nameVal || `Archer ${i+1}`,
-                    scores: Array(72).fill(""),
-                    cursor: 0
-                });
+                archers.push({ name: nameVal || `Archer ${i+1}`, scores: Array(arrowCount).fill(""), cursor: 0 });
             }
         }
         
-        let tabsHtml = '';
-        archers.forEach((a, i) => {
-            tabsHtml += `<button id="tab-${i}" class="tab-btn ${i===0?'active':''}" onclick="switchArcher(${i})">${a.name.toUpperCase()}</button>`;
-        });
-        tabsHtml += `<button class="settings-btn" onclick="toggleSetup(true)">⚙</button>`;
-        document.getElementById('archer-tabs').innerHTML = tabsHtml;
+        // Define Column Groups
+        const outCols = '<col class="col-end"><col class="col-arr"><col class="col-arr"><col class="col-arr"><col class="col-sum"><col class="col-tot"><col class="col-run"><col class="col-stat"><col class="col-stat">';
+        const inCols = '<col class="col-end"><col class="col-arr"><col class="col-arr"><col class="col-arr"><col class="col-tot"><col class="col-run"><col class="col-stat"><col class="col-stat">';
+        document.getElementById('col-group-1').innerHTML = (sessionMode === 'outdoor' ? outCols : inCols);
+        document.getElementById('col-group-2').innerHTML = (sessionMode === 'outdoor' ? outCols : inCols);
 
-        toggleSetup(false);
+        // Titles
+        document.getElementById('title-h1').innerText = (sessionMode === 'outdoor' ? "1st Half (Ends 1-6)" : "1st Half (Ends 1-10)");
+        document.getElementById('title-h2').innerText = (sessionMode === 'outdoor' ? "2nd Half (Ends 7-12)" : "2nd Half (Ends 11-20)");
+        
+        document.getElementById('setup-screen').style.display = 'none';
+        document.getElementById('main-app').style.display = 'flex';
         switchArcher(0);
     }
 
-    function toggleSetup(show) {
-        document.getElementById('setup-screen').style.display = show ? 'flex' : 'none';
-        document.getElementById('main-app').style.display = show ? 'none' : 'flex';
-    }
-
     function switchArcher(idx) {
-        currentIdx = idx;
-        editIndex = null;
-        document.querySelectorAll('.tab-btn').forEach((btn, i) => {
-            btn.classList.toggle('active', i === idx);
-        });
+        currentIdx = idx; editIndex = null;
+        let tabsHtml = '';
+        archers.forEach((a, i) => { tabsHtml += `<button class="tab-btn ${i===idx?'active':''}" onclick="switchArcher(${i})">${a.name.toUpperCase()}</button>`; });
+        tabsHtml += `<button class="settings-btn" onclick="location.reload()">⚙</button>`;
+        document.getElementById('archer-tabs').innerHTML = tabsHtml;
         document.getElementById('footer-name').innerText = archers[idx].name.toUpperCase() + " TOTAL:";
         render();
     }
 
     function render() {
         let archer = archers[currentIdx];
-        let h1 = renderHalf(0, 6, "body-1", archer);
-        let h2 = renderHalf(6, 12, "body-2", archer);
+        let h1, h2;
+        if(sessionMode === 'outdoor') {
+            h1 = renderOutdoor(0, 6, "body-1", archer);
+            h2 = renderOutdoor(6, 12, "body-2", archer);
+        } else {
+            h1 = renderIndoor(0, 10, "body-1", archer);
+            h2 = renderIndoor(10, 20, "body-2", archer);
+        }
         document.getElementById('gt-score').innerText = h1.score + h2.score;
-        document.getElementById('gt-10x').innerText = h1.tenX + h2.tenX;
-        document.getElementById('gt-x').innerText = h1.xOnly + h2.xOnly;
+        document.getElementById('gt-stat1').innerText = h1.s1 + h2.s1;
+        document.getElementById('gt-stat2').innerText = h1.s2 + h2.s2;
+        
         let target = document.querySelector('.editing-cell') || document.querySelector('.active-cell');
         if(target) target.scrollIntoView({behavior:'smooth', block:'center'});
     }
 
-    function renderHalf(startEnd, endEnd, bodyId, archer) {
+    // EXACT OUTDOOR RENDERER FROM YOUR GOOD CODE
+    function renderOutdoor(startEnd, endEnd, bodyId, archer) {
         const targetBody = document.getElementById(bodyId);
-        let html = '';
-        let halfRunning = 0, half10s = 0, halfXs = 0;
+        let html = '', running = 0, tens = 0, xs = 0;
 
         for(let e = startEnd + 1; e <= endEnd; e++) {
             let sIdx = (e-1)*6;
@@ -201,17 +203,41 @@
             let s1 = (a[0]!=="" && a[1]!=="" && a[2]!=="") ? v[0]+v[1]+v[2] : "";
             let s2 = (a[3]!=="" && a[4]!=="" && a[5]!=="") ? v[3]+v[4]+v[5] : "";
             let endTotal = s2 !== "" ? (Number(s1)||0) + s2 : "";
-            if(endTotal !== "") halfRunning += endTotal;
+            if(endTotal !== "") running += endTotal;
+            
             let countStats = (arr) => ({ tenX: arr.filter(x => x===10 || x==='X').length, xOnly: arr.filter(x => x==='X').length });
             let r1 = countStats(a.slice(0,3)); let r2 = countStats(a.slice(3,6));
-            if(a[0]!==""||a[1]!==""||a[2]!=="") { half10s += r1.tenX; halfXs += r1.xOnly; }
-            if(a[3]!==""||a[4]!==""||a[5]!=="") { half10s += r2.tenX; halfXs += r2.xOnly; }
+            if(a[0]!==""||a[1]!==""||a[2]!=="") { tens += r1.tenX; xs += r1.xOnly; }
+            if(a[3]!==""||a[4]!==""||a[5]!=="") { tens += r2.tenX; xs += r2.xOnly; }
 
-            html += `<tr><td rowspan="2" class="end-label">End ${e}</td>${cellHtml(sIdx, a[0])}${cellHtml(sIdx+1, a[1])}${cellHtml(sIdx+2, a[2])}<td class="sum-box">${s1}</td><td class="no-entry"></td><td rowspan="2" class="running-sum-box">${endTotal !== "" ? halfRunning : ""}</td><td class="stat-box">${(a[0]!==""||a[1]!==""||a[2]!=="")?r1.tenX:""}</td><td class="stat-box">${(a[0]!==""||a[1]!==""||a[2]!=="")?r1.xOnly:""}</td></tr><tr class="end-sep">${cellHtml(sIdx+3, a[3])}${cellHtml(sIdx+4, a[4])}${cellHtml(sIdx+5, a[5])}<td class="sum-box">${s2}</td><td class="end-total-box">${endTotal}</td><td class="stat-box">${(a[3]!==""||a[4]!==""||a[5]!=="")?r2.tenX:""}</td><td class="stat-box">${(a[3]!==""||a[4]!==""||a[5]!=="")?r2.xOnly:""}</td></tr>`;
+            html += `<tr><td rowspan="2" class="end-label">End ${e}</td>${cellHtml(sIdx, a[0])}${cellHtml(sIdx+1, a[1])}${cellHtml(sIdx+2, a[2])}<td class="sum-box">${s1}</td><td class="no-entry"></td><td rowspan="2" class="running-sum-box">${endTotal !== "" ? running : ""}</td><td class="stat-box">${(a[0]!==""||a[1]!==""||a[2]!=="")?r1.tenX:""}</td><td class="stat-box">${(a[0]!==""||a[1]!==""||a[2]!=="")?r1.xOnly:""}</td></tr><tr class="end-sep">${cellHtml(sIdx+3, a[3])}${cellHtml(sIdx+4, a[4])}${cellHtml(sIdx+5, a[5])}<td class="sum-box">${s2}</td><td class="end-total-box">${endTotal}</td><td class="stat-box">${(a[3]!==""||a[4]!==""||a[5]!=="")?r2.tenX:""}</td><td class="stat-box">${(a[3]!==""||a[4]!==""||a[5]!=="")?r2.xOnly:""}</td></tr>`;
         }
-        html += `<tr class="half-total-row"><td colspan="5">HALF TOTAL</td><td>${halfRunning}</td><td></td><td>${half10s}</td><td>${halfXs}</td></tr>`;
+        html += `<tr class="half-total-row"><td colspan="5">HALF TOTAL</td><td>${running}</td><td></td><td>${tens}</td><td>${xs}</td></tr>`;
         targetBody.innerHTML = html;
-        return { score: halfRunning, tenX: half10s, xOnly: halfXs };
+        return { score: running, s1: tens, s2: xs };
+    }
+
+    // INDOOR RENDERER (1 ROW PER END)
+    function renderIndoor(startEnd, endEnd, bodyId, archer) {
+        const targetBody = document.getElementById(bodyId);
+        let html = '', running = 0, tens = 0, nines = 0;
+
+        for(let e = startEnd + 1; e <= endEnd; e++) {
+            let sIdx = (e-1)*3;
+            let a = archer.scores.slice(sIdx, sIdx + 3);
+            let v = a.map(val => (val==='X'||val===10?10:val==='M'?0:Number(val)||0));
+            let endTotal = (a[0]!=="" && a[1]!=="" && a[2]!=="") ? v[0]+v[1]+v[2] : "";
+            if(endTotal !== "") running += endTotal;
+            
+            let c10 = a.filter(x => x===10 || x==='X').length;
+            let c9 = a.filter(x => x===9).length;
+            if(a[0]!=="") { tens += c10; nines += c9; }
+
+            html += `<tr class="end-sep"><td class="end-label">End ${e}</td>${cellHtml(sIdx, a[0])}${cellHtml(sIdx+1, a[1])}${cellHtml(sIdx+2, a[2])}<td class="end-total-box">${endTotal}</td><td class="running-sum-box">${endTotal !== "" ? running : ""}</td><td class="stat-box">${a[0]!==""?c10:""}</td><td class="stat-box">${a[0]!==""?c9:""}</td></tr>`;
+        }
+        html += `<tr class="half-total-row"><td colspan="4">HALF TOTAL</td><td>${running}</td><td></td><td>${tens}</td><td>${nines}</td></tr>`;
+        targetBody.innerHTML = html;
+        return { score: running, s1: tens, s2: nines };
     }
 
     function cellHtml(idx, val) {
@@ -227,19 +253,14 @@
 
     function handleInput(val) {
         let archer = archers[currentIdx];
-        if (editIndex !== null) {
-            archer.scores[editIndex] = val;
-            editIndex = null;
-        } else if (archer.cursor < 72) {
-            archer.scores[archer.cursor] = val;
-            archer.cursor++;
-            if (archer.cursor % 6 === 0) {
-                render(); 
-                setTimeout(() => {
-                    let nextArcherIdx = (currentIdx + 1) % archers.length;
-                    switchArcher(nextArcherIdx);
-                }, 100); 
-                return; 
+        const step = (sessionMode === 'outdoor' ? 6 : 3);
+        if (editIndex !== null) { archer.scores[editIndex] = val; editIndex = null; }
+        else if (archer.cursor < archer.scores.length) {
+            archer.scores[archer.cursor] = val; archer.cursor++;
+            if (archer.cursor % step === 0) {
+                render();
+                setTimeout(() => { switchArcher((currentIdx + 1) % archers.length); }, 100);
+                return;
             }
         }
         render();
@@ -254,43 +275,25 @@
 
     function exportCSV() {
         let archer = archers[currentIdx];
-        let csvContent = "data:text/csv;charset=utf-8,";
-        csvContent += "ARCHER: " + archer.name.toUpperCase() + "\n";
-        csvContent += "DATE: " + new Date().toLocaleDateString() + "\n\n";
-        
-        const generateHalf = (startEnd, endEnd) => {
-            let section = (startEnd === 0 ? "1ST HALF" : "2ND HALF") + "\n";
-            section += "End,A1,A2,A3,Sum1,A4,A5,A6,Sum2,End Total,10+X,X\n";
-            let hTotal = 0, h10 = 0, hX = 0;
-            for(let i = startEnd; i < endEnd; i++) {
-                let s = i * 6;
-                let row = archer.scores.slice(s, s + 6);
-                let v = row.map(val => (val==='X'||val===10?10:val==='M'?0:Number(val)||0));
-                let sum1 = (row[0]!=="" && row[1]!=="" && row[2]!=="") ? v[0]+v[1]+v[2] : "";
-                let sum2 = (row[3]!=="" && row[4]!=="" && row[5]!=="") ? v[3]+v[4]+v[5] : "";
-                let eTotal = sum2 !== "" ? (Number(sum1)||0) + sum2 : "";
-                if(eTotal !== "") hTotal += eTotal;
-                let r10 = row.filter(x => x===10 || x==='X').length;
-                let rX = row.filter(x => x==='X').length;
-                h10 += r10; hX += rX;
-                section += `${i+1},${row[0]},${row[1]},${row[2]},${sum1},${row[3]},${row[4]},${row[5]},${sum2},${eTotal},${r10},${rX}\n`;
+        let csv = "data:text/csv;charset=utf-8,ARCHER: " + archer.name.toUpperCase() + " (" + sessionMode.toUpperCase() + ")\n\n";
+        if(sessionMode === 'outdoor') {
+            csv += "End,A1,A2,A3,Sum1,A4,A5,A6,Sum2,Total,10+X,X\n";
+            for(let i=0; i<12; i++) {
+                let r = archer.scores.slice(i*6, i*6+6);
+                let v = r.map(x => (x==='X'||x===10?10:x==='M'?0:Number(x)||0));
+                csv += `${i+1},${r[0]},${r[1]},${r[2]},${v[0]+v[1]+v[2]},${r[3]},${r[4]},${r[5]},${v[3]+v[4]+v[5]},${v.reduce((a,b)=>a+b,0)},${r.filter(x=>x===10||x==='X').length},${r.filter(x=>x==='X').length}\n`;
             }
-            section += `,,,HALF TOTAL,,,,,,${hTotal},${h10},${hX}\n\n`;
-            return section;
-        };
-
-        csvContent += generateHalf(0, 6);
-        csvContent += generateHalf(6, 12);
-        let totalScore = archer.scores.reduce((a, b) => a + (b==='X'||b===10?10:b==='M'?0:Number(b)||0), 0);
-        csvContent += `,,,GRAND TOTAL,,,,,,${totalScore}\n`;
-
-        let encodedUri = encodeURI(csvContent);
-        let link = document.createElement("a");
-        link.setAttribute("href", encodedUri);
-        link.setAttribute("download", `Scorecard_${archer.name.replace(/\s+/g, '_')}.csv`);
-        document.body.appendChild(link);
+        } else {
+            csv += "End,A1,A2,A3,Total,10s,9s\n";
+            for(let i=0; i<20; i++) {
+                let r = archer.scores.slice(i*3, i*3+3);
+                let v = r.map(x => (x==='X'||x===10?10:x==='M'?0:Number(x)||0));
+                csv += `${i+1},${r[0]},${r[1]},${r[2]},${v[0]+v[1]+v[2]},${r.filter(x=>x===10||x==='X').length},${r.filter(x=>x===9).length}\n`;
+            }
+        }
+        let link = document.createElement("a"); link.setAttribute("href", encodeURI(csv));
+        link.setAttribute("download", `${archer.name}_Scorecard.csv`);
         link.click();
-        document.body.removeChild(link);
     }
 </script>
 </body>
