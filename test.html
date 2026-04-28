@@ -217,7 +217,8 @@
     }
 
     function selectCell(idx) { editIndex = (editIndex === idx) ? null : idx; render(); }
-   function handleInput(val) {
+
+    function handleInput(val) {
         let archer = archers[currentIdx];
         
         // 1. Handle the input/correction for the current archer
@@ -238,13 +239,11 @@
                     // Otherwise, jump to the next one
                     let nextArcherIdx = (currentIdx + 1) % archers.length;
                     switchArcher(nextArcherIdx);
-                }, 50); 
+                }, 400); // 400ms delay gives a nice visual confirmation of the last arrow
                 
                 return; // Exit so we don't render twice
             }
         }
-        render();
-    }
         render();
     }
     function backspace() {
