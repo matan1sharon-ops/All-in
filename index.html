@@ -173,7 +173,6 @@
     let wakeLock = null;
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
-    // AUTO-SAVE FUNCTION
     function backupActiveSession() {
         localStorage.setItem('active_session_backup', JSON.stringify(state));
     }
@@ -209,21 +208,26 @@
     }
 
     function switchArcher(idx) {
+        // Fix: If current archer is finished (3 of 3), commit to history BEFORE switching
+        if (state.current.length === state.arrows) {
+            const newEnd = { rawScores: [...state.current], displayScores: [...state.current].map(s => s === 0 ? 'M' : s), total: state.current.reduce((a, b) => a + getVal(b), 0), markers: [...state.markers] };
+            state.history.push(newEnd);
+            state.current = [];
+            state.markers = [];
+        }
+        
         state.participants[state.activeArcherIdx].current = [...state.current];
         state.participants[state.activeArcherIdx].history = [...state.history];
         state.participants[state.activeArcherIdx].markers = [...state.markers];
+        
         state.activeArcherIdx = idx;
         const p = state.participants[idx];
+        
         state.history = [...p.history];
+        state.current = [...p.current];
         state.markers = [...p.markers];
         state.editingIndex = -1;
-        if (p.current.length === state.arrows) {
-            state.current = [];
-            state.markers = [];
-        } else {
-            state.current = [...p.current];
-            state.markers = [...p.markers];
-        }
+        
         renderTabs();
         if(state.scoringType === 'face') updateFaceMarkers();
         renderUI();
@@ -242,24 +246,39 @@
             if (state.editingIndex !== -1) { 
                 state.history[state.editingIndex] = newEnd; 
                 state.editingIndex = -1; 
-                renderUI();
-                backupActiveSession();
-                return;
             } else { 
                 state.history.push(newEnd); 
             }
+            
             state.participants[state.activeArcherIdx].history = [...state.history];
             state.participants[state.activeArcherIdx].current = []; 
             state.participants[state.activeArcherIdx].markers = []; 
-            backupActiveSession();
+            
             if (state.activeArcherIdx < state.participants.length - 1) {
-                switchArcher(state.activeArcherIdx + 1);
+                // Not using switchArcher here because we manually committed above
+                state.activeArcherIdx++;
+                const p = state.participants[state.activeArcherIdx];
+                state.history = [...p.history];
+                state.current = [...p.current];
+                state.markers = [...p.markers];
+                renderTabs();
+                if(state.scoringType === 'face') updateFaceMarkers();
+                renderUI();
+                backupActiveSession();
             } else {
                 if(state.history.length >= state.ends) {
                     saveSession(); 
                 } else {
-                    switchArcher(0);
+                    state.activeArcherIdx = 0;
+                    const p = state.participants[0];
+                    state.history = [...p.history];
+                    state.current = [...p.current];
+                    state.markers = [...p.markers];
                     stopTimer(); 
+                    renderTabs();
+                    if(state.scoringType === 'face') updateFaceMarkers();
+                    renderUI();
+                    backupActiveSession();
                 }
             }
         }
@@ -440,7 +459,7 @@
         const sessionData = state.participants.map(p => ({ archer: p.name, score: p.history.reduce((a, b) => a + b.total, 0), avg: (p.history.reduce((a, b) => a + b.total, 0) / (p.history.length * state.arrows)).toFixed(1), ends: [...p.history] }));
         const mainSession = { id: Date.now() + Math.random(), date: new Date().toLocaleDateString('en-GB'), archers: sessionData, arrowsPerEnd: state.arrows, totalEndsPlanned: state.ends, scoringType: state.scoringType };
         let allHist = JSON.parse(localStorage.getItem(state.mode) || "[]"); allHist.unshift(mainSession); localStorage.setItem(state.mode, JSON.stringify(allHist));
-        localStorage.removeItem('active_session_backup'); // CLEAR BACKUP ON FINISH
+        localStorage.removeItem('active_session_backup');
         showScreen('home');
     }
 
@@ -514,7 +533,6 @@
         if (cC) { cC.innerHTML = ''; for(let d=5; d<=50; d+=5) cC.innerHTML += `<div class="crawl-item"><div class="crawl-dist">${d}m</div><input type="text" id="c-${d}" class="crawl-val"></div>`; }
         if (document.getElementById('g-owner-name')) document.getElementById('g-owner-name').value = state.gear.ownerName;
 
-        // RECOVERY LOGIC
         const backup = localStorage.getItem('active_session_backup');
         if (backup && confirm("Restore previous session? / שחזר אימון קודם?")) {
             state = JSON.parse(backup);
