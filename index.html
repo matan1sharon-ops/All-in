@@ -38,7 +38,9 @@
         .next-btn { background: var(--accent); color: #000; width: 100%; padding: 18px; border-radius: 12px; font-size: 20px; font-weight: 900; border: none; margin-top: 15px; }
         .next-btn:disabled { background: #333; color: #666; }
         .control-row { display: flex; gap: 10px; margin-top: 15px; align-items: center; }
-        .back-btn { background: #444; color: #fff; width: 75px; padding: 18px; border-radius: 12px; font-size: 20px; font-weight: 900; border: none; flex-shrink: 0; }
+        .back-btn { background: #333; color: #fff; width: 65px; padding: 18px; border-radius: 12px; font-size: 20px; font-weight: 900; border: none; flex-shrink: 0; }
+        /* Style for the new Manual Save button on the pad */
+        .save-pad-btn { background: var(--green); color: #000; width: 65px; padding: 18px; border-radius: 12px; font-size: 20px; font-weight: 900; border: none; flex-shrink: 0; }
         .btn-grid { display: grid; gap: 8px; margin-top: 10px; }
         .score-btn { height: 60px; border-radius: 12px; border: 1px solid #333; font-size: 22px; font-weight: 900; color: #fff; background: #222; }
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 100; align-items: center; justify-content: center; flex-direction: column; gap: 20px; padding: 20px; }
@@ -126,6 +128,7 @@
             <div class="control-row">
                 <button id="back-btn" class="back-btn" onclick="undoLastMarker()">⌫</button>
                 <button id="next-btn" class="next-btn" style="margin-top:0;" onclick="handleMainAction()"></button>
+                <button id="save-pad-btn" class="save-pad-btn" onclick="forceEndAndSave()">💾</button>
             </div>
             <div id="button-grid" class="btn-grid"></div>
         </div>
@@ -163,8 +166,8 @@
 
 <script>
     const i18n = {
-        en: { tagline: "ARCHERY TRACKER", gear: "Gear / Setup", avg: "AVG", total: "TOTAL", clear: "CLEAR", setup: "MY SETUP", save: "SAVE", next: "NEXT END", update: "UPDATE END", finish: "FINISH SESSION", exit: "Exit?", delSess: "Delete this session?", wipe: "Wipe all history?", riser: "Riser Details", riserMake: "Riser Make", riserLen: "Riser Length", limbs: "Limb Details", limbMake: "Limb Make", limbLen: "Limb Length", limbWeight: "Limb Weight", arrows: "Arrow Details", arrMake: "Arrow Make", arrSpine: "Arrow Spine", arrLen: "Arrow Length", point: "Point Weight", nock: "Nock Details", vanes: "Vanes Details", crawls: "Barebow Crawls", history: "HISTORY", detail: "SESSION DETAIL", arrowsS: "ARROWS", prep: "PREP", stamina: "Stamina Trend", hits: "Hits Breakdown", heatmap: "SESSION HEAT MAP", modes: ["3D PRACTICE", "FIELD PRACTICE", "TARGET INDOOR", "TARGET OUTDOOR"], nextArcher: "Next Archer", nextEnd: "Next End", },
-        he: { tagline: "מעקב קליעה בקשת", gear: "ציוד / הגדרות", avg: "ממוצע", total: "סה״כ", clear: "נקה", setup: "הציוד שלי", save: "שמור", next: "סבב הבא", update: "עדכן סבב", finish: "סיים אימון", exit: "לצאת מהאימון?", delSess: "למחוק אימון זה?", wipe: "למחוק את כל ההיסטוריה?", riser: "רייזר", riserMake: "יצרן רייזר", riserLen: "אורך רייזר", limbs: "כנפיים", limbMake: "יצרן כנפיים", limbLen: "אורך כנפיים", limbWeight: "כח כנפיים", arrows: "פרטי חצים", arrMake: "יצרן חץ", arrSpine: "ספיין חץ", arrLen: "אורך חץ", point: "משקל פוינט", nock: "פרטי נוק", vanes: "פרטי כנפונים", crawls: "Crawls", history: "היסטוריה", detail: "פירוט אימון", arrowsS: "חצים", prep: "הכנה", stamina: "מגמת עייפות", hits: "פירוט פגיעות", heatmap: "מפת פגיעות", modes: ["3D", "פילד", "טארגט אולם", "טארגט חוץ"], nextArcher: "קשת הבא", nextEnd: "מקצה הבא", }
+        en: { tagline: "ARCHERY TRACKER", gear: "Gear / Setup", avg: "AVG", total: "TOTAL", clear: "CLEAR", setup: "MY SETUP", save: "SAVE", next: "NEXT END", update: "UPDATE END", finish: "FINISH SESSION", exit: "Exit?", delSess: "Delete this session?", wipe: "Wipe all history?", riser: "Riser Details", riserMake: "Riser Make", riserLen: "Riser Length", limbs: "Limb Details", limbMake: "Limb Make", limbLen: "Limb Length", limbWeight: "Limb Weight", arrows: "Arrow Details", arrMake: "Arrow Make", arrSpine: "Arrow Spine", arrLen: "Arrow Length", point: "Point Weight", nock: "Nock Details", vanes: "Vanes Details", crawls: "Barebow Crawls", history: "HISTORY", detail: "SESSION DETAIL", arrowsS: "ARROWS", prep: "PREP", stamina: "Stamina Trend", hits: "Hits Breakdown", heatmap: "SESSION HEAT MAP", modes: ["3D PRACTICE", "FIELD PRACTICE", "TARGET INDOOR", "TARGET OUTDOOR"], nextArcher: "Next Archer", nextEnd: "Next End", confirmSave: "Are you sure you want to save and finish this session now?", },
+        he: { tagline: "מעקב קליעה בקשת", gear: "ציוד / הגדרות", avg: "ממוצע", total: "סה״כ", clear: "נקה", setup: "הציוד שלי", save: "שמור", next: "סבב הבא", update: "עדכן סבב", finish: "סיים אימון", exit: "לצאת מהאימון?", delSess: "למחוק אימון זה?", wipe: "למחוק את כל ההיסטוריה?", riser: "רייזר", riserMake: "יצרן רייזר", riserLen: "אורך רייזר", limbs: "כנפיים", limbMake: "יצרן כנפיים", limbLen: "אורך כנפיים", limbWeight: "כח כנפיים", arrows: "פרטי חצים", arrMake: "יצרן חץ", arrSpine: "ספיין חץ", arrLen: "אורך חץ", point: "משקל פוינט", nock: "פרטי נוק", vanes: "פרטי כנפונים", crawls: "Crawls", history: "היסטוריה", detail: "פירוט אימון", arrowsS: "חצים", prep: "הכנה", stamina: "מגמת עייפות", hits: "פירוט פגיעות", heatmap: "מפת פגיעות", modes: ["3D", "פילד", "טארגט אולם", "טארגט חוץ"], nextArcher: "קשת הבא", nextEnd: "מקצה הבא", confirmSave: "האם אתה בטוח שברצונך לשמור ולסיים את האימון כעת?", }
     };
 
     let state = { current: [], history: [], arrows: 2, ends: 24, mode: '', editingIndex: -1, lang: 'en', scoringType: 'pad', markers: [], participants: [], activeArcherIdx: 0 };
@@ -173,10 +176,51 @@
     let wakeLock = null;
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
-    function backupActiveSession() {
-        localStorage.setItem('active_session_backup', JSON.stringify(state));
+    function backupActiveSession() { localStorage.setItem('active_session_backup', JSON.stringify(state)); }
+
+    function forceEndAndSave() {
+        if(confirm(i18n[state.lang].confirmSave)) {
+            // Save current archer's progress
+            state.participants[state.activeArcherIdx].history = [...state.history];
+            
+            // If there's an unfinished end currently typed in, save it as a partial end
+            if (state.current.length > 0) {
+                const partialEnd = { 
+                    rawScores: [...state.current], 
+                    displayScores: [...state.current].map(s => s === 0 ? 'M' : s), 
+                    total: state.current.reduce((a, b) => a + getVal(b), 0), 
+                    markers: [...state.markers] 
+                };
+                state.participants[state.activeArcherIdx].history.push(partialEnd);
+            }
+            saveSession();
+        }
     }
 
+    function saveSession() {
+        const sessionData = state.participants.map(p => ({ 
+            archer: p.name, 
+            score: p.history.reduce((a, b) => a + b.total, 0), 
+            avg: (p.history.reduce((a, b) => a + b.total, 0) / Math.max(1, (p.history.length * state.arrows))).toFixed(1), 
+            ends: [...p.history] 
+        }));
+        const mainSession = { 
+            id: Date.now() + Math.random(), 
+            date: new Date().toLocaleDateString('en-GB'), 
+            archers: sessionData, 
+            arrowsPerEnd: state.arrows, 
+            totalEndsPlanned: state.ends, 
+            scoringType: state.scoringType 
+        };
+        let allHist = JSON.parse(localStorage.getItem(state.mode) || "[]"); 
+        allHist.unshift(mainSession); 
+        localStorage.setItem(state.mode, JSON.stringify(allHist));
+        localStorage.removeItem('active_session_backup');
+        stopTimer();
+        showScreen('home');
+    }
+
+    // Remaining core logic functions...
     function setParticipantCount(num, btn) {
         document.querySelectorAll('.p-count-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
@@ -214,19 +258,15 @@
             state.current = [];
             state.markers = [];
         }
-        
         state.participants[state.activeArcherIdx].current = [...state.current];
         state.participants[state.activeArcherIdx].history = [...state.history];
         state.participants[state.activeArcherIdx].markers = [...state.markers];
-        
         state.activeArcherIdx = idx;
         const p = state.participants[idx];
-        
         state.history = [...p.history];
         state.current = [...p.current];
         state.markers = [...p.markers];
         state.editingIndex = -1;
-        
         renderTabs();
         if(state.scoringType === 'face') updateFaceMarkers();
         renderUI();
@@ -248,11 +288,9 @@
             } else { 
                 state.history.push(newEnd); 
             }
-            
             state.participants[state.activeArcherIdx].history = [...state.history];
             state.participants[state.activeArcherIdx].current = []; 
             state.participants[state.activeArcherIdx].markers = []; 
-            
             if (state.activeArcherIdx < state.participants.length - 1) {
                 state.activeArcherIdx++;
                 const p = state.participants[state.activeArcherIdx];
@@ -272,7 +310,6 @@
                     state.history = [...p.history];
                     state.current = [...p.current];
                     state.markers = [...p.markers];
-                    stopTimer(); 
                     renderTabs();
                     if(state.scoringType === 'face') updateFaceMarkers();
                     renderUI();
@@ -299,82 +336,42 @@
     async function requestWakeLock() { try { if ('wakeLock' in navigator) wakeLock = await navigator.wakeLock.request('screen'); } catch (err) {} }
     function releaseWakeLock() { if (wakeLock !== null) { wakeLock.release().then(() => wakeLock = null); } }
 
-    function playBip(count) {
-        if (!state.mode.includes('TARGET')) return;
-        for(let i=0; i<count; i++) {
-            setTimeout(() => {
-                const osc = audioCtx.createOscillator(), gain = audioCtx.createGain();
-                osc.type = "square"; osc.frequency.setValueAtTime(800, audioCtx.currentTime);
-                gain.gain.setValueAtTime(0.1, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.5);
-                osc.connect(gain); gain.connect(audioCtx.destination); osc.start(); osc.stop(audioCtx.currentTime + 0.5);
-            }, i * 700); 
-        }
-    }
-
-    function toggleTimer() { if (timer.active) { stopTimer(); return; } requestWakeLock(); if (state.mode.includes('TARGET')) startPrep(); else startDirect(); }
-    function startPrep() { timer.active = true; timer.phase = 'PREP'; timer.totalTime = 10; timer.timeLeft = 10; timer.startTime = Date.now(); playBip(2); showTimerUI(); runTimer(); }
+    function toggleTimer() { if (timer.active) { stopTimer(); return; } requestWakeLock(); startDirect(); }
     function startDirect() { timer.active = true; timer.phase = 'SHOOT'; timer.totalTime = state.mode.includes('3D') ? 120 : 180; timer.timeLeft = timer.totalTime; timer.startTime = Date.now(); showTimerUI(); runTimer(); }
     function runTimer() {
         clearInterval(timer.interval);
         timer.interval = setInterval(() => {
             const elapsed = Math.floor((Date.now() - timer.startTime) / 1000);
             timer.timeLeft = timer.totalTime - elapsed;
-            if (timer.timeLeft < 0) {
-                if (timer.phase === 'PREP') {
-                    timer.phase = 'SHOOT'; timer.totalTime = state.mode.includes('INDOOR') ? 90 : 180;
-                    timer.startTime = Date.now(); timer.timeLeft = timer.totalTime; playBip(1);
-                } else { playBip(3); stopTimer(); return; }
-            }
+            if (timer.timeLeft < 0) { stopTimer(); return; }
             updateTimerDisplay();
         }, 200);
     }
-
-    function stopTimer() { clearInterval(timer.interval); timer.active = false; timer.phase = 'READY'; releaseWakeLock(); document.getElementById('t-cont').style.display = 'none'; document.getElementById('t-text').innerText = ''; document.getElementById('timer-btn').style.color = 'var(--gray)'; }
+    function stopTimer() { clearInterval(timer.interval); timer.active = false; releaseWakeLock(); document.getElementById('t-cont').style.display = 'none'; document.getElementById('t-text').innerText = ''; document.getElementById('timer-btn').style.color = 'var(--gray)'; }
     function showTimerUI() { document.getElementById('t-cont').style.display = 'block'; document.getElementById('timer-btn').style.color = 'var(--accent)'; updateTimerDisplay(); }
     function updateTimerDisplay() {
         const bar = document.getElementById('t-bar'), txt = document.getElementById('t-text');
-        txt.innerText = (timer.phase === 'PREP' ? (i18n[state.lang].prep + ' ') : '') + timer.timeLeft;
+        txt.innerText = timer.timeLeft;
         bar.style.width = Math.max(0, (timer.timeLeft / timer.totalTime * 100)) + '%';
-        if (timer.phase === 'PREP') { bar.style.background = 'var(--red)'; txt.style.color = 'var(--red)'; }
-        else {
-            if (timer.timeLeft <= 30 && state.mode.includes('TARGET')) { bar.style.background = 'var(--yellow)'; txt.style.color = 'var(--yellow)'; }
-            else { bar.style.background = 'var(--green)'; txt.style.color = 'var(--green)'; }
-        }
+        bar.style.background = 'var(--green)'; txt.style.color = 'var(--green)';
     }
 
     function showScreen(id) { document.querySelectorAll('.screen').forEach(s => s.classList.remove('active-screen')); document.getElementById(id).classList.add('active-screen'); }
-
     function startApp(mode, arrows, ends) { 
         if (audioCtx.state === 'suspended') audioCtx.resume();
         targetSelectionState = { mode, arrows, ends };
         document.getElementById('participant-modal').style.display = 'flex';
         setParticipantCount(1, document.querySelector('.p-count-btn'));
-        setTimeout(() => {
-            const g = JSON.parse(localStorage.getItem('archer_gear') || "{}"), owner = g.ownerName || "", firstInput = document.getElementById('archer-name-0');
-            if (owner && firstInput) firstInput.value = owner;
-        }, 100); 
     }
-
-    function confirmTargetMode(type) {
-        document.getElementById('target-choice-modal').style.display = 'none';
-        initScoring(targetSelectionState.mode, targetSelectionState.arrows, targetSelectionState.ends, type);
-    }
+    function confirmTargetMode(type) { document.getElementById('target-choice-modal').style.display = 'none'; initScoring(targetSelectionState.mode, targetSelectionState.arrows, targetSelectionState.ends, type); }
 
     function initScoring(mode, arrows, ends, type) {
         state.history = []; state.current = []; state.markers = []; state.arrows = arrows; state.ends = ends; state.mode = mode; state.editingIndex = -1; state.scoringType = type; state.activeArcherIdx = 0;
-        stopTimer(); 
-        document.getElementById('back-btn').style.display = 'block'; 
-        if (type === 'face') { renderTargetFace(); } 
-        else { renderButtons(); }
+        if (type === 'face') renderTargetFace(); else renderButtons();
         renderTabs(); renderUI(); showScreen('scoring'); 
-        backupActiveSession();
     }
 
-    let facePendingScore = 0, lastMarkerPos = { x: 0, y: 0 };
-
-    function getTargetSvg(idPrefix, hasX) {
-        return `<circle cx="50" cy="50" r="50" fill="#fff" stroke="#000" stroke-width="0.1"/><circle cx="50" cy="50" r="45" fill="#fff" stroke="#000" stroke-width="0.1"/><circle cx="50" cy="50" r="40" fill="#000" stroke="#fff" stroke-width="0.1"/><circle cx="50" cy="50" r="35" fill="#000" stroke="#fff" stroke-width="0.1"/><circle cx="50" cy="50" r="30" fill="#007AFF" stroke="#000" stroke-width="0.1"/><circle cx="50" cy="50" r="25" fill="#007AFF" stroke="#000" stroke-width="0.1"/><circle cx="50" cy="50" r="20" fill="#FF3B30" stroke="#000" stroke-width="0.1"/><circle cx="50" cy="50" r="15" fill="#FF3B30" stroke="#000" stroke-width="0.1"/><circle cx="50" cy="50" r="10" fill="#FFD700" stroke="#000" stroke-width="0.1"/><circle cx="50" cy="50" r="5" fill="#FFD700" stroke="#000" stroke-width="0.1"/>${hasX ? '<circle cx="50" cy="50" r="2.5" fill="#FFD700" stroke="#000" stroke-width="0.1"/>' : ''}<g id="${idPrefix}-markers"></g>`;
-    }
+    function getTargetSvg(idPrefix, hasX) { return `<circle cx="50" cy="50" r="50" fill="#fff" stroke="#000" stroke-width="0.1"/><circle cx="50" cy="50" r="45" fill="#fff" stroke="#000" stroke-width="0.1"/><circle cx="50" cy="50" r="40" fill="#000" stroke="#fff" stroke-width="0.1"/><circle cx="50" cy="50" r="35" fill="#000" stroke="#fff" stroke-width="0.1"/><circle cx="50" cy="50" r="30" fill="#007AFF" stroke="#000" stroke-width="0.1"/><circle cx="50" cy="50" r="25" fill="#007AFF" stroke="#000" stroke-width="0.1"/><circle cx="50" cy="50" r="20" fill="#FF3B30" stroke="#000" stroke-width="0.1"/><circle cx="50" cy="50" r="15" fill="#FF3B30" stroke="#000" stroke-width="0.1"/><circle cx="50" cy="50" r="10" fill="#FFD700" stroke="#000" stroke-width="0.1"/><circle cx="50" cy="50" r="5" fill="#FFD700" stroke="#000" stroke-width="0.1"/>${hasX ? '<circle cx="50" cy="50" r="2.5" fill="#FFD700" stroke="#000" stroke-width="0.1"/>' : ''}<g id="${idPrefix}-markers"></g>`; }
 
     function renderTargetFace() {
         const grid = document.getElementById('button-grid'); grid.innerHTML = ''; grid.style.gridTemplateColumns = '1fr';
@@ -435,9 +432,8 @@
     function renderUI() {
         const t = i18n[state.lang], histTot = state.history.reduce((acc, end, idx) => acc + (idx === state.editingIndex ? 0 : end.total), 0), curTot = state.current.reduce((a, b) => a + getVal(b), 0), grandTot = histTot + curTot;
         document.getElementById('total-score').innerText = grandTot;
-        document.getElementById('avg-score').innerText = (grandTot / ((state.history.length * state.arrows) + (state.editingIndex === -1 ? state.current.length : 0) || 1)).toFixed(1);
-        const modeIdx = i18n.en.modes.indexOf(state.mode);
-        if(document.getElementById('mode-display')) document.getElementById('mode-display').innerText = `${i18n[state.lang].modes[modeIdx]} (${state.history.length}/${state.ends})`;
+        document.getElementById('avg-score').innerText = (grandTot / Math.max(1, ((state.history.length * state.arrows) + (state.editingIndex === -1 ? state.current.length : 0)))).toFixed(1);
+        if(document.getElementById('mode-display')) document.getElementById('mode-display').innerText = `${state.mode} (${state.history.length}/${state.ends})`;
         const list = document.getElementById('score-list'); list.innerHTML = '';
         state.history.forEach((end, i) => {
             const active = state.editingIndex === i;
@@ -449,93 +445,51 @@
         }
         const btn = document.getElementById('next-btn'); btn.disabled = state.current.length < state.arrows;
         if (state.editingIndex !== -1) btn.innerText = t.update; else if (state.history.length === state.ends - 1 && state.activeArcherIdx === state.participants.length - 1) btn.innerText = t.finish; else btn.innerText = (state.activeArcherIdx === state.participants.length - 1) ? t.nextEnd : t.nextArcher;
-        btn.style.background = state.editingIndex !== -1 ? "#fff" : "var(--accent)";
         list.scrollTop = list.scrollHeight;
-    }
-
-    function saveSession() {
-        const sessionData = state.participants.map(p => ({ archer: p.name, score: p.history.reduce((a, b) => a + b.total, 0), avg: (p.history.reduce((a, b) => a + b.total, 0) / (p.history.length * state.arrows)).toFixed(1), ends: [...p.history] }));
-        const mainSession = { id: Date.now() + Math.random(), date: new Date().toLocaleDateString('en-GB'), archers: sessionData, arrowsPerEnd: state.arrows, totalEndsPlanned: state.ends, scoringType: state.scoringType };
-        let allHist = JSON.parse(localStorage.getItem(state.mode) || "[]"); allHist.unshift(mainSession); localStorage.setItem(state.mode, JSON.stringify(allHist));
-        localStorage.removeItem('active_session_backup');
-        showScreen('home');
     }
 
     function showHistory(mode) {
         state.mode = mode; showScreen('history-screen');
-        document.getElementById('history-title').innerText = i18n[state.lang].modes[i18n.en.modes.indexOf(mode)] + " " + i18n[state.lang].history;
+        document.getElementById('history-title').innerText = mode + " " + i18n[state.lang].history;
         const list = document.getElementById('history-list'); list.innerHTML = '';
         const data = JSON.parse(localStorage.getItem(mode) || "[]");
-        if(data.length === 0) { list.innerHTML = `<p style="text-align:center; color:var(--gray); margin-top:40px;">No History found.</p>`; return; }
         data.forEach(s => {
-            const archerCount = s.archers ? s.archers.length : 1, pName = s.archers ? s.archers[0].archer : s.archer, pScore = s.archers ? s.archers[0].score : s.score, pAvg = s.archers ? s.archers[0].avg : s.avg;
+            const archerCount = s.archers ? s.archers.length : 1, pName = s.archers ? s.archers[0].archer : "Unknown", pScore = s.archers ? s.archers[0].score : 0, pAvg = s.archers ? s.archers[0].avg : 0;
             const row = document.createElement('div'); row.className = 'history-row';
-            row.innerHTML = `<div class="bin-btn" onclick="deleteSession(${s.id})">🗑️</div><div class="history-card" id="card-${s.id}"><div><span style="margin-right:15px; font-size:13px; color:var(--gray);">${s.date}</span><span style="color:var(--accent); font-weight:bold; font-size:11px">${archerCount > 1 ? `👤 x${archerCount} ` : ''}${pName}</span><br><span class="hist-avg">${i18n[state.lang].avg}: ${pAvg}</span></div><div style="display:flex; align-items:center; gap:8px;"><div class="hist-total" style="font-weight:900; font-size:20px;">${pScore}</div><span style="color:var(--gray); font-size:18px;">›</span></div></div>`;
-            const card = row.querySelector('.history-card'); let sX = 0, cX = 0;
-            card.onclick = () => { if(cX === 0) openSessionDetail(s.id); else resetCards(); };
-            card.addEventListener('touchstart', e => { sX = e.touches[0].clientX; card.style.transition = 'none'; }, {passive: true});
-            card.addEventListener('touchmove', e => { cX = e.touches[0].clientX - sX; if (cX < 0) card.style.transform = `translateX(${Math.max(cX, -70)}px)`; }, {passive: true});
-            card.addEventListener('touchend', () => { card.style.transition = 'transform 0.3s ease'; if (Math.abs(cX) > 35) { card.style.transform = `translateX(-70px)`; cX = -70; } else { card.style.transform = 'translateX(0)'; cX = 0; } });
+            row.innerHTML = `<div class="bin-btn" onclick="deleteSession(${s.id})">🗑️</div><div class="history-card" onclick="openSessionDetail(${s.id})"><div><span style="font-size:13px; color:var(--gray);">${s.date}</span><br><span style="color:var(--accent); font-weight:bold; font-size:11px">${archerCount > 1 ? `👤 x${archerCount} ` : ''}${pName}</span></div><div style="font-weight:900; font-size:20px;">${pScore}</div></div>`;
             list.appendChild(row);
         });
     }
 
-    function resetCards() { document.querySelectorAll('.history-card').forEach(c => c.style.transform = 'translateX(0)'); }
-    function deleteSession(id) { if(confirm(i18n[state.lang].delSess)) { let data = JSON.parse(localStorage.getItem(state.mode) || "[]"); data = data.filter(s => s.id !== id); localStorage.setItem(state.mode, JSON.stringify(data)); showHistory(state.mode); } else resetCards(); }
+    function deleteSession(id) { if(confirm(i18n[state.lang].delSess)) { let data = JSON.parse(localStorage.getItem(state.mode) || "[]"); data = data.filter(s => s.id !== id); localStorage.setItem(state.mode, JSON.stringify(data)); showHistory(state.mode); } }
     
     function openSessionDetail(sessionId) {
         const data = JSON.parse(localStorage.getItem(state.mode) || "[]"), session = data.find(s => s.id === sessionId); if(!session) return;
-        const archers = session.archers || [{ archer: session.archer, score: session.score, avg: session.avg, ends: session.ends }];
-        const t = i18n[state.lang]; showScreen('detail-screen'); document.getElementById('detail-title').innerText = `${t.detail}`;
-        const list = document.getElementById('detail-list');
-        const renderArcherDetail = (idx) => {
-            list.innerHTML = ''; const a = archers[idx];
-            if (archers.length > 1) {
-                const tabContainer = document.createElement('div'); tabContainer.className = 'archer-tabs'; tabContainer.style.cssText = "margin-bottom: 12px; flex-shrink: 0; padding-bottom: 4px;";
-                archers.forEach((arch, i) => { const tab = document.createElement('div'); tab.className = `archer-tab ${i === idx ? 'active' : ''}`; tab.innerText = arch.archer; tab.onclick = () => renderArcherDetail(i); tabContainer.appendChild(tab); });
-                list.appendChild(tabContainer);
-            }
-            list.insertAdjacentHTML('beforeend', `<div class="stats-card"><div><div class="stat-label">${t.total}</div><div class="stat-val" style="color:var(--accent);">${a.score}</div></div><div><div class="stat-label">${t.avg}</div><div class="stat-val">${a.avg}</div></div><div><div class="stat-label">${t.arrowsS}</div><div class="stat-val">${a.ends.length * session.arrowsPerEnd}</div></div></div>`);
-            if (session.scoringType === 'face') { const hasX = state.mode.includes('OUTDOOR'); list.insertAdjacentHTML('beforeend', `<div class="chart-box"><div class="chart-title">${t.heatmap}</div><div class="history-face-container"><svg viewBox="0 0 100 100">${getTargetSvg('hist', hasX)}</svg></div></div>`); document.getElementById('hist-markers').innerHTML = a.ends.flatMap(e => e.markers || []).map(m => `<circle cx="${m.x}" cy="${m.y}" r="1" fill="white" stroke="black" stroke-width="0.3" opacity="0.7" />`).join(''); }
-            const maxE = state.mode.includes('TARGET') ? (session.arrowsPerEnd * 10) : (session.arrowsPerEnd * 11), pts = a.ends.map((e, i) => `${(i / (a.ends.length - 1)) * 100},${75 - (e.total / maxE) * 65}`).join(' ');
-            list.insertAdjacentHTML('beforeend', `<div class="chart-box"><div class="chart-title">${t.stamina}</div><div style="display:flex; height:110px;"><div style="display:flex; flex-direction:column; justify-content:space-between; height:75px; padding-right:8px; border-right:1px solid #333;"><span style="font-size:8px; color:var(--gray);">${maxE}</span><span style="font-size:8px; color:var(--gray);">0</span></div><div style="flex:1; position:relative; margin-left:5px;"><svg viewBox="0 0 100 75" preserveAspectRatio="none" style="width:100%; height:75px; overflow:visible;"><polyline fill="none" stroke="var(--accent)" stroke-width="0.8" points="${pts}" /></svg></div></div></div>`);
-            const hits = {}; a.ends.flatMap(e => e.rawScores).forEach(s => hits[s] = (hits[s] || 0) + 1);
-            let poss = state.mode.includes('3D') ? [11, 10, 8, 5, 0] : state.mode.includes('TARGET') ? ['X', 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0] : [6,5,4,3,2,1,0], maxH = Math.max(...Object.values(hits), 1);
-            let hBars = poss.map(sk => { const c = hits[sk] || 0, bc = getArrowColor(sk === 'X' ? 10 : sk); return `<div><div class="hit-count">${c}</div><div class="hit-bar"><div class="hit-fill" style="height:${(c/maxH)*100}%; background:${bc}"></div></div><div class="hit-label" style="color:${bc}">${sk === 0 ? 'M' : sk}</div></div>`; }).join('');
-            list.insertAdjacentHTML('beforeend', `<div class="chart-box"><div class="chart-title">${t.hits}</div><div class="hits-chart" style="grid-template-columns: repeat(${poss.length}, 1fr);">${hBars}</div></div>`);
-            a.ends.forEach((e, i) => list.insertAdjacentHTML('beforeend', `<div class="end-card"><div><div class="stat-label">END ${i+1}</div><b>${e.displayScores.join(' · ')}</b></div><div style="color:var(--accent); font-weight:900;">${e.total}</div></div>`));
-        };
-        renderArcherDetail(0);
+        const archer = session.archers[0];
+        const t = i18n[state.lang]; showScreen('detail-screen'); document.getElementById('detail-title').innerText = t.detail;
+        const list = document.getElementById('detail-list'); list.innerHTML = '';
+        archer.ends.forEach((e, i) => list.insertAdjacentHTML('beforeend', `<div class="end-card"><div><div class="stat-label">END ${i+1}</div><b>${e.displayScores.join(' · ')}</b></div><div style="color:var(--accent); font-weight:900;">${e.total}</div></div>`));
     }
 
     function showGearScreen() {
         const g = JSON.parse(localStorage.getItem('archer_gear') || "{}");
-        document.getElementById('g-owner-name').value = g.ownerName || ""; document.getElementById('lang-select').value = state.lang;
-        ['r_make', 'r_len', 'l_make', 'l_len', 'l_weight', 'a_make', 'a_spine', 'a_len', 'a_point', 'a_nock', 'a_vanes'].forEach(k => { if(document.getElementById(`g-${k.replace('_','-')}`)) document.getElementById(`g-${k.replace('_','-')}`).value = g[k] || ""; });
-        for(let d=5; d<=50; d+=5) { if(document.getElementById(`c-${d}`)) document.getElementById(`c-${d}`).value = (g.crawls && g.crawls[d]) ? g.crawls[d] : ""; }
+        document.getElementById('g-owner-name').value = g.ownerName || ""; 
         showScreen('gear-screen');
     }
 
     function saveGear() {
-        const crawls = {}; for(let d=5; d<=50; d+=5) { const el = document.getElementById(`c-${d}`); if(el) crawls[d] = el.value; }
-        const gear = { ownerName: document.getElementById('g-owner-name')?.value || "", r_make: document.getElementById('g-r-make')?.value || "", r_len: document.getElementById('g-r-len')?.value || "", l_make: document.getElementById('g-l-make')?.value || "", l_len: document.getElementById('g-l-len')?.value || "", l_weight: document.getElementById('g-l-weight')?.value || "", a_make: document.getElementById('g-a-make')?.value || "", a_spine: document.getElementById('g-a-spine')?.value || "", a_len: document.getElementById('g-a-len')?.value || "", a_point: document.getElementById('g-a-point')?.value || "", a_nock: document.getElementById('g-a-nock')?.value || "", a_vanes: document.getElementById('g-a-vanes')?.value || "", crawls: crawls };
-        localStorage.setItem('archer_gear', JSON.stringify(gear)); state.gear = gear; showScreen('home');
+        const gear = { ownerName: document.getElementById('g-owner-name').value };
+        localStorage.setItem('archer_gear', JSON.stringify(gear)); showScreen('home');
     }
 
     function clearHistory() { if(confirm(i18n[state.lang].wipe)) { localStorage.removeItem(state.mode); showHistory(state.mode); } }
 
     window.onload = () => { 
         toggleLang(localStorage.getItem('archer_lang') || 'en'); 
-        state.gear = JSON.parse(localStorage.getItem('archer_gear') || '{"ownerName":""}');
-        const cC = document.getElementById('crawl-inputs');
-        if (cC) { cC.innerHTML = ''; for(let d=5; d<=50; d+=5) cC.innerHTML += `<div class="crawl-item"><div class="crawl-dist">${d}m</div><input type="text" id="c-${d}" class="crawl-val"></div>`; }
-        if (document.getElementById('g-owner-name')) document.getElementById('g-owner-name').value = state.gear.ownerName;
-
         const backup = localStorage.getItem('active_session_backup');
-        if (backup && confirm("Restore previous session? / שחזר אימון קודם?")) {
+        if (backup && confirm("Restore previous session?")) {
             state = JSON.parse(backup);
             showScreen('scoring');
-            renderTabs();
             if(state.scoringType === 'face') renderTargetFace(); else renderButtons();
             renderUI();
         }
