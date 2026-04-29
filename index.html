@@ -106,17 +106,22 @@
 
     <div id="scoring" class="screen">
         <header>
-            <button onclick="exitScoring()" style="background:none; border:none; color:var(--gray); font-size:22px;">←</button>
-            <div class="header-center">
-                <div id="mode-display" style="color:#fff; font-weight:800; text-transform:uppercase; font-size:11px;"></div>
-                <div id="t-text" class="timer-text"></div>
-            </div>
-            <div class="header-right">
-                <button id="timer-btn" onclick="toggleTimer()" style="background:none; border:none; color:var(--gray); font-size:20px;">⏰</button>
-                <div style="display:flex; flex-direction:column;"><span id="l-avg" class="stat-label"></span><span id="avg-score" class="stat-val">0.0</span></div>
-                <div style="display:flex; flex-direction:column;"><span id="l-total" class="stat-label"></span><span id="total-score" class="stat-val" style="color:var(--accent);">0</span></div>
-            </div>
-        </header>
+    <div style="display: flex; align-items: center; gap: 12px;">
+        <button onclick="exitScoring()" style="background:none; border:none; color:var(--gray); font-size:22px;">←</button>
+        <button onclick="manualSave()" style="background:none; border:none; color:var(--green); font-size:20px;">💾</button>
+    </div>
+
+    <div class="header-center">
+        <div id="mode-display" style="color:#fff; font-weight:800; text-transform:uppercase; font-size:11px;"></div>
+        <div id="t-text" class="timer-text"></div>
+    </div>
+
+    <div class="header-right">
+        <button id="timer-btn" onclick="toggleTimer()" style="background:none; border:none; color:var(--gray); font-size:20px;">⏰</button>
+        <div style="display:flex; flex-direction:column;"><span id="l-avg" class="stat-label"></span><span id="avg-score" class="stat-val">0.0</span></div>
+        <div style="display:flex; flex-direction:column;"><span id="l-total" class="stat-label"></span><span id="total-score" class="stat-val" style="color:var(--accent);">0</span></div>
+    </div>
+</header>
 
         <div id="archer-tabs" class="archer-tabs"></div>
         <div class="timer-container" id="t-cont"><div class="timer-bar" id="t-bar"></div></div>
@@ -125,7 +130,6 @@
         <div style="padding-bottom:30px; border-top: 1px solid #222; background: var(--bg);">
             <div class="control-row">
                 <button id="back-btn" class="back-btn" onclick="undoLastMarker()">⌫</button>
-                <button onclick="manualSave()" style="background:var(--green); color:#000; width:65px; border-radius:12px; font-size:20px; font-weight:bold; border:none;">SAVE</button>
                 <button id="next-btn" class="next-btn" style="margin-top:0;" onclick="handleMainAction()"></button>
             </div>
             <div id="button-grid" class="btn-grid"></div>
