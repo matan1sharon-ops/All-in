@@ -363,8 +363,9 @@
     function initScoring(mode, arrows, ends, type) {
         state.history = []; state.current = []; state.markers = []; state.arrows = arrows; state.ends = ends; state.mode = mode; state.editingIndex = -1; state.scoringType = type; state.activeArcherIdx = 0;
         stopTimer(); 
-        if (type === 'face') { document.getElementById('back-btn').style.display = 'block'; renderTargetFace(); } 
-        else { document.getElementById('back-btn').style.display = 'none'; renderButtons(); }
+        document.getElementById('back-btn').style.display = 'block'; 
+        if (type === 'face') { renderTargetFace(); } 
+        else { renderButtons(); }
         renderTabs(); renderUI(); showScreen('scoring'); 
         backupActiveSession();
     }
