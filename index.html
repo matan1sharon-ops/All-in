@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <link rel="apple-touch-icon" href="logo.png">
     <title>ALL IN Archery</title>
     <style>
         :root { --bg: #000; --text: #fff; --accent: #FFD700; --card: #151515; --gray: #888; --red: #FF3B30; --yellow: #FFCC00; --green: #4CD964; }
@@ -85,7 +84,7 @@
             <button class="p-count-btn" onclick="setParticipantCount(3, this)">3</button>
             <button class="p-count-btn" onclick="setParticipantCount(4, this)">4</button>
         </div>
-        <div id="participant-names-contner" style="width:100%; display:flex; flex-direction:column; gap:10px;"></div>
+        <div id="participant-names-container" style="width:100%; display:flex; flex-direction:column; gap:10px;"></div>
         <button class="next-btn" onclick="confirmParticipants()">START SESSION</button>
     </div>
 
@@ -97,9 +96,7 @@
 
     <div id="home" class="screen active-screen">
         <div style="text-align:center; margin-top:40px;">
-            <div class="logo-badge">
-    <img src="logo.png" style="width: 75%; height: 75%; object-fit: contain;">
-</div>
+            <div class="logo-badge">AI</div>
             <div style="font-size:32px; font-weight:900; letter-spacing:6px;">ALL IN</div>
             <p id="l-tagline" style="color:var(--gray); font-size:12px;"></p>
         </div>
