@@ -208,7 +208,6 @@
     }
 
     function switchArcher(idx) {
-        // Fix: If current archer is finished (3 of 3), commit to history BEFORE switching
         if (state.current.length === state.arrows) {
             const newEnd = { rawScores: [...state.current], displayScores: [...state.current].map(s => s === 0 ? 'M' : s), total: state.current.reduce((a, b) => a + getVal(b), 0), markers: [...state.markers] };
             state.history.push(newEnd);
@@ -255,7 +254,6 @@
             state.participants[state.activeArcherIdx].markers = []; 
             
             if (state.activeArcherIdx < state.participants.length - 1) {
-                // Not using switchArcher here because we manually committed above
                 state.activeArcherIdx++;
                 const p = state.participants[state.activeArcherIdx];
                 state.history = [...p.history];
@@ -428,7 +426,6 @@
             b.innerText = s === 0 ? 'M' : s; b.onclick = () => { if(state.current.length < state.arrows) { state.current.push(s); renderUI(); backupActiveSession(); } };
             grid.appendChild(b);
         });
-        const del = document.createElement('button'); del.className = 'score-btn'; del.innerText = '⌫'; del.style.background = '#444'; del.onclick = () => undoLastMarker(); grid.appendChild(del);
     }
 
     function getVal(s) { return s === 'X' ? 10 : (parseInt(s) || 0); }
@@ -545,4 +542,3 @@
 </script>
 </body>
 </html>
-
