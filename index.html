@@ -125,6 +125,7 @@
         <div style="padding-bottom:30px; border-top: 1px solid #222; background: var(--bg);">
             <div class="control-row">
                 <button id="back-btn" class="back-btn" onclick="undoLastMarker()">⌫</button>
+                <button onclick="manualSave()" style="background:var(--green); color:#000; width:65px; border-radius:12px; font-size:20px; font-weight:bold; border:none;">SAVE</button>
                 <button id="next-btn" class="next-btn" style="margin-top:0;" onclick="handleMainAction()"></button>
             </div>
             <div id="button-grid" class="btn-grid"></div>
@@ -452,7 +453,12 @@
         btn.style.background = state.editingIndex !== -1 ? "#fff" : "var(--accent)";
         list.scrollTop = list.scrollHeight;
     }
-
+    function manualSave() {
+        const msg = state.lang === 'he' ? "האם אתה בטוח?" : "Are you sure?";
+        if (confirm(msg)) {
+            saveSession();
+    }
+}
     function saveSession() {
         const sessionData = state.participants.map(p => ({ archer: p.name, score: p.history.reduce((a, b) => a + b.total, 0), avg: (p.history.reduce((a, b) => a + b.total, 0) / (p.history.length * state.arrows)).toFixed(1), ends: [...p.history] }));
         const mainSession = { id: Date.now() + Math.random(), date: new Date().toLocaleDateString('en-GB'), archers: sessionData, arrowsPerEnd: state.arrows, totalEndsPlanned: state.ends, scoringType: state.scoringType };
