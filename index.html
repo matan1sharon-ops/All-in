@@ -96,19 +96,19 @@
 
     <div id="home" class="screen active-screen">
         <div style="text-align:center; margin-top:40px;">
-            <div class="logo-badge">AI</div>
+            <div class="logo-badge"><img src="logo.png" style="width: 75%; height: 75%; object-fit: contain;"></div>
             <div style="font-size:32px; font-weight:900; letter-spacing:6px;">ALL IN</div>
             <p id="l-tagline" style="color:var(--gray); font-size:12px;"></p>
         </div>
         <div class="menu-list" id="main-menu"></div>
-        <div class="home-footer"><div class="gear-link" onclick="showGearScreen()"><span>⚙️</span><span id="l-gear-link" class="gear-text"></span></div></div>
+        <div class="home-footer"><div class="gear-link" onclick="showGearScreen()"><span>??</span><span id="l-gear-link" class="gear-text"></span></div></div>
     </div>
 
     <div id="scoring" class="screen">
         <header>
     <div style="display: flex; align-items: center; gap: 12px;">
-        <button onclick="exitScoring()" style="background:none; border:none; color:var(--gray); font-size:22px;">←</button>
-        <button onclick="manualSave()" style="background:none; border:none; color:var(--green); font-size:20px;">💾</button>
+        <button onclick="exitScoring()" style="background:none; border:none; color:var(--gray); font-size:22px;">?</button>
+        <button onclick="manualSave()" style="background:none; border:none; color:var(--green); font-size:20px;">??</button>
     </div>
 
     <div class="header-center">
@@ -117,7 +117,7 @@
     </div>
 
     <div class="header-right">
-        <button id="timer-btn" onclick="toggleTimer()" style="background:none; border:none; color:var(--gray); font-size:20px;">⏰</button>
+        <button id="timer-btn" onclick="toggleTimer()" style="background:none; border:none; color:var(--gray); font-size:20px;">?</button>
         <div style="display:flex; flex-direction:column;"><span id="l-avg" class="stat-label"></span><span id="avg-score" class="stat-val">0.0</span></div>
         <div style="display:flex; flex-direction:column;"><span id="l-total" class="stat-label"></span><span id="total-score" class="stat-val" style="color:var(--accent);">0</span></div>
     </div>
@@ -129,7 +129,7 @@
 
         <div style="padding-bottom:30px; border-top: 1px solid #222; background: var(--bg);">
             <div class="control-row">
-                <button id="back-btn" class="back-btn" onclick="undoLastMarker()">⌫</button>
+                <button id="back-btn" class="back-btn" onclick="undoLastMarker()">?</button>
                 <button id="next-btn" class="next-btn" style="margin-top:0;" onclick="handleMainAction()"></button>
             </div>
             <div id="button-grid" class="btn-grid"></div>
@@ -137,17 +137,17 @@
     </div>
 
     <div id="history-screen" class="screen">
-        <header><button onclick="showScreen('home')" style="background:none; border:none; color:var(--gray); font-size:22px;">←</button><div class="header-center"><div id="history-title" class="stat-label" style="color:#fff;"></div></div><button id="l-clear" onclick="clearHistory()" style="background:none; border:none; color:var(--gray); font-size:10px; font-weight:bold;"></button></header>
+        <header><button onclick="showScreen('home')" style="background:none; border:none; color:var(--gray); font-size:22px;">?</button><div class="header-center"><div id="history-title" class="stat-label" style="color:#fff;"></div></div><button id="l-clear" onclick="clearHistory()" style="background:none; border:none; color:var(--gray); font-size:10px; font-weight:bold;"></button></header>
         <div id="history-list"></div>
     </div>
 
     <div id="detail-screen" class="screen">
-        <header><button onclick="showScreen('history-screen')" style="background:none; border:none; color:var(--gray); font-size:22px;">←</button><div class="header-center"><div id="detail-title" class="stat-label" style="color:#fff;"></div></div><div style="width:30px;"></div></header>
+        <header><button onclick="showScreen('history-screen')" style="background:none; border:none; color:var(--gray); font-size:22px;">?</button><div class="header-center"><div id="detail-title" class="stat-label" style="color:#fff;"></div></div><div style="width:30px;"></div></header>
         <div id="detail-list"></div>
     </div>
 
     <div id="gear-screen" class="screen">
-        <header><button onclick="showScreen('home')" style="background:none; border:none; color:var(--gray); font-size:22px;">←</button><div class="header-center"><div id="l-setup-title" class="stat-label" style="color:#fff;"></div></div><button id="l-save" onclick="saveGear()" style="background:none; border:none; color:var(--accent); font-weight:bold;"></button></header>
+        <header><button onclick="showScreen('home')" style="background:none; border:none; color:var(--gray); font-size:22px;">?</button><div class="header-center"><div id="l-setup-title" class="stat-label" style="color:#fff;"></div></div><button id="l-save" onclick="saveGear()" style="background:none; border:none; color:var(--accent); font-weight:bold;"></button></header>
         <div id="gear-list" style="padding-bottom: 40px;">
             <div class="gear-section-title">Profile / פרופיל</div>
             <div class="gear-grid" style="grid-template-columns: 1fr;">
@@ -298,7 +298,7 @@
     function renderMainMenu() {
         const menu = document.getElementById('main-menu'); menu.innerHTML = '';
         const mNames = i18n[state.lang].modes, rawNames = i18n.en.modes, configs = [[2, 24], [3, 24], [3, 20], [6, 12]];
-        rawNames.forEach((name, i) => { menu.insertAdjacentHTML('beforeend', `<div class="menu-row"><button class="menu-btn" onclick="startApp('${name}', ${configs[i][0]}, ${configs[i][1]})">${mNames[i]}</button><button class="history-btn" onclick="showHistory('${name}')">📜</button></div>`); });
+        rawNames.forEach((name, i) => { menu.insertAdjacentHTML('beforeend', `<div class="menu-row"><button class="menu-btn" onclick="startApp('${name}', ${configs[i][0]}, ${configs[i][1]})">${mNames[i]}</button><button class="history-btn" onclick="showHistory('${name}')">??</button></div>`); });
     }
 
     async function requestWakeLock() { try { if ('wakeLock' in navigator) wakeLock = await navigator.wakeLock.request('screen'); } catch (err) {} }
@@ -480,7 +480,7 @@
         data.forEach(s => {
             const archerCount = s.archers ? s.archers.length : 1, pName = s.archers ? s.archers[0].archer : s.archer, pScore = s.archers ? s.archers[0].score : s.score, pAvg = s.archers ? s.archers[0].avg : s.avg;
             const row = document.createElement('div'); row.className = 'history-row';
-            row.innerHTML = `<div class="bin-btn" onclick="deleteSession(${s.id})">🗑️</div><div class="history-card" id="card-${s.id}"><div><span style="margin-right:15px; font-size:13px; color:var(--gray);">${s.date}</span><span style="color:var(--accent); font-weight:bold; font-size:11px">${archerCount > 1 ? `👤 x${archerCount} ` : ''}${pName}</span><br><span class="hist-avg">${i18n[state.lang].avg}: ${pAvg}</span></div><div style="display:flex; align-items:center; gap:8px;"><div class="hist-total" style="font-weight:900; font-size:20px;">${pScore}</div><span style="color:var(--gray); font-size:18px;">›</span></div></div>`;
+            row.innerHTML = `<div class="bin-btn" onclick="deleteSession(${s.id})">???</div><div class="history-card" id="card-${s.id}"><div><span style="margin-right:15px; font-size:13px; color:var(--gray);">${s.date}</span><span style="color:var(--accent); font-weight:bold; font-size:11px">${archerCount > 1 ? `?? x${archerCount} ` : ''}${pName}</span><br><span class="hist-avg">${i18n[state.lang].avg}: ${pAvg}</span></div><div style="display:flex; align-items:center; gap:8px;"><div class="hist-total" style="font-weight:900; font-size:20px;">${pScore}</div><span style="color:var(--gray); font-size:18px;">›</span></div></div>`;
             const card = row.querySelector('.history-card'); let sX = 0, cX = 0;
             card.onclick = () => { if(cX === 0) openSessionDetail(s.id); else resetCards(); };
             card.addEventListener('touchstart', e => { sX = e.touches[0].clientX; card.style.transition = 'none'; }, {passive: true});
@@ -553,4 +553,3 @@
 </script>
 </body>
 </html>
-
