@@ -477,7 +477,7 @@ function initTargetCanvas() {
     const ctx=canvas.getContext('2d');
     ctx.clearRect(0,0,TGT_CSS,TGT_CSS);
     const archer=archers[currentIdx];
-    drawTarget(ctx,TGT_CSS,getRings(),archer?archer.arrowDots||[]:[],{x:nx,y:ny},sessionMode==='outdoor');
+    drawTarget(ctx,TGT_CSS,getRings(),archer?archer.currentEndDots||[]:[],{x:nx,y:ny},sessionMode==='outdoor');
     drawMagnifier(pos.x,pos.y,{x:nx,y:ny});
     document.getElementById('target-score-display').innerText=String(pendingScore);
   }
@@ -492,8 +492,11 @@ function initTargetCanvas() {
     if(pendingScore!==null&&pendingNorm!==null){
       const archer=archers[currentIdx];
       if(!archer.arrowDots) archer.arrowDots=[];
+      if(!archer.currentEndDots) archer.currentEndDots=[];
       if(archer.cursor<archer.scores.length){
-        archer.arrowDots.push({x:pendingNorm.x,y:pendingNorm.y,score:pendingScore});
+        const dot={x:pendingNorm.x,y:pendingNorm.y,score:pendingScore};
+        archer.arrowDots.push(dot);        // accumulates for history
+        archer.currentEndDots.push(dot);  // resets each end for live face
         handleInput(pendingScore);
       }
       pendingScore=null; pendingNorm=null;
@@ -516,7 +519,8 @@ function redrawTarget(highlightPos) {
   const ctx=canvas.getContext('2d');
   ctx.clearRect(0,0,TGT_CSS,TGT_CSS);
   const archer=archers[currentIdx];
-  drawTarget(ctx,TGT_CSS,getRings(),archer?archer.arrowDots||[]:[],highlightPos,sessionMode==='outdoor');
+  const dots = archer ? archer.currentEndDots||[] : [];
+  drawTarget(ctx,TGT_CSS,getRings(),dots,highlightPos,sessionMode==='outdoor');
 }
 
 function renderTargetSnapshot(canvasEl, cssSize, mode, dots) {
@@ -554,7 +558,11 @@ function saveToHistory() {
 function autoSaveToHistory() {
   _doSaveHistory();
   clearSave();
-  alert('Session complete! ✓ Saved to history automatically.');
+  alert('Session complete! ✓ Saved to history.');
+  // close session → back to mode screen
+  document.getElementById('main-app').style.display='none';
+  document.getElementById('mode-screen').classList.remove('hidden');
+  archers=[]; currentIdx=0; editIndex=null;
 }
 
 function _doSaveHistory() {
@@ -569,7 +577,7 @@ function _doSaveHistory() {
       name: a.name,
       scores: [...a.scores],
       stats: calcStats(a.scores, sessionMode),
-      arrowDots: a.arrowDots ? [...a.arrowDots] : []
+      arrowDots: a.arrowDots ? [...a.arrowDots] : []  // all session dots for history
     }))
   };
   const h=getHistory(); h.unshift(entry); setHistory(h);
@@ -717,7 +725,7 @@ function startSession(){
   const count=sessionMode==='outdoor'?72:60;
   for(let i=0;i<4;i++){
     const n=document.getElementById(`name-${i}`).value.trim();
-    if(n!==''||i===0) archers.push({name:n||`Archer ${i+1}`,scores:Array(count).fill(''),cursor:0,arrowDots:[]});
+    if(n!==''||i===0) archers.push({name:n||`Archer ${i+1}`,scores:Array(count).fill(''),cursor:0,arrowDots:[],currentEndDots:[]});
   }
   setupTableCols();
   document.getElementById('setup-screen').classList.add('hidden');
@@ -817,7 +825,16 @@ function handleInput(val){
   saveSession();
   const totalArrows=sessionMode==='outdoor'?72:60;
   if(archers.every(a=>a.cursor>=totalArrows)){ render(); autoSaveToHistory(); return; }
-  if(archer.cursor%step===0){ render(); if(archers.length>1) showBanner((currentIdx+1)%archers.length); return; }
+  // end just completed — reset target face dots for this archer
+  if(archer.cursor%step===0){
+    if(inputMethod==='target'){
+      archer.currentEndDots=[];
+      redrawTarget(null);
+    }
+    render();
+    if(archers.length>1) showBanner((currentIdx+1)%archers.length);
+    return;
+  }
   render();
 }
 
@@ -840,6 +857,7 @@ function backspace(){
     archer.scores[archer.cursor]='';
     if(inputMethod==='target'&&archer.arrowDots&&archer.arrowDots.length>0){
       archer.arrowDots.pop();
+      if(archer.currentEndDots&&archer.currentEndDots.length>0) archer.currentEndDots.pop();
       redrawTarget(null);
     }
   }
@@ -984,7 +1002,7 @@ function restoreSession(saved){
   archers=saved.archers; currentIdx=saved.currentIdx; sessionMode=saved.sessionMode;
   inputMethod=saved.inputMethod||'pad';
   // ensure arrowDots arrays exist
-  archers.forEach(a=>{ if(!a.arrowDots) a.arrowDots=[]; });
+  archers.forEach(a=>{ if(!a.arrowDots) a.arrowDots=[]; if(!a.currentEndDots) a.currentEndDots=[]; });
   document.getElementById('btn-x').style.display=sessionMode==='indoor'?'none':'';
   setupTableCols();
   document.getElementById('mode-screen').classList.add('hidden');
