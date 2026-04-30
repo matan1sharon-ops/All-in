@@ -353,8 +353,18 @@ function drawTarget(ctx, cssSize, rings, arrowDots, highlightPos, isOutdoor) {
     const r=maxR*(i+1)/rings.length;
     ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2);
     ctx.fillStyle=rings[i].color; ctx.fill();
-    ctx.strokeStyle=(rings[i].color==='#eee'||rings[i].color==='#FFD700')?'#bbb':'rgba(0,0,0,0.18)';
-    ctx.lineWidth=0.7/((window.devicePixelRatio)||1); ctx.stroke();
+    // stronger line between same-color neighbors (e.g. 8/7 red, 6/5 blue, 10/9 gold)
+    const nextColor = i>0 ? rings[i-1].color : null;
+    const samePair  = nextColor === rings[i].color;
+    if(rings[i].color==='#eee'){
+      ctx.strokeStyle='#999';
+    } else if(rings[i].color==='#FFD700'){
+      ctx.strokeStyle='rgba(0,0,0,0.35)';
+    } else {
+      ctx.strokeStyle = samePair ? 'rgba(255,255,255,0.55)' : 'rgba(0,0,0,0.25)';
+    }
+    ctx.lineWidth = samePair ? 1.5 : 0.8;
+    ctx.stroke();
   }
   // crosshairs
   ctx.strokeStyle='rgba(0,0,0,0.12)'; ctx.lineWidth=0.5;
