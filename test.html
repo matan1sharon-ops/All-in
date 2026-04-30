@@ -285,15 +285,15 @@ const SAVE_KEY='archery_session', HISTORY_KEY='archery_history';
 /* ══════════════════════════════════════
    TARGET FACE
 ══════════════════════════════════════ */
-const TGT_SIZE   = 260;
-const TGT_CX     = TGT_SIZE/2;
-const TGT_CY     = TGT_SIZE/2;
-const TGT_RADIUS = TGT_SIZE/2 - 2;
-const MAG_SIZE   = 90;
-const MAG_ZOOM   = 3.5;
+const TGT_CSS    = 260;   // CSS display size
+const MAG_CSS    = 90;    // magnifier CSS size
+const MAG_ZOOM   = 4;
+let   DPR        = 1;     // set on init
+let   TGT_SIZE   = TGT_CSS; // actual canvas pixel size (DPR * CSS)
+let   MAG_SIZE   = MAG_CSS;
+// offscreen hi-res canvas used as source for magnifier
+let   offCanvas  = null;
 
-// rings: outdoor has X ring (innermost), indoor doesn't
-// each ring: {score, color, ratio} ratio = outer edge fraction of total radius
 const OUTDOOR_RINGS = [
   {score:'X', color:'#FFD700'},
   {score:10,  color:'#FFD700'},
@@ -322,89 +322,119 @@ const INDOOR_RINGS = [
 
 function getRings() { return sessionMode==='outdoor' ? OUTDOOR_RINGS : INDOOR_RINGS; }
 
-function ringRadius(i) {
-  const rings = getRings();
-  return TGT_RADIUS * (i+1) / rings.length;
+function setupHiResCanvas(canvas, cssSize) {
+  DPR = window.devicePixelRatio || 1;
+  const physical = Math.round(cssSize * DPR);
+  canvas.width  = physical;
+  canvas.height = physical;
+  canvas.style.width  = cssSize + 'px';
+  canvas.style.height = cssSize + 'px';
+  const ctx = canvas.getContext('2d');
+  ctx.scale(DPR, DPR);
+  return physical;
 }
 
-function drawTarget(ctx, size, rings, arrowDots, highlightPos) {
-  const cx=size/2, cy=size/2, maxR=size/2-2;
-  // draw rings from outside in
+function setupHiResMagCanvas(canvas) {
+  DPR = window.devicePixelRatio || 1;
+  const physical = Math.round(MAG_CSS * DPR);
+  canvas.width  = physical;
+  canvas.height = physical;
+  canvas.style.width  = MAG_CSS + 'px';
+  canvas.style.height = MAG_CSS + 'px';
+  const ctx = canvas.getContext('2d');
+  ctx.scale(DPR, DPR);
+}
+
+// Draw target onto any ctx at given CSS size (ctx already scaled by DPR if needed)
+function drawTarget(ctx, cssSize, rings, arrowDots, highlightPos, isOutdoor) {
+  const cx=cssSize/2, cy=cssSize/2, maxR=cssSize/2-2;
+  // rings outside-in
   for(let i=rings.length-1; i>=0; i--) {
-    const r = maxR*(i+1)/rings.length;
-    ctx.beginPath();
-    ctx.arc(cx,cy,r,0,Math.PI*2);
-    ctx.fillStyle = rings[i].color;
-    ctx.fill();
-    ctx.strokeStyle = (rings[i].color==='#eee'||rings[i].color==='#FFD700') ? '#bbb' : 'rgba(0,0,0,0.2)';
-    ctx.lineWidth = 0.5;
-    ctx.stroke();
+    const r=maxR*(i+1)/rings.length;
+    ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2);
+    ctx.fillStyle=rings[i].color; ctx.fill();
+    ctx.strokeStyle=(rings[i].color==='#eee'||rings[i].color==='#FFD700')?'#bbb':'rgba(0,0,0,0.18)';
+    ctx.lineWidth=0.7/((window.devicePixelRatio)||1); ctx.stroke();
   }
-  // crosshair lines
-  ctx.strokeStyle='rgba(0,0,0,0.15)'; ctx.lineWidth=0.5;
-  ctx.beginPath(); ctx.moveTo(cx,0); ctx.lineTo(cx,size); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(0,cy); ctx.lineTo(size,cy); ctx.stroke();
-  // X ring line for outdoor
-  if(sessionMode==='outdoor'){
-    const xR = maxR/rings.length;
+  // crosshairs
+  ctx.strokeStyle='rgba(0,0,0,0.12)'; ctx.lineWidth=0.5;
+  ctx.beginPath(); ctx.moveTo(cx,0); ctx.lineTo(cx,cssSize); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(0,cy); ctx.lineTo(cssSize,cy); ctx.stroke();
+  // X inner circle for outdoor
+  if(isOutdoor){
+    const xR=maxR/rings.length;
     ctx.beginPath(); ctx.arc(cx,cy,xR,0,Math.PI*2);
-    ctx.strokeStyle='rgba(0,0,0,0.3)'; ctx.lineWidth=1; ctx.stroke();
+    ctx.strokeStyle='rgba(0,0,0,0.25)'; ctx.lineWidth=1; ctx.stroke();
   }
-  // existing arrow dots
-  if(arrowDots) {
-    arrowDots.forEach(d => {
-      ctx.beginPath();
-      ctx.arc(d.x*size, d.y*size, size*0.025, 0, Math.PI*2);
-      ctx.fillStyle='rgba(0,0,0,0.75)';
-      ctx.fill();
-      ctx.strokeStyle='#fff';
-      ctx.lineWidth=1;
-      ctx.stroke();
-    });
-  }
-  // live pointer dot
-  if(highlightPos) {
-    ctx.beginPath();
-    ctx.arc(highlightPos.x*size, highlightPos.y*size, size*0.022, 0, Math.PI*2);
-    ctx.fillStyle='white';
-    ctx.fill();
-    ctx.strokeStyle='#222';
-    ctx.lineWidth=1.5;
-    ctx.stroke();
+  // arrow dots
+  const dotR = Math.max(3, cssSize*0.018);
+  if(arrowDots) arrowDots.forEach(d=>{
+    ctx.beginPath(); ctx.arc(d.x*cssSize, d.y*cssSize, dotR, 0, Math.PI*2);
+    ctx.fillStyle='rgba(20,20,20,0.85)'; ctx.fill();
+    ctx.strokeStyle='rgba(255,255,255,0.9)'; ctx.lineWidth=1.2; ctx.stroke();
+  });
+  // live pointer
+  if(highlightPos){
+    const pr=Math.max(2.5, cssSize*0.015);
+    ctx.beginPath(); ctx.arc(highlightPos.x*cssSize, highlightPos.y*cssSize, pr, 0, Math.PI*2);
+    ctx.fillStyle='white'; ctx.fill();
+    ctx.strokeStyle='#222'; ctx.lineWidth=1.2; ctx.stroke();
   }
 }
 
-function drawMagnifier(touchX, touchY) {
-  const tgtCanvas = document.getElementById('target-canvas');
-  const mag = document.getElementById('magnifier');
-  const magCtx = document.getElementById('mag-canvas').getContext('2d');
-  const rect = tgtCanvas.getBoundingClientRect();
-  const scaleX = TGT_SIZE/rect.width, scaleY = TGT_SIZE/rect.height;
-  const cx = (touchX-rect.left)*scaleX;
-  const cy = (touchY-rect.top)*scaleY;
-  const srcSize = MAG_SIZE/MAG_ZOOM;
-  magCtx.clearRect(0,0,MAG_SIZE,MAG_SIZE);
-  magCtx.drawImage(tgtCanvas, cx-srcSize/2, cy-srcSize/2, srcSize, srcSize, 0, 0, MAG_SIZE, MAG_SIZE);
-  // white dot in centre of magnifier
-  magCtx.beginPath();
-  magCtx.arc(MAG_SIZE/2, MAG_SIZE/2, 4, 0, Math.PI*2);
-  magCtx.fillStyle='white';
-  magCtx.fill();
-  magCtx.strokeStyle='#333';
-  magCtx.lineWidth=1.5;
-  magCtx.stroke();
-  // position magnifier above finger
-  const wrapRect = document.getElementById('target-wrap').getBoundingClientRect();
-  const lx = (touchX - wrapRect.left) - MAG_SIZE/2;
-  const ly = (touchY - wrapRect.top) - MAG_SIZE - 20;
-  mag.style.left = Math.max(0, Math.min(lx, TGT_SIZE-MAG_SIZE)) + 'px';
-  mag.style.top  = Math.max(-MAG_SIZE, ly) + 'px';
+function buildOffscreen(highlightPos) {
+  // draw full hi-res target into offscreen canvas for magnifier source
+  if(!offCanvas){ offCanvas=document.createElement('canvas'); }
+  const physical=Math.round(TGT_CSS*DPR);
+  offCanvas.width=physical; offCanvas.height=physical;
+  const ctx=offCanvas.getContext('2d');
+  ctx.save(); ctx.scale(DPR,DPR);
+  const archer=archers[currentIdx];
+  drawTarget(ctx,TGT_CSS,getRings(),archer?archer.arrowDots||[]:[], highlightPos, sessionMode==='outdoor');
+  ctx.restore();
+}
+
+function drawMagnifier(touchX, touchY, highlightPos) {
+  const tgtCanvas=document.getElementById('target-canvas');
+  const mag=document.getElementById('magnifier');
+  const magCanvas=document.getElementById('mag-canvas');
+  const magCtx=magCanvas.getContext('2d');
+  const rect=tgtCanvas.getBoundingClientRect();
+
+  // normalised position on the target
+  const nx=(touchX-rect.left)/rect.width;
+  const ny=(touchY-rect.top)/rect.height;
+
+  // rebuild offscreen with current highlight
+  buildOffscreen(highlightPos);
+
+  // source region in physical pixels
+  const srcCSSSize=TGT_CSS/MAG_ZOOM;
+  const srcPhys=srcCSSSize*DPR;
+  const srcX=(nx*TGT_CSS - srcCSSSize/2)*DPR;
+  const srcY=(ny*TGT_CSS - srcCSSSize/2)*DPR;
+
+  // draw into mag canvas (already scaled by DPR in setup)
+  magCtx.clearRect(0,0,MAG_CSS,MAG_CSS);
+  magCtx.drawImage(offCanvas, srcX, srcY, srcPhys, srcPhys, 0, 0, MAG_CSS, MAG_CSS);
+
+  // tiny crosshair dot in centre
+  magCtx.beginPath(); magCtx.arc(MAG_CSS/2, MAG_CSS/2, 2, 0, Math.PI*2);
+  magCtx.fillStyle='white'; magCtx.fill();
+  magCtx.strokeStyle='rgba(0,0,0,0.7)'; magCtx.lineWidth=1; magCtx.stroke();
+
+  // position above finger
+  const wrapRect=document.getElementById('target-wrap').getBoundingClientRect();
+  const lx=(touchX-wrapRect.left)-MAG_CSS/2;
+  const ly=(touchY-wrapRect.top)-MAG_CSS-18;
+  mag.style.left=Math.max(0,Math.min(lx,TGT_CSS-MAG_CSS))+'px';
+  mag.style.top=Math.max(-MAG_CSS,ly)+'px';
   mag.style.display='block';
 }
 
 function scoreFromPos(nx, ny) {
   const dx=nx-0.5, dy=ny-0.5;
-  const dist=Math.sqrt(dx*dx+dy*dy)*2; // 0=centre, 1=edge
+  const dist=Math.sqrt(dx*dx+dy*dy)*2;
   const rings=getRings();
   const idx=Math.floor(dist*rings.length);
   if(idx>=rings.length) return 'M';
@@ -412,49 +442,48 @@ function scoreFromPos(nx, ny) {
 }
 
 function initTargetCanvas() {
-  const canvas = document.getElementById('target-canvas');
-  const ctx = canvas.getContext('2d');
+  const canvas=document.getElementById('target-canvas');
+  const magCanvas=document.getElementById('mag-canvas');
+  // set up hi-res canvases
+  setupHiResCanvas(canvas, TGT_CSS);
+  setupHiResMagCanvas(magCanvas);
+  DPR=window.devicePixelRatio||1;
   redrawTarget(null);
 
-  let touching = false, pendingScore = null, pendingNorm = null;
+  let touching=false, pendingScore=null, pendingNorm=null;
 
-  function getPos(e) {
-    const t = e.touches ? e.touches[0] : e;
-    return {x: t.clientX, y: t.clientY};
+  function getPos(e){ const t=e.touches?e.touches[0]:e; return {x:t.clientX,y:t.clientY}; }
+
+  function onMove(e){
+    e.preventDefault();
+    if(!touching)return;
+    const pos=getPos(e);
+    const rect=canvas.getBoundingClientRect();
+    const nx=(pos.x-rect.left)/rect.width;
+    const ny=(pos.y-rect.top)/rect.height;
+    pendingScore=scoreFromPos(nx,ny);
+    pendingNorm={x:nx,y:ny};
+    // redraw main canvas with live dot
+    const ctx=canvas.getContext('2d');
+    ctx.clearRect(0,0,TGT_CSS,TGT_CSS);
+    const archer=archers[currentIdx];
+    drawTarget(ctx,TGT_CSS,getRings(),archer?archer.arrowDots||[]:[],{x:nx,y:ny},sessionMode==='outdoor');
+    drawMagnifier(pos.x,pos.y,{x:nx,y:ny});
+    document.getElementById('target-score-display').innerText=String(pendingScore);
   }
 
-  function onMove(e) {
-    e.preventDefault();
-    if(!touching) return;
-    const pos = getPos(e);
-    const rect = canvas.getBoundingClientRect();
-    const nx = (pos.x-rect.left)/rect.width;
-    const ny = (pos.y-rect.top)/rect.height;
-    pendingScore = scoreFromPos(nx, ny);
-    pendingNorm = {x:nx, y:ny};
-    redrawTarget({x:nx,y:ny});
-    drawMagnifier(pos.x, pos.y);
-    const disp = document.getElementById('target-score-display');
-    disp.innerText = pendingScore===undefined ? '—' : String(pendingScore);
-  }
+  function onStart(e){ e.preventDefault(); touching=true; onMove(e); }
 
-  function onStart(e) {
+  function onEnd(e){
     e.preventDefault();
-    touching=true;
-    onMove(e);
-  }
-
-  function onEnd(e) {
-    e.preventDefault();
-    if(!touching) return;
+    if(!touching)return;
     touching=false;
     document.getElementById('magnifier').style.display='none';
-    if(pendingScore!==null && pendingNorm!==null) {
-      // store dot on current archer
+    if(pendingScore!==null&&pendingNorm!==null){
       const archer=archers[currentIdx];
       if(!archer.arrowDots) archer.arrowDots=[];
-      if(archer.cursor < archer.scores.length) {
-        archer.arrowDots.push({x:pendingNorm.x, y:pendingNorm.y, score:pendingScore});
+      if(archer.cursor<archer.scores.length){
+        archer.arrowDots.push({x:pendingNorm.x,y:pendingNorm.y,score:pendingScore});
         handleInput(pendingScore);
       }
       pendingScore=null; pendingNorm=null;
@@ -463,31 +492,30 @@ function initTargetCanvas() {
     document.getElementById('target-score-display').innerText='Touch target';
   }
 
-  canvas.addEventListener('touchstart', onStart, {passive:false});
-  canvas.addEventListener('touchmove',  onMove,  {passive:false});
-  canvas.addEventListener('touchend',   onEnd,   {passive:false});
-  canvas.addEventListener('mousedown',  onStart);
-  canvas.addEventListener('mousemove',  onMove);
-  canvas.addEventListener('mouseup',    onEnd);
+  canvas.addEventListener('touchstart',onStart,{passive:false});
+  canvas.addEventListener('touchmove', onMove, {passive:false});
+  canvas.addEventListener('touchend',  onEnd,  {passive:false});
+  canvas.addEventListener('mousedown', onStart);
+  canvas.addEventListener('mousemove', onMove);
+  canvas.addEventListener('mouseup',   onEnd);
 }
 
 function redrawTarget(highlightPos) {
-  const canvas = document.getElementById('target-canvas');
-  const ctx = canvas.getContext('2d');
-  ctx.clearRect(0,0,TGT_SIZE,TGT_SIZE);
-  const archer = archers[currentIdx];
-  const dots = archer ? archer.arrowDots||[] : [];
-  drawTarget(ctx, TGT_SIZE, getRings(), dots, highlightPos);
+  const canvas=document.getElementById('target-canvas');
+  if(!canvas) return;
+  const ctx=canvas.getContext('2d');
+  ctx.clearRect(0,0,TGT_CSS,TGT_CSS);
+  const archer=archers[currentIdx];
+  drawTarget(ctx,TGT_CSS,getRings(),archer?archer.arrowDots||[]:[],highlightPos,sessionMode==='outdoor');
 }
 
-function renderTargetSnapshot(canvasEl, size, mode, dots) {
-  const rings = mode==='outdoor' ? OUTDOOR_RINGS : INDOOR_RINGS;
-  const ctx = canvasEl.getContext('2d');
-  canvasEl.width = size; canvasEl.height = size;
-  const savedMode = sessionMode;
-  sessionMode = mode; // temp
-  drawTarget(ctx, size, rings, dots, null);
-  sessionMode = savedMode;
+function renderTargetSnapshot(canvasEl, cssSize, mode, dots) {
+  const savedMode=sessionMode; sessionMode=mode;
+  const rings=mode==='outdoor'?OUTDOOR_RINGS:INDOOR_RINGS;
+  setupHiResCanvas(canvasEl, cssSize);
+  const ctx=canvasEl.getContext('2d');
+  drawTarget(ctx,cssSize,rings,dots,null,mode==='outdoor');
+  sessionMode=savedMode;
 }
 
 /* ══════════════════════════════════════
