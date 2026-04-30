@@ -267,7 +267,7 @@
   <div class="hist-header">
     <button class="hist-back-btn" onclick="closeDetail()">←</button>
     <h2 id="detail-title">SESSION</h2>
-    <div style="width:80px;"></div>
+    <button class="hist-clear-btn" style="color:#a5d6a7;" onclick="exportPDF()">📄 PDF</button>
   </div>
   <div class="detail-archer-tabs" id="detail-archer-tabs"></div>
   <div class="detail-summary"     id="detail-summary"></div>
@@ -846,26 +846,135 @@ function backspace(){
   saveSession(); render();
 }
 
-function exportCSV(){
-  const archer=archers[currentIdx];
-  let csv='data:text/csv;charset=utf-8,ARCHER: '+archer.name.toUpperCase()+'\n\n';
-  if(sessionMode==='outdoor'){
-    csv+='End,A1,A2,A3,Sum1,A4,A5,A6,Sum2,Total,10+X,X\n';
-    for(let i=0;i<12;i++){
-      const r=archer.scores.slice(i*6,i*6+6),v=r.map(x=>x==='X'||x===10?10:x==='M'?0:Number(x)||0);
-      csv+=`${i+1},${r.join(',')},${v[0]+v[1]+v[2]},${v[3]+v[4]+v[5]},${v.reduce((a,b)=>a+b,0)},${r.filter(x=>x===10||x==='X').length},${r.filter(x=>x==='X').length}\n`;
-    }
-  } else {
-    csv+='End,A1,A2,A3,Total,10s,9s\n';
-    for(let i=0;i<20;i++){
-      const r=archer.scores.slice(i*3,i*3+3),v=r.map(x=>x==='X'||x===10?10:x==='M'?0:Number(x)||0);
-      csv+=`${i+1},${r.join(',')},${v.reduce((a,b)=>a+b,0)},${r.filter(x=>x===10||x==='X').length},${r.filter(x=>x===9).length}\n`;
+/* ══════════════════════════════════════
+   PDF EXPORT (browser print)
+══════════════════════════════════════ */
+function buildScorecardHTML(archerList, mode, date, time) {
+  const isOut = mode === 'outdoor';
+  const s1Lab = isOut ? '10+X' : '10';
+  const s2Lab = isOut ? 'X'    : '9';
+
+  function archerTable(archer) {
+    const stats = archer.stats || calcStats(archer.scores, mode);
+    const s2Val = isOut ? stats.xs : stats.nines;
+    let rows = '';
+    if (isOut) {
+      let running=0, tens=0, xs=0;
+      for(let e=1;e<=12;e++){
+        const sIdx=(e-1)*6, a=archer.scores.slice(sIdx,sIdx+6);
+        const v=a.map(x=>x==='X'||x===10?10:x==='M'?0:Number(x)||0);
+        const s1=(a[0]!==''&&a[1]!==''&&a[2]!=='')?v[0]+v[1]+v[2]:'';
+        const s2=(a[3]!==''&&a[4]!==''&&a[5]!=='')?v[3]+v[4]+v[5]:'';
+        const et=s2!==''?(Number(s1)||0)+s2:'';
+        if(et!=='')running+=et;
+        const c10=a.filter(x=>x===10||x==='X').length, cx=a.filter(x=>x==='X').length;
+        if(a[0]!==''){tens+=c10;xs+=cx;}
+        const half = e===6 ? ' style="border-bottom:2px solid #555;"' : '';
+        rows+=`<tr${half}>
+          <td rowspan="2" style="background:#f0f0f0;font-weight:700;font-size:10px;border-right:1.5px solid #999;">End ${e}</td>
+          ${a.slice(0,3).map(v=>`<td style="${v==='X'||v===10||v===9?'background:#fff9c4;':''}">${v}</td>`).join('')}
+          <td style="background:#f5f5f5;font-size:11px;">${s1}</td>
+          <td style="background:#f5f5f5;"></td>
+          <td rowspan="2" style="background:#fff8e1;font-weight:700;color:#c62828;border-left:1.5px solid #999;border-right:1.5px solid #999;">${et!==''?running:''}</td>
+          <td style="font-size:11px;background:#fafafa;">${a[0]!==''?c10:''}</td>
+          <td style="font-size:11px;background:#fafafa;">${a[0]!==''?cx:''}</td>
+        </tr><tr style="border-bottom:1.5px solid #999;">
+          ${a.slice(3,6).map(v=>`<td style="${v==='X'||v===10||v===9?'background:#fff9c4;':''}">${v}</td>`).join('')}
+          <td style="background:#f5f5f5;font-size:11px;">${s2}</td>
+          <td style="background:#e3f2fd;font-weight:700;color:#1565c0;border-left:1.5px solid #999;">${et}</td>
+          <td style="background:#fafafa;"></td><td style="background:#fafafa;"></td>
+        </tr>`;
+      }
+      rows+=`<tr style="background:#37474f;color:#fff;font-weight:700;">
+        <td colspan="5">TOTAL</td><td>${running}</td><td></td><td>${tens}</td><td>${xs}</td>
+      </tr>`;
+      return `<table style="width:100%;border-collapse:collapse;table-layout:fixed;border:1.5px solid #999;font-size:12px;font-family:Arial,sans-serif;">
+        <colgroup><col style="width:46px"><col><col><col><col style="width:32px"><col style="width:34px"><col style="width:42px"><col style="width:28px"><col style="width:28px"></colgroup>
+        <tr style="background:#555;color:#fff;font-size:10px;"><th colspan="4" style="text-align:left;padding:3px 6px;">ARROWS</th><th>SUB</th><th>END</th><th>TOTAL</th><th>${s1Lab}</th><th>${s2Lab}</th></tr>
+        ${rows}
+      </table>`;
+    } else {
+      let running=0, tens=0, nines=0;
+      for(let e=1;e<=20;e++){
+        const sIdx=(e-1)*3, a=archer.scores.slice(sIdx,sIdx+3);
+        const v=a.map(x=>x==='X'||x===10?10:x==='M'?0:Number(x)||0);
+        const et=(a[0]!==''&&a[1]!==''&&a[2]!=='')?v[0]+v[1]+v[2]:'';
+        if(et!=='')running+=et;
+        const c10=a.filter(x=>x===10||x==='X').length, c9=a.filter(x=>x===9).length;
+        if(a[0]!==''){tens+=c10;nines+=c9;}
+        const half = e===10 ? ' style="border-bottom:2px solid #555;"' : '';
+        rows+=`<tr${half} style="border-bottom:1px solid #ccc;">
+          <td style="background:#f0f0f0;font-weight:700;font-size:10px;border-right:1.5px solid #999;">End ${e}</td>
+          ${a.map(v=>`<td style="${v==='X'||v===10||v===9?'background:#fff9c4;':''}">${v}</td>`).join('')}
+          <td style="background:#e3f2fd;font-weight:700;color:#1565c0;border-left:1.5px solid #999;">${et}</td>
+          <td style="background:#fff8e1;font-weight:700;color:#c62828;border-left:1.5px solid #999;border-right:1.5px solid #999;">${et!==''?running:''}</td>
+          <td style="font-size:11px;background:#fafafa;">${a[0]!==''?c10:''}</td>
+          <td style="font-size:11px;background:#fafafa;">${a[0]!==''?c9:''}</td>
+        </tr>`;
+      }
+      rows+=`<tr style="background:#37474f;color:#fff;font-weight:700;">
+        <td colspan="4">TOTAL</td><td>${running}</td><td></td><td>${tens}</td><td>${nines}</td>
+      </tr>`;
+      return `<table style="width:100%;border-collapse:collapse;table-layout:fixed;border:1.5px solid #999;font-size:12px;font-family:Arial,sans-serif;">
+        <colgroup><col style="width:46px"><col><col><col><col style="width:38px"><col style="width:44px"><col style="width:28px"><col style="width:28px"></colgroup>
+        <tr style="background:#555;color:#fff;font-size:10px;"><th colspan="4" style="text-align:left;padding:3px 6px;">ARROWS</th><th>END</th><th>TOTAL</th><th>${s1Lab}</th><th>${s2Lab}</th></tr>
+        ${rows}
+      </table>`;
     }
   }
-  const link=document.createElement('a');
-  link.setAttribute('href',encodeURI(csv));
-  link.setAttribute('download',`${archer.name}_Scorecard.csv`);
-  link.click();
+
+  const archerSections = archerList.map(a => {
+    const stats = a.stats || calcStats(a.scores, mode);
+    const s2Val = isOut ? stats.xs : stats.nines;
+    return `
+      <div style="margin-bottom:28px;page-break-inside:avoid;">
+        <div style="background:#37474f;color:#fff;padding:8px 12px;font-family:Arial,sans-serif;display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+          <span style="font-size:16px;font-weight:700;">${a.name.toUpperCase()}</span>
+          <span style="font-size:22px;font-weight:900;color:#FFD700;">${stats.total}</span>
+          <span style="font-size:12px;opacity:0.8;">${s1Lab}: ${stats.tens} &nbsp; ${s2Lab}: ${s2Val}</span>
+        </div>
+        ${archerTable(a)}
+      </div>`;
+  }).join('<div style="page-break-after:always;"></div>');
+
+  return `<!DOCTYPE html><html><head><meta charset="utf-8">
+    <title>Archery Scorecard</title>
+    <style>
+      body{margin:20px;font-family:Arial,sans-serif;color:#111;}
+      h1{font-size:18px;margin:0 0 4px;}
+      .sub{font-size:12px;color:#555;margin-bottom:16px;}
+      td,th{border:1px solid #ccc;text-align:center;height:26px;padding:0 2px;}
+      @media print{body{margin:10px;} @page{size:A4 portrait;margin:10mm;}}
+    </style>
+  </head><body>
+    <h1>🏹 Archery Scorecard — ${isOut?'OUTDOOR':'INDOOR'}</h1>
+    <div class="sub">${date} · ${time} · ${archerList.length} archer${archerList.length>1?'s':''}</div>
+    ${archerSections}
+  </body></html>`;
+}
+
+function exportPDF() {
+  // works for both live session (archers global) and history detail (detailEntry)
+  const entry = detailEntry;
+  let archerList, mode, date, time;
+  if(entry) {
+    archerList = entry.archers;
+    mode = entry.mode;
+    date = entry.date;
+    time = entry.time;
+  } else {
+    archerList = archers.map(a=>({...a, stats: calcStats(a.scores, sessionMode)}));
+    mode = sessionMode;
+    const now = new Date();
+    date = now.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
+    time = now.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+  }
+  const html = buildScorecardHTML(archerList, mode, date, time);
+  const win = window.open('','_blank');
+  win.document.write(html);
+  win.document.close();
+  win.focus();
+  setTimeout(()=>{ win.print(); }, 400);
 }
 
 /* ══════════════════════════════════════
