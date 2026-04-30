@@ -514,6 +514,60 @@
 let archers = [], currentIdx = 0, editIndex = null, sessionMode = 'outdoor';
 let pendingNextIdx = -1;
 
+const SAVE_KEY = 'archery_session';
+
+function saveSession() {
+  localStorage.setItem(SAVE_KEY, JSON.stringify({ archers, currentIdx, sessionMode }));
+}
+
+function clearSave() {
+  localStorage.removeItem(SAVE_KEY);
+}
+
+function restoreSession(saved) {
+  archers      = saved.archers;
+  currentIdx   = saved.currentIdx;
+  sessionMode  = saved.sessionMode;
+
+  document.getElementById('btn-x').style.display = sessionMode === 'indoor' ? 'none' : '';
+
+  const outCols = '<col class="col-end"><col class="col-arr"><col class="col-arr"><col class="col-arr"><col class="col-sum"><col class="col-tot"><col class="col-run"><col class="col-stat"><col class="col-stat">';
+  const inCols  = '<col class="col-end"><col class="col-arr"><col class="col-arr"><col class="col-arr"><col class="col-tot"><col class="col-run"><col class="col-stat"><col class="col-stat">';
+  document.getElementById('col-group-1').innerHTML = document.getElementById('col-group-2').innerHTML =
+    sessionMode === 'outdoor' ? outCols : inCols;
+
+  const s1Lab = sessionMode === 'outdoor' ? '10+X' : '10';
+  const s2Lab = sessionMode === 'outdoor' ? 'X'    : '9';
+  document.getElementById('h1-s1').innerText = document.getElementById('h2-s1').innerText = s1Lab;
+  document.getElementById('h1-s2').innerText = document.getElementById('h2-s2').innerText = s2Lab;
+  document.getElementById('h1-main-title').innerText = sessionMode === 'outdoor' ? '1st HALF  (Ends 1–6)'  : '1st HALF  (Ends 1–10)';
+  document.getElementById('h2-main-title').innerText = sessionMode === 'outdoor' ? '2nd HALF  (Ends 7–12)' : '2nd HALF  (Ends 11–20)';
+
+  document.getElementById('mode-screen').classList.add('hidden');
+  document.getElementById('setup-screen').classList.add('hidden');
+  document.getElementById('main-app').style.display = 'flex';
+  switchArcher(currentIdx);
+}
+
+window.addEventListener('load', () => {
+  const raw = localStorage.getItem(SAVE_KEY);
+  if (raw) {
+    try {
+      const saved = JSON.parse(raw);
+      if (saved && saved.archers && saved.archers.length > 0) {
+        const archer = saved.archers[0];
+        const filled = archer.scores.filter(s => s !== '').length;
+        if (filled > 0 && confirm(`Restore session for "${archer.name}"? (${filled} arrows entered)`)) {
+          restoreSession(saved);
+          return;
+        } else {
+          clearSave();
+        }
+      }
+    } catch(e) { clearSave(); }
+  }
+});
+
 function selectMode(m) {
   sessionMode = m;
   document.getElementById('btn-x').style.display = (m === 'indoor' ? 'none' : '');
@@ -561,6 +615,7 @@ function startSession() {
 function switchArcher(idx) {
   currentIdx = idx;
   editIndex = null;
+  saveSession();
   renderTabs();
   document.getElementById('footer-name').innerText = archers[idx].name.toUpperCase() + '  TOTAL:';
   render();
@@ -576,7 +631,10 @@ function renderTabs() {
 }
 
 function confirmReset() {
-  if (confirm('Start a new session? All current scores will be lost.')) location.reload();
+  if (confirm('Start a new session? All current scores will be lost.')) {
+    clearSave();
+    location.reload();
+  }
 }
 
 function render() {
@@ -674,6 +732,7 @@ function handleInput(val) {
     archer.scores[editIndex] = val;
     editIndex = null;
     render();
+    saveSession();
     return;
   }
 
@@ -681,6 +740,7 @@ function handleInput(val) {
 
   archer.scores[archer.cursor] = val;
   archer.cursor++;
+  saveSession();
 
   // End just completed?
   if (archer.cursor % step === 0) {
@@ -720,6 +780,7 @@ function backspace() {
     archer.cursor--;
     archer.scores[archer.cursor] = '';
   }
+  saveSession();
   render();
 }
 
