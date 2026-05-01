@@ -2,7 +2,7 @@
   "name": "Archer Scoring",
   "short_name": "Archer",
   "description": "Archery scorecard for outdoor and indoor sessions",
-  "start_url": "./index.html",
+ "start_url": "./scoring.html",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#111111",
