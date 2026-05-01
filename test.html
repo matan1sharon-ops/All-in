@@ -85,21 +85,6 @@
   .save-hist-btn{grid-column:span 2;background:#1b5e20;color:#a5d6a7;font-size:13px;height:40px;}
   .export-btn{grid-column:span 2;background:#1a237e;color:#9fa8da;font-size:13px;height:40px;}
 
-  /* TARGET FACE INPUT */
-  #target-input{display:none;flex-direction:column;align-items:center;justify-content:flex-start;padding:10px 8px 8px;background:var(--surface);border-top:1px solid var(--border);flex-shrink:0;gap:8px;}
-  #target-wrap{position:relative;width:260px;height:260px;touch-action:none;user-select:none;}
-  #target-canvas{border-radius:50%;display:block;cursor:crosshair;}
-  #magnifier{position:absolute;width:90px;height:90px;border-radius:50%;border:3px solid #fff;pointer-events:none;display:none;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,0.7);top:-100px;left:0;}
-  #mag-canvas{display:block;}
-  #target-score-display{font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:900;color:var(--accent);letter-spacing:1px;min-height:34px;}
-  #target-bottom-row{display:flex;gap:6px;width:100%;max-width:280px;}
-  .tgt-btn{flex:1;height:42px;border:none;border-radius:8px;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;cursor:pointer;box-shadow:0 3px 0 rgba(0,0,0,0.35);}
-  .tgt-btn:active{transform:translateY(2px);box-shadow:0 1px 0 rgba(0,0,0,0.35);}
-  .tgt-miss{background:#757575;color:white;}
-  .tgt-back{background:#333;color:#aaa;}
-  .tgt-save-hist{background:#1b5e20;color:#a5d6a7;}
-  .tgt-export{background:#1a237e;color:#9fa8da;}
-
   /* NEXT ARCHER BANNER */
   #next-archer-banner{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:200;align-items:center;justify-content:center;flex-direction:column;}
   #next-archer-banner.show{display:flex;}
@@ -175,11 +160,6 @@
     <div class="input-group"><label>Archer 2 <span style="color:#555">(optional)</span></label><input type="text" id="name-1" placeholder="Leave blank to skip" autocomplete="off"></div>
     <div class="input-group"><label>Archer 3 <span style="color:#555">(optional)</span></label><input type="text" id="name-2" placeholder="Leave blank to skip" autocomplete="off"></div>
     <div class="input-group"><label>Archer 4 <span style="color:#555">(optional)</span></label><input type="text" id="name-3" placeholder="Leave blank to skip" autocomplete="off"></div>
-    <span class="input-toggle-label">Input Method</span>
-    <div class="input-toggle">
-      <button class="input-toggle-btn active" id="toggle-pad" onclick="setInputMethod('pad')">🎯 PAD</button>
-      <button class="input-toggle-btn" id="toggle-target" onclick="setInputMethod('target')">🎯 TARGET FACE</button>
-    </div>
     <button class="start-btn" onclick="startSession()">START SESSION →</button>
   </div>
 </div>
@@ -226,20 +206,7 @@
     <button             class="pad-btn export-btn"   onclick="exportCSV()">📤 EXPORT</button>
   </div>
 
-  <!-- TARGET FACE INPUT -->
-  <div id="target-input">
-    <div id="target-score-display">Touch target</div>
-    <div id="target-wrap">
-      <canvas id="target-canvas" width="260" height="260"></canvas>
-      <div id="magnifier"><canvas id="mag-canvas" width="90" height="90"></canvas></div>
-    </div>
-    <div id="target-bottom-row">
-      <button class="tgt-btn tgt-miss"     onclick="handleInput('M')">MISS</button>
-      <button class="tgt-btn tgt-back"     onclick="backspace()">← BACK</button>
-      <button class="tgt-btn tgt-save-hist" onclick="saveToHistory()">💾</button>
-      <button class="tgt-btn tgt-export"   onclick="exportCSV()">📤</button>
-    </div>
-  </div>
+
 </div>
 
 <!-- NEXT ARCHER BANNER -->
@@ -278,259 +245,17 @@
 /* ══════════════════════════════════════
    STATE
 ══════════════════════════════════════ */
-let archers=[], currentIdx=0, editIndex=null, sessionMode='outdoor', inputMethod='pad';
+let archers=[], currentIdx=0, editIndex=null, sessionMode='outdoor';
 let pendingNextIdx=-1;
 const SAVE_KEY='archery_session', HISTORY_KEY='archery_history';
 
 /* ══════════════════════════════════════
-   TARGET FACE
+   PERSISTENCE
 ══════════════════════════════════════ */
-const TGT_CSS    = 260;   // CSS display size
-const MAG_CSS    = 90;    // magnifier CSS size
-const MAG_ZOOM   = 4;
-let   DPR        = 1;     // set on init
-let   TGT_SIZE   = TGT_CSS; // actual canvas pixel size (DPR * CSS)
-let   MAG_SIZE   = MAG_CSS;
-// offscreen hi-res canvas used as source for magnifier
-let   offCanvas  = null;
-
-const OUTDOOR_RINGS = [
-  {score:'X', color:'#FFD700'},
-  {score:10,  color:'#FFD700'},
-  {score:9,   color:'#FFD700'},
-  {score:8,   color:'#e53935'},
-  {score:7,   color:'#e53935'},
-  {score:6,   color:'#1e88e5'},
-  {score:5,   color:'#1e88e5'},
-  {score:4,   color:'#333'},
-  {score:3,   color:'#333'},
-  {score:2,   color:'#eee'},
-  {score:1,   color:'#eee'},
-];
-const INDOOR_RINGS = [
-  {score:10, color:'#FFD700'},
-  {score:9,  color:'#FFD700'},
-  {score:8,  color:'#e53935'},
-  {score:7,  color:'#e53935'},
-  {score:6,  color:'#1e88e5'},
-  {score:5,  color:'#1e88e5'},
-  {score:4,  color:'#333'},
-  {score:3,  color:'#333'},
-  {score:2,  color:'#eee'},
-  {score:1,  color:'#eee'},
-];
-
-function getRings() { return sessionMode==='outdoor' ? OUTDOOR_RINGS : INDOOR_RINGS; }
-
-function setupHiResCanvas(canvas, cssSize) {
-  DPR = window.devicePixelRatio || 1;
-  const physical = Math.round(cssSize * DPR);
-  canvas.width  = physical;
-  canvas.height = physical;
-  canvas.style.width  = cssSize + 'px';
-  canvas.style.height = cssSize + 'px';
-  const ctx = canvas.getContext('2d');
-  ctx.scale(DPR, DPR);
-  return physical;
+function saveSession() {
+  localStorage.setItem(SAVE_KEY, JSON.stringify({archers, currentIdx, sessionMode}));
 }
 
-function setupHiResMagCanvas(canvas) {
-  DPR = window.devicePixelRatio || 1;
-  const physical = Math.round(MAG_CSS * DPR);
-  canvas.width  = physical;
-  canvas.height = physical;
-  canvas.style.width  = MAG_CSS + 'px';
-  canvas.style.height = MAG_CSS + 'px';
-  const ctx = canvas.getContext('2d');
-  ctx.scale(DPR, DPR);
-}
-
-// Draw target onto any ctx at given CSS size (ctx already scaled by DPR if needed)
-function drawTarget(ctx, cssSize, rings, arrowDots, highlightPos, isOutdoor) {
-  const cx=cssSize/2, cy=cssSize/2, maxR=cssSize/2-2;
-  // rings outside-in
-  for(let i=rings.length-1; i>=0; i--) {
-    const r=maxR*(i+1)/rings.length;
-    ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2);
-    ctx.fillStyle=rings[i].color; ctx.fill();
-    // stronger line between same-color neighbors (e.g. 8/7 red, 6/5 blue, 10/9 gold)
-    const nextColor = i>0 ? rings[i-1].color : null;
-    const samePair  = nextColor === rings[i].color;
-    if(rings[i].color==='#eee'){
-      ctx.strokeStyle='#999';
-    } else if(rings[i].color==='#FFD700'){
-      ctx.strokeStyle='rgba(0,0,0,0.35)';
-    } else {
-      ctx.strokeStyle = samePair ? 'rgba(255,255,255,0.55)' : 'rgba(0,0,0,0.25)';
-    }
-    ctx.lineWidth = samePair ? 1.5 : 0.8;
-    ctx.stroke();
-  }
-  // crosshairs
-  ctx.strokeStyle='rgba(0,0,0,0.12)'; ctx.lineWidth=0.5;
-  ctx.beginPath(); ctx.moveTo(cx,0); ctx.lineTo(cx,cssSize); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(0,cy); ctx.lineTo(cssSize,cy); ctx.stroke();
-  // X inner circle for outdoor
-  if(isOutdoor){
-    const xR=maxR/rings.length;
-    ctx.beginPath(); ctx.arc(cx,cy,xR,0,Math.PI*2);
-    ctx.strokeStyle='rgba(0,0,0,0.25)'; ctx.lineWidth=1; ctx.stroke();
-  }
-  // arrow dots
-  const dotR = Math.max(3, cssSize*0.018);
-  if(arrowDots) arrowDots.forEach(d=>{
-    ctx.beginPath(); ctx.arc(d.x*cssSize, d.y*cssSize, dotR, 0, Math.PI*2);
-    ctx.fillStyle='rgba(20,20,20,0.85)'; ctx.fill();
-    ctx.strokeStyle='rgba(255,255,255,0.9)'; ctx.lineWidth=1.2; ctx.stroke();
-  });
-  // live pointer
-  if(highlightPos){
-    const pr=Math.max(2.5, cssSize*0.015);
-    ctx.beginPath(); ctx.arc(highlightPos.x*cssSize, highlightPos.y*cssSize, pr, 0, Math.PI*2);
-    ctx.fillStyle='white'; ctx.fill();
-    ctx.strokeStyle='#222'; ctx.lineWidth=1.2; ctx.stroke();
-  }
-}
-
-function buildOffscreen(highlightPos) {
-  // draw full hi-res target into offscreen canvas for magnifier source
-  if(!offCanvas){ offCanvas=document.createElement('canvas'); }
-  const physical=Math.round(TGT_CSS*DPR);
-  offCanvas.width=physical; offCanvas.height=physical;
-  const ctx=offCanvas.getContext('2d');
-  ctx.save(); ctx.scale(DPR,DPR);
-  const archer=archers[currentIdx];
-  drawTarget(ctx,TGT_CSS,getRings(),archer?archer.arrowDots||[]:[], highlightPos, sessionMode==='outdoor');
-  ctx.restore();
-}
-
-function drawMagnifier(touchX, touchY, highlightPos) {
-  const tgtCanvas=document.getElementById('target-canvas');
-  const mag=document.getElementById('magnifier');
-  const magCanvas=document.getElementById('mag-canvas');
-  const magCtx=magCanvas.getContext('2d');
-  const rect=tgtCanvas.getBoundingClientRect();
-
-  // normalised position on the target
-  const nx=(touchX-rect.left)/rect.width;
-  const ny=(touchY-rect.top)/rect.height;
-
-  // rebuild offscreen with current highlight
-  buildOffscreen(highlightPos);
-
-  // source region in physical pixels
-  const srcCSSSize=TGT_CSS/MAG_ZOOM;
-  const srcPhys=srcCSSSize*DPR;
-  const srcX=(nx*TGT_CSS - srcCSSSize/2)*DPR;
-  const srcY=(ny*TGT_CSS - srcCSSSize/2)*DPR;
-
-  // draw into mag canvas (already scaled by DPR in setup)
-  magCtx.clearRect(0,0,MAG_CSS,MAG_CSS);
-  magCtx.drawImage(offCanvas, srcX, srcY, srcPhys, srcPhys, 0, 0, MAG_CSS, MAG_CSS);
-
-  // tiny crosshair dot in centre
-  magCtx.beginPath(); magCtx.arc(MAG_CSS/2, MAG_CSS/2, 2, 0, Math.PI*2);
-  magCtx.fillStyle='white'; magCtx.fill();
-  magCtx.strokeStyle='rgba(0,0,0,0.7)'; magCtx.lineWidth=1; magCtx.stroke();
-
-  // position above finger
-  const wrapRect=document.getElementById('target-wrap').getBoundingClientRect();
-  const lx=(touchX-wrapRect.left)-MAG_CSS/2;
-  const ly=(touchY-wrapRect.top)-MAG_CSS-18;
-  mag.style.left=Math.max(0,Math.min(lx,TGT_CSS-MAG_CSS))+'px';
-  mag.style.top=Math.max(-MAG_CSS,ly)+'px';
-  mag.style.display='block';
-}
-
-function scoreFromPos(nx, ny) {
-  const dx=nx-0.5, dy=ny-0.5;
-  const dist=Math.sqrt(dx*dx+dy*dy)*2;
-  const rings=getRings();
-  const idx=Math.floor(dist*rings.length);
-  if(idx>=rings.length) return 'M';
-  return rings[idx].score;
-}
-
-function initTargetCanvas() {
-  const canvas=document.getElementById('target-canvas');
-  const magCanvas=document.getElementById('mag-canvas');
-  // set up hi-res canvases
-  setupHiResCanvas(canvas, TGT_CSS);
-  setupHiResMagCanvas(magCanvas);
-  DPR=window.devicePixelRatio||1;
-  redrawTarget(null);
-
-  let touching=false, pendingScore=null, pendingNorm=null;
-
-  function getPos(e){ const t=e.touches?e.touches[0]:e; return {x:t.clientX,y:t.clientY}; }
-
-  function onMove(e){
-    e.preventDefault();
-    if(!touching)return;
-    const pos=getPos(e);
-    const rect=canvas.getBoundingClientRect();
-    const nx=(pos.x-rect.left)/rect.width;
-    const ny=(pos.y-rect.top)/rect.height;
-    pendingScore=scoreFromPos(nx,ny);
-    pendingNorm={x:nx,y:ny};
-    // redraw main canvas with live dot
-    const ctx=canvas.getContext('2d');
-    ctx.clearRect(0,0,TGT_CSS,TGT_CSS);
-    const archer=archers[currentIdx];
-    drawTarget(ctx,TGT_CSS,getRings(),archer?archer.currentEndDots||[]:[],{x:nx,y:ny},sessionMode==='outdoor');
-    drawMagnifier(pos.x,pos.y,{x:nx,y:ny});
-    document.getElementById('target-score-display').innerText=String(pendingScore);
-  }
-
-  function onStart(e){ e.preventDefault(); touching=true; onMove(e); }
-
-  function onEnd(e){
-    e.preventDefault();
-    if(!touching)return;
-    touching=false;
-    document.getElementById('magnifier').style.display='none';
-    if(pendingScore!==null&&pendingNorm!==null){
-      const archer=archers[currentIdx];
-      if(!archer.arrowDots) archer.arrowDots=[];
-      if(!archer.currentEndDots) archer.currentEndDots=[];
-      if(archer.cursor<archer.scores.length){
-        const dot={x:pendingNorm.x,y:pendingNorm.y,score:pendingScore};
-        archer.arrowDots.push(dot);        // accumulates for history
-        archer.currentEndDots.push(dot);  // resets each end for live face
-        handleInput(pendingScore);
-      }
-      pendingScore=null; pendingNorm=null;
-    }
-    redrawTarget(null);
-    document.getElementById('target-score-display').innerText='Touch target';
-  }
-
-  canvas.addEventListener('touchstart',onStart,{passive:false});
-  canvas.addEventListener('touchmove', onMove, {passive:false});
-  canvas.addEventListener('touchend',  onEnd,  {passive:false});
-  canvas.addEventListener('mousedown', onStart);
-  canvas.addEventListener('mousemove', onMove);
-  canvas.addEventListener('mouseup',   onEnd);
-}
-
-function redrawTarget(highlightPos) {
-  const canvas=document.getElementById('target-canvas');
-  if(!canvas) return;
-  const ctx=canvas.getContext('2d');
-  ctx.clearRect(0,0,TGT_CSS,TGT_CSS);
-  const archer=archers[currentIdx];
-  const dots = archer ? archer.currentEndDots||[] : [];
-  drawTarget(ctx,TGT_CSS,getRings(),dots,highlightPos,sessionMode==='outdoor');
-}
-
-function renderTargetSnapshot(canvasEl, cssSize, mode, dots) {
-  const savedMode=sessionMode; sessionMode=mode;
-  const rings=mode==='outdoor'?OUTDOOR_RINGS:INDOOR_RINGS;
-  setupHiResCanvas(canvasEl, cssSize);
-  const ctx=canvasEl.getContext('2d');
-  drawTarget(ctx,cssSize,rings,dots,null,mode==='outdoor');
-  sessionMode=savedMode;
-}
 
 /* ══════════════════════════════════════
    PERSISTENCE
@@ -572,12 +297,10 @@ function _doSaveHistory() {
     date: now.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}),
     time: now.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}),
     mode: sessionMode,
-    inputMethod,
     archers: archers.map(a=>({
       name: a.name,
       scores: [...a.scores],
-      stats: calcStats(a.scores, sessionMode),
-      arrowDots: a.arrowDots ? [...a.arrowDots] : []  // all session dots for history
+      stats: calcStats(a.scores, sessionMode)
     }))
   };
   const h=getHistory(); h.unshift(entry); setHistory(h);
@@ -658,24 +381,12 @@ function renderDetailContent(){
   const h1L=isOut?'1st HALF  (Ends 1–6)':'1st HALF  (Ends 1–10)';
   const h2L=isOut?'2nd HALF  (Ends 7–12)':'2nd HALF  (Ends 11–20)';
 
-  // target snapshot if it has dots
-  const hasDots = archer.arrowDots && archer.arrowDots.length>0;
-  const targetHtml = hasDots
-    ? `<div class="detail-target-wrap"><canvas id="detail-target-canvas" style="border-radius:50%;"></canvas></div>`
-    : '';
-
   document.getElementById('detail-content').innerHTML=`
-    ${targetHtml}
     <div class="half-header"><div class="half-title">${h1L}</div><div>${sH1}</div><div>${sH2}</div></div>
     <table><colgroup>${cols}</colgroup><tbody id="d-body-1"></tbody></table>
     <div class="half-header" style="margin-top:8px;"><div class="half-title">${h2L}</div><div>${sH1}</div><div>${sH2}</div></div>
     <table><colgroup>${cols}</colgroup><tbody id="d-body-2"></tbody></table>
     <div style="height:16px;"></div>`;
-
-  if(hasDots){
-    const c=document.getElementById('detail-target-canvas');
-    renderTargetSnapshot(c, 240, entry.mode, archer.arrowDots);
-  }
 
   if(isOut){ renderROOutdoor(archer.scores,0,6,'d-body-1'); renderROOutdoor(archer.scores,6,12,'d-body-2'); }
   else     { renderROIndoor(archer.scores,0,10,'d-body-1'); renderROIndoor(archer.scores,10,20,'d-body-2'); }
@@ -710,12 +421,6 @@ function renderROIndoor(scores,startEnd,endEnd,bodyId){
 /* ══════════════════════════════════════
    SESSION FLOW
 ══════════════════════════════════════ */
-function setInputMethod(m){
-  inputMethod=m;
-  document.getElementById('toggle-pad').classList.toggle('active',m==='pad');
-  document.getElementById('toggle-target').classList.toggle('active',m==='target');
-}
-
 function selectMode(m){ sessionMode=m; document.getElementById('btn-x').style.display=m==='indoor'?'none':''; showScreen('setup-screen'); }
 function goBack(){ showScreen('mode-screen'); }
 function showScreen(id){ ['mode-screen','setup-screen'].forEach(s=>document.getElementById(s).classList.toggle('hidden',s!==id)); }
@@ -725,13 +430,11 @@ function startSession(){
   const count=sessionMode==='outdoor'?72:60;
   for(let i=0;i<4;i++){
     const n=document.getElementById(`name-${i}`).value.trim();
-    if(n!==''||i===0) archers.push({name:n||`Archer ${i+1}`,scores:Array(count).fill(''),cursor:0,arrowDots:[],currentEndDots:[]});
+    if(n!==''||i===0) archers.push({name:n||`Archer ${i+1}`,scores:Array(count).fill(''),cursor:0});
   }
   setupTableCols();
   document.getElementById('setup-screen').classList.add('hidden');
   document.getElementById('main-app').style.display='flex';
-  applyInputMethod();
-  if(inputMethod==='target') initTargetCanvas();
   switchArcher(0);
 }
 
@@ -756,7 +459,6 @@ function switchArcher(idx){
   currentIdx=idx; editIndex=null;
   saveSession(); renderTabs();
   document.getElementById('footer-name').innerText=archers[idx].name.toUpperCase()+'  TOTAL:';
-  if(inputMethod==='target') redrawTarget(null);
   render();
 }
 
@@ -827,10 +529,6 @@ function handleInput(val){
   if(archers.every(a=>a.cursor>=totalArrows)){ render(); autoSaveToHistory(); return; }
   // end just completed — reset target face dots for this archer
   if(archer.cursor%step===0){
-    if(inputMethod==='target'){
-      archer.currentEndDots=[];
-      redrawTarget(null);
-    }
     render();
     if(archers.length>1) showBanner((currentIdx+1)%archers.length);
     return;
@@ -852,15 +550,7 @@ function dismissBanner(){
 function backspace(){
   const archer=archers[currentIdx];
   if(editIndex!==null){ archer.scores[editIndex]=''; editIndex=null; }
-  else if(archer.cursor>0){
-    archer.cursor--;
-    archer.scores[archer.cursor]='';
-    if(inputMethod==='target'&&archer.arrowDots&&archer.arrowDots.length>0){
-      archer.arrowDots.pop();
-      if(archer.currentEndDots&&archer.currentEndDots.length>0) archer.currentEndDots.pop();
-      redrawTarget(null);
-    }
-  }
+  else if(archer.cursor>0){ archer.cursor--; archer.scores[archer.cursor]=''; }
   saveSession(); render();
 }
 
@@ -1000,16 +690,11 @@ function exportPDF() {
 ══════════════════════════════════════ */
 function restoreSession(saved){
   archers=saved.archers; currentIdx=saved.currentIdx; sessionMode=saved.sessionMode;
-  inputMethod=saved.inputMethod||'pad';
-  // ensure arrowDots arrays exist
-  archers.forEach(a=>{ if(!a.arrowDots) a.arrowDots=[]; if(!a.currentEndDots) a.currentEndDots=[]; });
   document.getElementById('btn-x').style.display=sessionMode==='indoor'?'none':'';
   setupTableCols();
   document.getElementById('mode-screen').classList.add('hidden');
   document.getElementById('setup-screen').classList.add('hidden');
   document.getElementById('main-app').style.display='flex';
-  applyInputMethod();
-  if(inputMethod==='target') initTargetCanvas();
   switchArcher(currentIdx);
 }
 
