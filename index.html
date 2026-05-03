@@ -89,6 +89,9 @@
 
 <div class="app-container">
     <div id="participant-modal" class="modal-overlay">
+         <div style="width:100%; display:flex; align-items:center; margin-bottom:4px;">
+        <button onclick="document.getElementById('participant-modal').style.display='none'" style="background:none; border:none; color:var(--gray); font-size:22px; cursor:pointer;">←</button>
+    </div>
         <h2 style="font-weight: 900; letter-spacing: 1px;">ARCHERS</h2>
         <div class="p-count-row">
             <button class="p-count-btn active" onclick="setParticipantCount(1, this)">1</button>
