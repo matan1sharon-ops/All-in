@@ -548,14 +548,14 @@ function exportPDF(entry) {
     ${sections}
   </body></html>`;
 
- const win = window.open('', '_blank');
-  if (!win) { alert('Please allow popups to export PDF.'); return; }
-  win.document.write(html);
-  win.document.close();
-  win.focus();
+const iframe = document.createElement('iframe');
+  iframe.style.cssText = 'position:fixed;width:0;height:0;border:none;left:-999px;top:-999px;';
+  document.body.appendChild(iframe);
+  iframe.contentDocument.write(html);
+  iframe.contentDocument.close();
   setTimeout(() => {
-    win.print();
-    setTimeout(() => win.close(), 500);
+    iframe.contentWindow.print();
+    setTimeout(() => document.body.removeChild(iframe), 1000);
   }, 400);
 
 /* ── SESSION FLOW ── */
