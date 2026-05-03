@@ -1,4 +1,4 @@
-const CACHE = 'archer-scoring-v2';
+const CACHE = 'archer-scoring-v3';
 const ASSETS = [
   './scoring.html',
   './manifest.json',
