@@ -548,13 +548,15 @@ function exportPDF(entry) {
     ${sections}
   </body></html>`;
 
-  const win = window.open('', '_blank');
+ const win = window.open('', '_blank');
   if (!win) { alert('Please allow popups to export PDF.'); return; }
   win.document.write(html);
   win.document.close();
   win.focus();
-  setTimeout(() => win.print(), 400);
-}
+  setTimeout(() => {
+    win.print();
+    setTimeout(() => win.close(), 500);
+  }, 400);
 
 /* ── SESSION FLOW ── */
 function selectMode(m) {
