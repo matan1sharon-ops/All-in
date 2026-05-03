@@ -7,6 +7,17 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="logo.png">
     <title>ALL IN Archery</title>
+    <link rel="manifest" href="manifest-allin.json">
+    <meta name="theme-color" content="#000000">
+    <meta name="apple-mobile-web-app-title" content="ALL IN Archery">
+    <link rel="apple-touch-icon" href="icon-180.png">
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+         navigator.serviceWorker.register('./sw.js').catch(() => {});
+      });
+     }
+  </script>
     <style>
         :root { --bg: #000; --text: #fff; --accent: #FFD700; --card: #151515; --gray: #888; --red: #FF3B30; --yellow: #FFCC00; --green: #4CD964; }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; }
