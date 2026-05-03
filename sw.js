@@ -1,9 +1,9 @@
-const CACHE = 'archer-scoring-v1';
+const CACHE = 'archer-scoring-v2';
 const ASSETS = [
   './scoring.html',
   './manifest.json',
-  './icon-192.png',
-  './icon-512.png'
+  './scoring-icon-192.png',
+  './scoring-icon-512.png'
 ];
 
 self.addEventListener('install', e => {
