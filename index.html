@@ -471,7 +471,7 @@
     alert(state.lang === 'he' ? "נשמר ✓" : "Saved ✓");
     // stays in session — does NOT close
    }
-}
+
     function saveSession() {
         const sessionData = state.participants.map(p => ({ archer: p.name, score: p.history.reduce((a, b) => a + b.total, 0), avg: (p.history.reduce((a, b) => a + b.total, 0) / (p.history.length * state.arrows)).toFixed(1), ends: [...p.history] }));
         const mainSession = { id: Date.now() + Math.random(), date: new Date().toLocaleDateString('en-GB'), archers: sessionData, arrowsPerEnd: state.arrows, totalEndsPlanned: state.ends, scoringType: state.scoringType };
