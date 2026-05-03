@@ -460,11 +460,17 @@
         btn.style.background = state.editingIndex !== -1 ? "#fff" : "var(--accent)";
         list.scrollTop = list.scrollHeight;
     }
-    function manualSave() {
-        const msg = state.lang === 'he' ? "האם אתה בטוח?" : "Are you sure?";
-        if (confirm(msg)) {
-            saveSession();
-    }
+   function manualSave() {
+    const msg = state.lang === 'he' ? "לשמור גיבוי?" : "Save a backup?";
+    if (!confirm(msg)) return;
+    const sessionData = state.participants.map(p => ({ archer: p.name, score: p.history.reduce((a, b) => a + b.total, 0), avg: (p.history.reduce((a, b) => a + b.total, 0) / (p.history.length * state.arrows || 1)).toFixed(1), ends: [...p.history] }));
+    const mainSession = { id: Date.now() + Math.random(), date: new Date().toLocaleDateString('en-GB'), archers: sessionData, arrowsPerEnd: state.arrows, totalEndsPlanned: state.ends, scoringType: state.scoringType };
+    let allHist = JSON.parse(localStorage.getItem(state.mode) || "[]");
+    allHist.unshift(mainSession);
+    localStorage.setItem(state.mode, JSON.stringify(allHist));
+    alert(state.lang === 'he' ? "נשמר ✓" : "Saved ✓");
+    // stays in session — does NOT close
+   }
 }
     function saveSession() {
         const sessionData = state.participants.map(p => ({ archer: p.name, score: p.history.reduce((a, b) => a + b.total, 0), avg: (p.history.reduce((a, b) => a + b.total, 0) / (p.history.length * state.arrows)).toFixed(1), ends: [...p.history] }));
