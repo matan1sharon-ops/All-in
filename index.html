@@ -36,7 +36,7 @@
         .logo-badge { width: 80px; height: 80px; background: var(--accent); color: #000; border-radius: 20px; margin: 0 auto 10px; display: flex; align-items: center; justify-content: center; font-size: 28px; font-weight: 900; }
         .menu-list { display: flex; flex-direction: column; gap: 12px; margin-top: 20px; }
         .menu-row { display: flex; gap: 10px; height: 75px; }
-        .menu-btn { flex: 1; background: #fff; color: #000; padding: 0 20px; border-radius: 15px; font-size: 15px; font-weight: 800; border: none; text-align: left; }
+        .menu-btn { flex: 1; background: #fff; color: #000; padding: 0 20px; border-radius: 15px; font-size: 15px; font-weight: 800; border: none; text-align: left; cursor: pointer; }
         .history-btn { background: #1a1a1a; border-radius: 15px; width: 70px; display: flex; flex-direction: column; align-items: center; justify-content: center; border: 1px solid #333; color: #fff; cursor: pointer; }
         .home-footer { position: absolute; bottom: 40px; left: 0; right: 0; display: flex; justify-content: center; }
         .gear-link { display: flex; align-items: center; gap: 10px; color: var(--gray); background: #111; padding: 12px 25px; border-radius: 30px; border: 1px solid #222; cursor: pointer; }
@@ -112,12 +112,24 @@
     <div id="home" class="screen active-screen">
         <div style="text-align:center; margin-top:40px;">
             <div class="logo-badge">
-    <img src="logo.png" style="width: 75%; height: 75%; object-fit: contain;">
-</div>
+                <img src="logo.png" style="width: 75%; height: 75%; object-fit: contain;">
+            </div>
             <div style="font-size:32px; font-weight:900; letter-spacing:6px;">ALL IN</div>
             <p id="l-tagline" style="color:var(--gray); font-size:12px;"></p>
         </div>
         <div class="menu-list" id="main-menu"></div>
+
+        <!-- BowTune Button -->
+        <div class="menu-row" style="margin-top: 12px;">
+            <button class="menu-btn" onclick="window.location.href='bowtune.html'" style="background:#1a1a1a; color:var(--accent); border:1px solid #333; display:flex; align-items:center; gap:12px;">
+                <span style="font-size:22px;">🏹</span>
+                <div style="display:flex; flex-direction:column; gap:2px;">
+                    <span style="font-size:15px; font-weight:900;">BowTune</span>
+                    <span style="font-size:10px; color:var(--gray); font-weight:600;">Sound & Camera Tuning</span>
+                </div>
+            </button>
+        </div>
+
         <div class="home-footer"><div class="gear-link" onclick="showGearScreen()"><span>⚙️</span><span id="l-gear-link" class="gear-text"></span></div></div>
     </div>
 
@@ -236,19 +248,15 @@
             state.current = [];
             state.markers = [];
         }
-        
         state.participants[state.activeArcherIdx].current = [...state.current];
         state.participants[state.activeArcherIdx].history = [...state.history];
         state.participants[state.activeArcherIdx].markers = [...state.markers];
-        
         state.activeArcherIdx = idx;
         const p = state.participants[idx];
-        
         state.history = [...p.history];
         state.current = [...p.current];
         state.markers = [...p.markers];
         state.editingIndex = -1;
-        
         renderTabs();
         if(state.scoringType === 'face') updateFaceMarkers();
         renderUI();
@@ -270,11 +278,9 @@
             } else { 
                 state.history.push(newEnd); 
             }
-            
             state.participants[state.activeArcherIdx].history = [...state.history];
             state.participants[state.activeArcherIdx].current = []; 
             state.participants[state.activeArcherIdx].markers = []; 
-            
             if (state.activeArcherIdx < state.participants.length - 1) {
                 state.activeArcherIdx++;
                 const p = state.participants[state.activeArcherIdx];
@@ -474,17 +480,17 @@
         btn.style.background = state.editingIndex !== -1 ? "#fff" : "var(--accent)";
         list.scrollTop = list.scrollHeight;
     }
-   function manualSave() {
-    const msg = state.lang === 'he' ? "לשמור גיבוי?" : "Save a backup?";
-    if (!confirm(msg)) return;
-    const sessionData = state.participants.map(p => ({ archer: p.name, score: p.history.reduce((a, b) => a + b.total, 0), avg: (p.history.reduce((a, b) => a + b.total, 0) / (p.history.length * state.arrows || 1)).toFixed(1), ends: [...p.history] }));
-    const mainSession = { id: Date.now() + Math.random(), date: new Date().toLocaleDateString('en-GB'), archers: sessionData, arrowsPerEnd: state.arrows, totalEndsPlanned: state.ends, scoringType: state.scoringType };
-    let allHist = JSON.parse(localStorage.getItem(state.mode) || "[]");
-    allHist.unshift(mainSession);
-    localStorage.setItem(state.mode, JSON.stringify(allHist));
-    alert(state.lang === 'he' ? "נשמר ✓" : "Saved ✓");
-    // stays in session — does NOT close
-   }
+
+    function manualSave() {
+        const msg = state.lang === 'he' ? "לשמור גיבוי?" : "Save a backup?";
+        if (!confirm(msg)) return;
+        const sessionData = state.participants.map(p => ({ archer: p.name, score: p.history.reduce((a, b) => a + b.total, 0), avg: (p.history.reduce((a, b) => a + b.total, 0) / (p.history.length * state.arrows || 1)).toFixed(1), ends: [...p.history] }));
+        const mainSession = { id: Date.now() + Math.random(), date: new Date().toLocaleDateString('en-GB'), archers: sessionData, arrowsPerEnd: state.arrows, totalEndsPlanned: state.ends, scoringType: state.scoringType };
+        let allHist = JSON.parse(localStorage.getItem(state.mode) || "[]");
+        allHist.unshift(mainSession);
+        localStorage.setItem(state.mode, JSON.stringify(allHist));
+        alert(state.lang === 'he' ? "נשמר ✓" : "Saved ✓");
+    }
 
     function saveSession() {
         const sessionData = state.participants.map(p => ({ archer: p.name, score: p.history.reduce((a, b) => a + b.total, 0), avg: (p.history.reduce((a, b) => a + b.total, 0) / (p.history.length * state.arrows)).toFixed(1), ends: [...p.history] }));
@@ -563,7 +569,6 @@
         const cC = document.getElementById('crawl-inputs');
         if (cC) { cC.innerHTML = ''; for(let d=5; d<=50; d+=5) cC.innerHTML += `<div class="crawl-item"><div class="crawl-dist">${d}m</div><input type="text" id="c-${d}" class="crawl-val"></div>`; }
         if (document.getElementById('g-owner-name')) document.getElementById('g-owner-name').value = state.gear.ownerName;
-
         const backup = localStorage.getItem('active_session_backup');
         if (backup && confirm("Restore previous session? / שחזר אימון קודם?")) {
             state = JSON.parse(backup);
