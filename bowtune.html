@@ -720,8 +720,10 @@ function showFinalAnalysis() {
     `${state.bow.charAt(0).toUpperCase()+state.bow.slice(1)} · ${state.hand}-handed · 4 recordings`;
   document.getElementById('ai-thinking').style.display = 'none';
   document.getElementById('final-results').style.display = 'none';
+
   const findings = analyzeAllRecordings(state.recordings, state.bow, state.hand);
   renderFinalResults(findings);
+  renderCopyPrompt();
 }
 
 function renderFinalResults(findings) {
@@ -744,6 +746,66 @@ function renderFinalResults(findings) {
     `).join('')}
     <button class="action-btn" style="margin-top:8px;" onclick="saveReport()">💾 Save to Profile</button>
   `;
+}
+
+function renderCopyPrompt() {
+  const lines = state.recordings.map((r, i) => {
+    if (!r) return `- ${STEPS[i].title}: no recording`;
+    return `- ${STEPS[i].title}: peak frequency ${r.peakHz}Hz, intensity ${r.peakRms}%, duration ${r.duration}s`;
+  }).join('\n');
+
+  const prompt = `I am a ${state.bow}, ${state.hand}-handed archer. I recorded 4 shots from different angles for bow tuning sound analysis. Here is the audio data captured by my phone microphone:
+
+${lines}
+
+Based on this sound data only, what tuning issues might I have and what should I check or adjust first? Please be specific and practical.`;
+
+  const container = document.getElementById('final-results');
+
+  const copyBox = document.createElement('div');
+  copyBox.style.cssText = 'margin-top:20px;';
+  copyBox.innerHTML = \`
+    <div style="font-size:11px; letter-spacing:2px; color:var(--gray); text-transform:uppercase; margin-bottom:10px;">
+      🤖 Get AI Tuning Advice
+    </div>
+    <div style="font-size:13px; color:#555; margin-bottom:12px; line-height:1.6;">
+      Copy this prompt and paste it into any AI (ChatGPT, Gemini, Claude.ai):
+    </div>
+    <div style="background:#0a0a0a; border:1px solid #222; border-radius:10px; padding:14px; font-size:12px; color:#888; line-height:1.7; white-space:pre-wrap; font-family:monospace;">\${prompt}</div>
+    <button onclick="copyPrompt()" id="copy-btn" style="width:100%; margin-top:12px; padding:16px; font-size:15px; font-weight:800; border-radius:12px; border:none; cursor:pointer; background:var(--gold); color:#000;">
+      📋 Copy Prompt
+    </button>
+  \`;
+  container.appendChild(copyBox);
+
+  window._tuningPrompt = prompt;
+}
+
+function copyPrompt() {
+  navigator.clipboard.writeText(window._tuningPrompt).then(() => {
+    const btn = document.getElementById('copy-btn');
+    btn.textContent = '✓ Copied!';
+    btn.style.background = '#4CD964';
+    setTimeout(() => {
+      btn.textContent = '📋 Copy Prompt';
+      btn.style.background = 'var(--gold)';
+    }, 2000);
+  }).catch(() => {
+    // Fallback for older browsers
+    const ta = document.createElement('textarea');
+    ta.value = window._tuningPrompt;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    const btn = document.getElementById('copy-btn');
+    btn.textContent = '✓ Copied!';
+    btn.style.background = '#4CD964';
+    setTimeout(() => {
+      btn.textContent = '📋 Copy Prompt';
+      btn.style.background = 'var(--gold)';
+    }, 2000);
+  });
 }
 
 function saveReport() {
