@@ -764,18 +764,18 @@ Based on this sound data only, what tuning issues might I have and what should I
 
   const copyBox = document.createElement('div');
   copyBox.style.cssText = 'margin-top:20px;';
-  copyBox.innerHTML = \`
+  copyBox.innerHTML = `
     <div style="font-size:11px; letter-spacing:2px; color:var(--gray); text-transform:uppercase; margin-bottom:10px;">
       🤖 Get AI Tuning Advice
     </div>
     <div style="font-size:13px; color:#555; margin-bottom:12px; line-height:1.6;">
       Copy this prompt and paste it into any AI (ChatGPT, Gemini, Claude.ai):
     </div>
-    <div style="background:#0a0a0a; border:1px solid #222; border-radius:10px; padding:14px; font-size:12px; color:#888; line-height:1.7; white-space:pre-wrap; font-family:monospace;">\${prompt}</div>
+    <div style="background:#0a0a0a; border:1px solid #222; border-radius:10px; padding:14px; font-size:12px; color:#888; line-height:1.7; white-space:pre-wrap; font-family:monospace;">${prompt}</div>
     <button onclick="copyPrompt()" id="copy-btn" style="width:100%; margin-top:12px; padding:16px; font-size:15px; font-weight:800; border-radius:12px; border:none; cursor:pointer; background:var(--gold); color:#000;">
       📋 Copy Prompt
     </button>
-  \`;
+  `;
   container.appendChild(copyBox);
 
   window._tuningPrompt = prompt;
