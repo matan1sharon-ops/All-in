@@ -329,6 +329,27 @@
   </div>
 
   <div class="card" style="margin-bottom:14px;">
+    <div class="section-label">💰 About costs</div>
+    <div style="display:flex; flex-direction:column; gap:10px;">
+      <div style="display:flex; align-items:flex-start; gap:10px; font-size:13px; color:#ccc; line-height:1.6;">
+        <span style="flex-shrink:0;">✅</span> No monthly fee — you only pay for what you use
+      </div>
+      <div style="display:flex; align-items:flex-start; gap:10px; font-size:13px; color:#ccc; line-height:1.6;">
+        <span style="flex-shrink:0;">✅</span> Each BowTune session costs less than $0.01
+      </div>
+      <div style="display:flex; align-items:flex-start; gap:10px; font-size:13px; color:#ccc; line-height:1.6;">
+        <span style="flex-shrink:0;">✅</span> New accounts include free credits — enough for thousands of sessions
+      </div>
+      <div style="display:flex; align-items:flex-start; gap:10px; font-size:13px; color:#ccc; line-height:1.6;">
+        <span style="flex-shrink:0;">⚠️</span> We recommend setting a <strong style="color:#fff;">spending limit</strong> at console.anthropic.com → Settings → Billing
+      </div>
+      <div style="display:flex; align-items:flex-start; gap:10px; font-size:13px; color:#ccc; line-height:1.6;">
+        <span style="flex-shrink:0;">✅</span> You can disable or delete your key instantly at any time
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:14px;">
     <div class="section-label">Paste your API key</div>
     <input type="password" id="api-key-input" placeholder="sk-ant-api03-..." style="width:100%; background:#0a0a0a; border:1px solid #333; color:#fff; padding:14px; border-radius:10px; font-size:13px; font-family:monospace; outline:none; margin-bottom:4px;">
     <div style="font-size:11px; color:#333; margin-top:6px;">Stored locally on this device only — never shared</div>
@@ -993,8 +1014,13 @@ function saveApiKey() {
   }
   localStorage.setItem('bowtune_api_key', key);
   localStorage.setItem('bowtune_key_set', 'true');
-  alert('API key saved! You now have full AI analysis.');
   showScreen('s-home');
+  // Show spending limit reminder
+  setTimeout(() => {
+    if (confirm('API key saved! \u2713\n\nTip: Set a spending limit so you are never surprised by unexpected charges.\n\nOpen console.anthropic.com now to set your limit?')) {
+      window.open('https://console.anthropic.com/settings/billing', '_blank');
+    }
+  }, 400);
 }
 
 function skipApiKey() {
