@@ -588,123 +588,100 @@ function showCaptured() {
 
 
 // ═══════════════════════════════════════════
-// RULE-BASED TUNING ANALYSIS ENGINE
+// SOUND-ONLY TUNING ANALYSIS ENGINE
+// Only reports what a phone mic can actually detect
 // ═══════════════════════════════════════════
 
 function analyzeAngle(diagram, rec, bow, hand) {
   if (!rec) return 'No recording captured for this angle.';
 
-  const { peakHz, rmsDb, peakRms, duration } = rec;
-  const loud = peakRms > 60;
-  const veryLoud = peakRms > 80;
-  const quiet = peakRms < 30;
-  const lowFreq = peakHz < 200;
-  const midFreq = peakHz >= 200 && peakHz < 500;
-  const highFreq = peakHz >= 500;
-  const shortShot = parseFloat(duration) < 1.5;
+  const { peakHz, peakRms } = rec;
+  const hasSnap  = peakHz > 600 && peakRms > 55;  // sharp high crack = string slap
+  const hasTwang = peakHz > 350 && peakHz <= 600 && peakRms > 45; // mid-high = string vibration
+  const cleanThud = peakHz < 300 && peakRms > 35;  // low thud = good clean release
+  const tooQuiet  = peakRms < 20;                  // mic too far or no shot captured
 
-  if (diagram === 'dominant') {
-    if (veryLoud && highFreq) return 'High-frequency snap detected on draw side — possible string slap or arrow kicking out. Check plunger pressure and centershot alignment.';
-    if (loud && lowFreq) return 'Strong low-frequency thud on draw side — bow is releasing energy well. Monitor for any lateral arrow movement.';
-    if (quiet) return 'Low sound level on draw side — shot may be well-damped or mic was too far. Consider re-recording closer.';
-    if (highFreq && !loud) return 'Mild high-frequency noise on draw side — slight string contact possible. Check nocking point height.';
-    return 'Draw side recording looks normal. No major issues detected.';
-  }
-
-  if (diagram === 'back') {
-    if (veryLoud && lowFreq) return 'Strong low-frequency vibration from behind — limbs may be unbalanced. Check tiller measurement top vs bottom.';
-    if (highFreq && loud) return 'High-frequency noise from rear — possible limb tip vibration or loose accessory. Check limb bolts and limb pockets.';
-    if (quiet) return 'Clean, quiet release from behind — tiller and limb balance appear good.';
-    if (midFreq) return 'Mid-range frequencies from rear — typical for a balanced release. Tiller appears within range.';
-    return 'Back view recording looks balanced. No tiller issues detected.';
-  }
-
-  if (diagram === 'front') {
-    if (veryLoud && highFreq) return 'High riser vibration detected from front — possible grip torque or stiff plunger. Relax grip and check plunger spring tension.';
-    if (loud && midFreq) return 'Moderate riser noise from front — some vibration transmitting through grip. Check grip pressure and bow hand position.';
-    if (quiet && lowFreq) return 'Clean low-frequency thud from front — riser is absorbing energy well. Grip pressure looks good.';
-    if (quiet) return 'Very quiet from front — excellent energy transfer. Grip and riser setup look solid.';
-    return 'Front view shows normal vibration levels. Riser and grip appear fine.';
-  }
-
-  if (diagram === 'non-dominant') {
-    if (veryLoud) return 'High sound level on non-dominant side — possible asymmetry in arrow flight. Cross-reference with dominant side recording.';
-    if (highFreq && loud) return 'High-frequency noise on non-dominant side — arrow may be kicking inward. Try easing plunger pressure slightly.';
-    if (quiet) return 'Quiet on non-dominant side — consistent with dominant side. No asymmetry detected.';
-    return 'Non-dominant side recording consistent. No major asymmetry detected.';
-  }
-
-  return 'Recording captured. Proceed to next step.';
+  if (tooQuiet) return 'Very low sound level — mic may have been too far away. Consider re-recording closer to the bow.';
+  if (hasSnap)  return 'Sharp snap detected — possible string slap. This is the most reliable sound indicator; worth investigating plunger or arrow clearance.';
+  if (hasTwang) return 'String twang detected — bow is vibrating after release. Could indicate brace height on the low side or arrow clearance issue.';
+  if (cleanThud) return 'Clean thud — good release sound. No obvious string slap detected from this angle.';
+  return 'Recording captured. Sound level is within normal range.';
 }
 
 function analyzeAllRecordings(recordings, bow, hand) {
   const findings = [];
-  const r0 = recordings[0]; // dominant side
+  const r0 = recordings[0]; // dominant side — best for string slap
   const r1 = recordings[1]; // back
   const r2 = recordings[2]; // front
   const r3 = recordings[3]; // non-dominant
 
-  // ── STRING SLAP / PLUNGER ──
-  if (r0) {
-    if (r0.peakHz > 500 && r0.peakRms > 60) {
-      findings.push({ status:'warning', title:'String slap / plunger issue detected', fix: bow === 'recurve' ? 'Turn plunger button out ¼ turn and re-test with bare shaft at 10m.' : 'Check arrow spine match and shelf contact. Try moving nocking point up 1mm.' });
-    } else if (r0.peakHz > 300 && r0.peakRms > 45) {
-      findings.push({ status:'warning', title:'Mild arrow kick on dominant side', fix:'Fine-tune plunger pressure — try ⅛ turn adjustments. Check arrow rest height.' });
+  // ── STRING SLAP — detectable by sound ──
+  const snapDetected = r0 && r0.peakHz > 600 && r0.peakRms > 55;
+  const mildSnap     = r0 && r0.peakHz > 400 && r0.peakRms > 45 && !snapDetected;
+
+  if (snapDetected) {
+    findings.push({
+      status: 'warning',
+      title: 'String slap sound detected',
+      fix: bow === 'recurve'
+        ? 'Adjust plunger pressure and check centershot. Re-test with bare shaft at 10m.'
+        : 'Check arrow clearance off the shelf. Ensure arrow spine suits your draw weight.'
+    });
+  } else if (mildSnap) {
+    findings.push({
+      status: 'warning',
+      title: 'Mild string noise detected',
+      fix: 'Minor string contact possible. Fine-tune plunger or nocking point by small increments and re-test.'
+    });
+  } else if (r0) {
+    findings.push({ status: 'ok', title: 'No string slap detected', fix: null });
+  }
+
+  // ── BRACE HEIGHT — detectable by sound (twang vs thud) ──
+  const allRecs = [r0, r1, r2, r3].filter(Boolean);
+  if (allRecs.length > 0) {
+    const avgHz  = allRecs.reduce((a,b) => a + b.peakHz,  0) / allRecs.length;
+    const avgRms = allRecs.reduce((a,b) => a + b.peakRms, 0) / allRecs.length;
+
+    if (avgHz > 500 && avgRms > 55) {
+      findings.push({
+        status: 'warning',
+        title: 'High-pitched shot sound — brace height may be low',
+        fix: 'Add 2 twists to string and re-test. A low brace height increases string noise and arrow contact risk.'
+      });
+    } else if (avgHz < 200 && avgRms > 50) {
+      findings.push({ status: 'ok', title: 'Deep thud tone — brace height sounds good', fix: null });
     } else {
-      findings.push({ status:'ok', title:'Arrow release looks clean on dominant side', fix:null });
+      findings.push({ status: 'ok', title: 'Shot tone within normal range', fix: null });
     }
   }
 
-  // ── TILLER / LIMB BALANCE ──
-  if (r1) {
-    if (r1.peakRms > 70 && r1.peakHz < 250) {
-      findings.push({ status:'warning', title:'Limb imbalance detected — tiller may be off', fix: bow === 'recurve' ? 'Measure tiller top and bottom. Adjust limb bolts ½ turn at a time until top tiller is 2-3mm more than bottom.' : 'Check limb alignment in pockets. Ensure limbs are seated evenly.' });
-    } else if (r1.peakHz > 400 && r1.peakRms > 55) {
-      findings.push({ status:'warning', title:'Limb tip vibration detected', fix:'Check limb tips for cracks or loose string grooves. Consider adding limb dampeners.' });
+  // ── OVERALL SHOT NOISE LEVEL ──
+  if (allRecs.length > 0) {
+    const avgRms = allRecs.reduce((a,b) => a + b.peakRms, 0) / allRecs.length;
+    if (avgRms > 75) {
+      findings.push({
+        status: 'warning',
+        title: 'Louder than average shot',
+        fix: 'Consider adding limb dampeners or a string silencer to reduce vibration noise and felt recoil.'
+      });
+    } else if (avgRms < 20) {
+      findings.push({
+        status: 'warning',
+        title: 'Very quiet recordings — mic may have been too far',
+        fix: 'Re-run the session with the phone placed closer to the bow (within 1m).'
+      });
     } else {
-      findings.push({ status:'ok', title:'Tiller and limb balance looks good', fix:null });
+      findings.push({ status: 'ok', title: 'Overall shot noise level is normal', fix: null });
     }
   }
 
-  // ── BRACE HEIGHT ──
-  if (r0 && r2) {
-    const avgRms = ((r0.peakRms || 0) + (r2.peakRms || 0)) / 2;
-    const avgHz = ((r0.peakHz || 0) + (r2.peakHz || 0)) / 2;
-    if (avgHz > 500 && avgRms > 65) {
-      findings.push({ status:'warning', title:'Brace height may be too low', fix: bow === 'traditional' ? 'Add 1-2 twists to string to increase brace height. Ideal range is typically 7.5"–8" for longbows.' : 'Add 2 twists to string. Recheck — brace height affects arrow clearance and noise significantly.' });
-    } else if (avgHz < 150 && avgRms < 35) {
-      findings.push({ status:'warning', title:'Brace height may be too high', fix:'Remove 1-2 twists from string. High brace height reduces power stroke and can cause inconsistency.' });
-    } else {
-      findings.push({ status:'ok', title:'Brace height appears within normal range', fix:null });
-    }
-  }
-
-  // ── GRIP TORQUE ──
-  if (r2) {
-    if (r2.peakHz > 450 && r2.peakRms > 65) {
-      findings.push({ status:'warning', title:'Grip torque detected — bow hand tension', fix:'Relax your bow hand. Only the thumb pad should contact the grip. Let fingers hang loose. Try a sling to remove fear of dropping the bow.' });
-    } else {
-      findings.push({ status:'ok', title:'Grip pressure looks neutral — no torque detected', fix:null });
-    }
-  }
-
-  // ── NOCKING POINT ──
-  if (r0 && r3) {
-    const diffRms = Math.abs((r0.peakRms||0) - (r3.peakRms||0));
-    const diffHz  = Math.abs((r0.peakHz||0)  - (r3.peakHz||0));
-    if (diffRms > 30 || diffHz > 300) {
-      findings.push({ status:'warning', title:'Asymmetry between sides — nocking point suspected', fix:'Adjust nocking point up or down by 1mm and re-test. Asymmetric sound between sides often indicates incorrect nock height.' });
-    } else {
-      findings.push({ status:'ok', title:'Left/right symmetry looks consistent', fix:null });
-    }
-  }
-
-  // ── BOW-SPECIFIC ADVICE ──
-  if (bow === 'barebow') {
-    findings.push({ status:'ok', title:'Tip: Bare shaft test recommended after any plunger change', fix:null });
-  } else if (bow === 'traditional') {
-    findings.push({ status:'ok', title:'Tip: For traditional bows, spine tuning is critical — re-test after arrow changes', fix:null });
-  }
+  // ── HONEST DISCLAIMER ──
+  findings.push({
+    status: 'ok',
+    title: 'Note: Sound analysis has limits',
+    fix: 'Tiller, nocking point, grip torque and centershot require physical measurement or camera analysis — not detectable by mic alone.'
+  });
 
   return findings;
 }
