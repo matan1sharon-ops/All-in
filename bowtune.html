@@ -1148,17 +1148,13 @@ const CAM_STEPS = [
     what: 'Limb bend at full draw · Limb timing at release',
     diagram: 'side-dominant',
     tip: '⭐ Slow-mo recommended (240fps) — limb timing is very fast. Import from your camera app for best results. 30fps works for draw position.',
-    capture: '1. Record from the side at arrow height, 2m away
-2. Archer draws to full draw and holds 1 second
-3. Then releases
-
-You will mark: Full draw frame · End of limb travel frame',
+    capture: '1. Record from the side at arrow height, 2m away\n2. Archer draws to full draw and holds 1 second\n3. Then releases\n\nYou will mark: Full draw frame · End of limb travel frame',
     markA: '🏹 Mark Full Draw',
     markB: '✅ Mark End of Travel',
     labelA: 'Full Draw',
     labelB: 'End of Travel',
     overlayColor: '#f97316',
-    analysis: analyzeSide,
+    analysis: 'analyzeSide',
   },
   {
     id: 'back',
@@ -1167,17 +1163,13 @@ You will mark: Full draw frame · End of limb travel frame',
     what: 'String alignment at full draw · Arrow clearance at release',
     diagram: 'back',
     tip: '✅ 30fps is fine for string alignment. Slow-mo helps to see arrow clearance at release.',
-    capture: '1. Record from directly behind the archer at nock height
-2. Archer draws to full draw and holds
-3. Then releases
-
-You will mark: Full draw frame · Release frame',
+    capture: '1. Record from directly behind the archer at nock height\n2. Archer draws to full draw and holds\n3. Then releases\n\nYou will mark: Full draw frame · Release frame',
     markA: '🏹 Mark Full Draw',
     markB: '✅ Mark Release',
     labelA: 'Full Draw',
     labelB: 'Release',
     overlayColor: '#3b82f6',
-    analysis: analyzeBack,
+    analysis: 'analyzeBack',
   },
   {
     id: 'front',
@@ -1186,17 +1178,13 @@ You will mark: Full draw frame · Release frame',
     what: 'Riser twist · Grip torque at release',
     diagram: 'front',
     tip: '✅ 30fps works well — riser rotation is a slow movement clearly visible at normal speed.',
-    capture: '1. Record from directly in front at chest height
-2. Archer draws to full draw
-3. Then releases and follows through
-
-You will mark: Full draw frame · Follow through frame',
+    capture: '1. Record from directly in front at chest height\n2. Archer draws to full draw\n3. Then releases and follows through\n\nYou will mark: Full draw frame · Follow through frame',
     markA: '🏹 Mark Full Draw',
     markB: '✅ Mark Follow Through',
     labelA: 'Full Draw',
     labelB: 'Follow Through',
     overlayColor: '#ef4444',
-    analysis: analyzeFront,
+    analysis: 'analyzeFront',
   },
 ];
 
@@ -1628,7 +1616,8 @@ function updateMarkedStatus() {
 function analyzeFrames() {
   const step = CAM_STEPS[camState.stepIdx];
   const marks = camState.markedFrames[step.id] || {};
-  const findings = step.analysis(marks, camState.bow, camState.hand);
+  const analysisFn = { analyzeSide, analyzeBack, analyzeFront }[step.analysis];
+  const findings = analysisFn(marks, camState.bow, camState.hand);
 
   camState.results.push({ stepId: step.id, title: step.title, findings });
 
