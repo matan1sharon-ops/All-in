@@ -152,11 +152,18 @@
   <div class="card">
     <div class="section-label">What do you want to tune?</div>
     <div style="display:flex; flex-direction:column; gap:10px;">
-      <button onclick="startSession('sound')" style="display:flex; align-items:center; gap:14px; padding:14px 16px; border-radius:12px; border:1px solid var(--border); background:#0a0a0a; cursor:pointer; text-align:left; width:100%;">
+      <button onclick="startSession('sound')" style="display:flex; align-items:center; gap:14px; padding:14px 16px; border-radius:12px; border:2px solid var(--border); background:#0a1628; cursor:pointer; text-align:left; width:100%;">
         <span style="font-size:26px;">🎙</span>
         <div>
-          <div style="font-size:14px; font-weight:700; color:#fff; margin-bottom:2px;">Sound Tuning</div>
-          <div style="font-size:12px; color:var(--gray); line-height:1.5;">Mic analysis — brace height, tiller, plunger</div>
+          <div style="font-size:14px; font-weight:700; color:var(--text); margin-bottom:2px;">Sound Tuning</div>
+          <div style="font-size:12px; color:var(--gray); line-height:1.5;">Mic analysis — brace height, string slap</div>
+        </div>
+      </button>
+      <button onclick="showScreen('s-camera-home')" style="display:flex; align-items:center; gap:14px; padding:14px 16px; border-radius:12px; border:2px solid var(--border); background:#0a1628; cursor:pointer; text-align:left; width:100%;">
+        <span style="font-size:26px;">📷</span>
+        <div>
+          <div style="font-size:14px; font-weight:700; color:var(--text); margin-bottom:2px;">Camera Tuning</div>
+          <div style="font-size:12px; color:var(--gray); line-height:1.5;">Limb timing · String alignment · Riser twist</div>
         </div>
       </button>
     </div>
@@ -1110,6 +1117,841 @@ window.onload = () => {
     showScreen('s-home');
   }
 };
+
+
+// ═══════════════════════════════════════════
+// CAMERA TUNING STATE & CONFIG
+// ═══════════════════════════════════════════
+
+const camState = {
+  bow: 'barebow',
+  hand: 'right',
+  stepIdx: 0,
+  videoBlob: null,
+  videoURL: null,
+  markedFrames: {},  // { stepId: { frameA: time, frameB: time } }
+  results: [],
+  mediaRecorder: null,
+  stream: null,
+  facingMode: 'environment',
+  recording: false,
+  recInterval: null,
+  recSeconds: 0,
+  countdown: null,
+};
+
+const CAM_STEPS = [
+  {
+    id: 'side',
+    icon: '📐',
+    title: 'Side View',
+    what: 'Limb bend at full draw · Limb timing at release',
+    diagram: 'side-dominant',
+    tip: '⭐ Slow-mo recommended (240fps) — limb timing is very fast. Import from your camera app for best results. 30fps works for draw position.',
+    capture: '1. Record from the side at arrow height, 2m away
+2. Archer draws to full draw and holds 1 second
+3. Then releases
+
+You will mark: Full draw frame · End of limb travel frame',
+    markA: '🏹 Mark Full Draw',
+    markB: '✅ Mark End of Travel',
+    labelA: 'Full Draw',
+    labelB: 'End of Travel',
+    overlayColor: '#f97316',
+    analysis: analyzeSide,
+  },
+  {
+    id: 'back',
+    icon: '🎯',
+    title: 'Back View',
+    what: 'String alignment at full draw · Arrow clearance at release',
+    diagram: 'back',
+    tip: '✅ 30fps is fine for string alignment. Slow-mo helps to see arrow clearance at release.',
+    capture: '1. Record from directly behind the archer at nock height
+2. Archer draws to full draw and holds
+3. Then releases
+
+You will mark: Full draw frame · Release frame',
+    markA: '🏹 Mark Full Draw',
+    markB: '✅ Mark Release',
+    labelA: 'Full Draw',
+    labelB: 'Release',
+    overlayColor: '#3b82f6',
+    analysis: analyzeBack,
+  },
+  {
+    id: 'front',
+    icon: '🔄',
+    title: 'Front View',
+    what: 'Riser twist · Grip torque at release',
+    diagram: 'front',
+    tip: '✅ 30fps works well — riser rotation is a slow movement clearly visible at normal speed.',
+    capture: '1. Record from directly in front at chest height
+2. Archer draws to full draw
+3. Then releases and follows through
+
+You will mark: Full draw frame · Follow through frame',
+    markA: '🏹 Mark Full Draw',
+    markB: '✅ Mark Follow Through',
+    labelA: 'Full Draw',
+    labelB: 'Follow Through',
+    overlayColor: '#ef4444',
+    analysis: analyzeFront,
+  },
+];
+
+// Analysis functions per angle
+function analyzeSide(markedFrames, bow, hand) {
+  const diff = Math.abs((markedFrames.frameB || 0) - (markedFrames.frameA || 0));
+  const findings = [];
+
+  if (!markedFrames.frameA || !markedFrames.frameB) {
+    return [{ status:'warning', title:'Incomplete marking', fix:'Mark both full draw and end of travel frames.' }];
+  }
+
+  // Time between draw and end of travel
+  if (diff < 0.05) {
+    findings.push({ status:'warning', title:'Limbs stopped very quickly', fix:'May indicate over-braced bow or stiff limbs. Check brace height.' });
+  } else if (diff > 0.4) {
+    findings.push({ status:'warning', title:'Long limb travel time', fix:'May indicate low brace height or very light limbs. Check brace height measurement.' });
+  } else {
+    findings.push({ status:'ok', title:'Limb travel time looks normal', fix:null });
+  }
+
+  findings.push({ status:'ok', title:'Tip: Check if top and bottom limbs stop at the same time', fix:'If one limb stops before the other, your tiller may need adjustment.' });
+  return findings;
+}
+
+function analyzeBack(markedFrames, bow, hand) {
+  if (!markedFrames.frameA || !markedFrames.frameB) {
+    return [{ status:'warning', title:'Incomplete marking', fix:'Mark both full draw and release frames.' }];
+  }
+  return [
+    { status:'ok', title:'Back view captured', fix:null },
+    { status:'ok', title:'Check string position at full draw', fix:'String should sit centered on the riser. If it drifts left or right, centershot needs adjustment.' },
+    { status:'ok', title:'Check arrow at release frame', fix:'Arrow should leave the rest cleanly. Any visible kick left or right indicates plunger or spine issue.' },
+  ];
+}
+
+function analyzeFront(markedFrames, bow, hand) {
+  if (!markedFrames.frameA || !markedFrames.frameB) {
+    return [{ status:'warning', title:'Incomplete marking', fix:'Mark both full draw and follow through frames.' }];
+  }
+  return [
+    { status:'ok', title:'Front view captured', fix:null },
+    { status:'ok', title:'Compare riser position between frames', fix:'If the riser rotates clockwise at release — grip is too tight on the right. Counter-clockwise — too tight on the left. Riser should fall straight forward.' },
+  ];
+}
+
+// ═══════════════════════════════════════════
+// CAMERA SESSION FLOW
+// ═══════════════════════════════════════════
+
+function setCamSeg(key, val, btn) {
+  camState[key] = val;
+  const seg = document.getElementById('cam-' + key + '-seg');
+  if (seg) seg.querySelectorAll('.seg-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+function startCameraSession() {
+  camState.stepIdx = 0;
+  camState.markedFrames = {};
+  camState.results = [];
+  renderCameraStep();
+  showScreen('s-camera-setup');
+}
+
+function backCameraStep() {
+  if (camState.stepIdx === 0) showScreen('s-camera-home');
+  else { camState.stepIdx--; renderCameraStep(); }
+}
+
+function renderCameraStep() {
+  const step = CAM_STEPS[camState.stepIdx];
+
+  // Progress
+  const pRow = document.getElementById('cam-progress-row');
+  pRow.innerHTML = CAM_STEPS.map((s, i) => {
+    const done = camState.markedFrames[s.id]?.frameA && camState.markedFrames[s.id]?.frameB;
+    const cls = done ? 'done' : i === camState.stepIdx ? 'active' : '';
+    return `<div class="progress-pip ${cls}"></div>`;
+  }).join('');
+
+  document.getElementById('cam-step-counter').textContent = `📷 Camera — Step ${camState.stepIdx + 1} of ${CAM_STEPS.length}`;
+  document.getElementById('cam-step-icon').textContent = step.icon;
+  document.getElementById('cam-step-title').textContent = step.title;
+  document.getElementById('cam-step-what').textContent = '🎯 ' + step.what;
+  document.getElementById('cam-rec-tip').textContent = step.tip;
+  document.getElementById('cam-capture-guide').innerHTML = '📋 What to capture:<br><br>' + step.capture.replace(/
+/g, '<br>');
+
+  // Render placement diagram
+  renderDiagram2('cam-placement-svg', step.diagram);
+}
+
+function renderDiagram2(svgId, type) {
+  const svg = document.getElementById(svgId);
+  if (!svg) return;
+  const cx = 150, cy = 80;
+  const isDomRight = camState.hand === 'right';
+  let phone;
+  if (type === 'side-dominant') phone = { x: cx, y: isDomRight ? 148 : 12, label: 'your draw side' };
+  else if (type === 'back') phone = { x: 28, y: cy, label: '2m behind you' };
+  else phone = { x: 272, y: cy, label: '2m in front' };
+  const targetX = 272;
+
+  svg.innerHTML = `
+    ${[40,80,120,160,200,240,280].map(x=>`<line x1="${x}" y1="0" x2="${x}" y2="160" stroke="#1e3a5f" stroke-width="0.5"/>`).join('')}
+    ${[20,40,60,80,100,120,140,160].map(y=>`<line x1="0" y1="${y}" x2="300" y2="${y}" stroke="#1e3a5f" stroke-width="0.5"/>`).join('')}
+    <line x1="10" y1="${cy}" x2="290" y2="${cy}" stroke="#2a4a6a" stroke-width="1" stroke-dasharray="5,4"/>
+    <text x="${cx}" y="10" text-anchor="middle" font-size="7" fill="#2a4a6a" font-family="sans-serif">← LEFT SIDE</text>
+    <text x="${cx}" y="158" text-anchor="middle" font-size="7" fill="#2a4a6a" font-family="sans-serif">RIGHT SIDE →</text>
+    <text x="18" y="${cy-6}" text-anchor="middle" font-size="7" fill="#2a4a6a" font-family="sans-serif">BACK</text>
+    <text x="282" y="${cy-6}" text-anchor="middle" font-size="7" fill="#2a4a6a" font-family="sans-serif">FRONT</text>
+    <circle cx="${targetX}" cy="${cy}" r="9" fill="none" stroke="#FF3B30" stroke-width="1.5"/>
+    <circle cx="${targetX}" cy="${cy}" r="3" fill="#FF3B30"/>
+    <text x="${targetX}" y="${cy+20}" text-anchor="middle" font-size="7" fill="#FF3B30" font-family="sans-serif">TARGET</text>
+    <defs><marker id="arr2" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto"><polygon points="0 0, 7 3.5, 0 7" fill="#FFD700"/></marker></defs>
+    <line x1="${cx+16}" y1="${cy}" x2="${targetX-12}" y2="${cy}" stroke="#FFD700" stroke-width="2.5" marker-end="url(#arr2)"/>
+    <text x="${(cx+targetX)/2}" y="${cy-8}" text-anchor="middle" font-size="8" fill="#FFD700" font-family="sans-serif" font-weight="bold">→ ARROW</text>
+    <line x1="${cx}" y1="${cy}" x2="${phone.x}" y2="${phone.y}" stroke="#7c3aed" stroke-width="1.5" stroke-dasharray="5,3"/>
+    <circle cx="${cx}" cy="${cy}" r="13" fill="#1d4ed8"/>
+    <circle cx="${cx+8}" cy="${cy-8}" r="5" fill="#93c5fd"/>
+    <line x1="${cx}" y1="${cy}" x2="${cx+13}" y2="${cy}" stroke="#FFD700" stroke-width="2"/>
+    <text x="${cx}" y="${cy+24}" text-anchor="middle" font-size="7" fill="#8899aa" font-family="sans-serif">YOU</text>
+    <rect x="${phone.x-9}" y="${phone.y-14}" width="18" height="28" rx="4" fill="#7c3aed"/>
+    <rect x="${phone.x-6}" y="${phone.y-11}" width="12" height="18" rx="2" fill="#0a1628"/>
+    <text x="${phone.x}" y="${phone.y+22}" text-anchor="middle" font-size="7" fill="#a78bfa" font-family="sans-serif" font-weight="bold">${phone.label}</text>
+  `;
+}
+
+// ═══════════════════════════════════════════
+// IN-APP CAMERA RECORDING
+// ═══════════════════════════════════════════
+
+async function startCameraRecord() {
+  showScreen('s-camera-record');
+  await initCamera();
+  // Show 5 second countdown in solo mode
+  startCamCountdown();
+}
+
+async function initCamera() {
+  try {
+    camState.stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: camState.facingMode, width: { ideal: 1280 }, height: { ideal: 720 } },
+      audio: false
+    });
+    document.getElementById('cam-preview').srcObject = camState.stream;
+  } catch(e) {
+    alert('Camera access denied. Please allow camera access and try again.');
+    showScreen('s-camera-setup');
+  }
+}
+
+function startCamCountdown() {
+  let count = 5;
+  const overlay = document.getElementById('cam-countdown-overlay');
+  const num = document.getElementById('cam-countdown-num');
+  overlay.style.display = 'flex';
+  num.textContent = count;
+
+  camState.countdown = setInterval(() => {
+    count--;
+    num.textContent = count;
+    if (count <= 2) num.style.color = '#FF3B30';
+    if (count <= 0) {
+      clearInterval(camState.countdown);
+      overlay.style.display = 'none';
+      num.style.color = '#fff';
+      beginRecording();
+    }
+  }, 1000);
+}
+
+function beginRecording() {
+  const chunks = [];
+  camState.mediaRecorder = new MediaRecorder(camState.stream);
+  camState.mediaRecorder.ondataavailable = e => { if (e.data.size > 0) chunks.push(e.data); };
+  camState.mediaRecorder.onstop = () => {
+    const blob = new Blob(chunks, { type: 'video/mp4' });
+    camState.videoBlob = blob;
+    camState.videoURL = URL.createObjectURL(blob);
+    stopCameraStream();
+    loadVideoForAnalysis();
+  };
+  camState.mediaRecorder.start();
+  camState.recording = true;
+  camState.recSeconds = 0;
+
+  document.getElementById('cam-rec-indicator').style.display = 'flex';
+  document.getElementById('cam-record-btn').style.background = '#333';
+  document.getElementById('cam-btn-inner').style.borderRadius = '4px';
+
+  camState.recInterval = setInterval(() => {
+    camState.recSeconds++;
+    document.getElementById('cam-rec-timer').textContent = camState.recSeconds + 's';
+    if (camState.recSeconds >= 15) toggleRecording(); // auto stop at 15s
+  }, 1000);
+}
+
+function toggleRecording() {
+  if (camState.recording) {
+    camState.recording = false;
+    clearInterval(camState.recInterval);
+    if (camState.mediaRecorder && camState.mediaRecorder.state !== 'inactive') {
+      camState.mediaRecorder.stop();
+    }
+  }
+}
+
+function stopCameraRecord() {
+  clearInterval(camState.countdown);
+  clearInterval(camState.recInterval);
+  if (camState.mediaRecorder && camState.mediaRecorder.state !== 'inactive') {
+    camState.mediaRecorder.stop();
+  }
+  stopCameraStream();
+  showScreen('s-camera-setup');
+}
+
+function stopCameraStream() {
+  if (camState.stream) {
+    camState.stream.getTracks().forEach(t => t.stop());
+    camState.stream = null;
+  }
+}
+
+function flipCamera() {
+  camState.facingMode = camState.facingMode === 'environment' ? 'user' : 'environment';
+  stopCameraStream();
+  initCamera();
+}
+
+// ═══════════════════════════════════════════
+// VIDEO IMPORT
+// ═══════════════════════════════════════════
+
+function importVideo() {
+  document.getElementById('video-import').click();
+}
+
+function handleVideoImport(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  camState.videoBlob = file;
+  camState.videoURL = URL.createObjectURL(file);
+  loadVideoForAnalysis();
+}
+
+// ═══════════════════════════════════════════
+// FRAME ANALYSIS
+// ═══════════════════════════════════════════
+
+function loadVideoForAnalysis() {
+  const step = CAM_STEPS[camState.stepIdx];
+  showScreen('s-frame-analysis');
+
+  document.getElementById('frame-step-title').textContent = step.icon + ' ' + step.title;
+  document.getElementById('frame-step-instruction').textContent = 'Scrub to key moments and mark each frame';
+  document.getElementById('frame-back-label').textContent = step.title;
+
+  // Set up mark buttons
+  const markBtns = document.getElementById('mark-buttons');
+  markBtns.innerHTML = `
+    <button id="markA-btn" onclick="markFrame('frameA')" style="padding:14px; font-size:13px; font-weight:700; border-radius:10px; border:2px solid ${step.overlayColor}; background:transparent; color:${step.overlayColor}; cursor:pointer;">
+      ${step.markA}
+    </button>
+    <button id="markB-btn" onclick="markFrame('frameB')" style="padding:14px; font-size:13px; font-weight:700; border-radius:10px; border:2px solid var(--green); background:transparent; color:var(--green); cursor:pointer;">
+      ${step.markB}
+    </button>
+  `;
+
+  document.getElementById('mark-instructions').textContent = 'Scrub to each key moment and mark it';
+
+  // Load video
+  const video = document.getElementById('frame-video');
+  video.src = camState.videoURL;
+  video.load();
+
+  video.onloadedmetadata = () => {
+    const canvas = document.getElementById('frame-canvas');
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    document.getElementById('overlay-canvas').width = video.videoWidth;
+    document.getElementById('overlay-canvas').height = video.videoHeight;
+    drawFrame(0);
+  };
+
+  // Reset marks for this step
+  if (!camState.markedFrames[step.id]) {
+    camState.markedFrames[step.id] = {};
+  }
+  updateMarkedStatus();
+  document.getElementById('frame-results').style.display = 'none';
+  document.getElementById('next-cam-step-btn').style.display = 'none';
+  document.getElementById('analyze-btn').style.display = 'block';
+  document.getElementById('analyze-btn').disabled = true;
+  document.getElementById('analyze-btn').style.opacity = '0.4';
+}
+
+function scrubFrame(val) {
+  const video = document.getElementById('frame-video');
+  if (!video.duration) return;
+  const time = (val / 100) * video.duration;
+  video.currentTime = time;
+  document.getElementById('frame-time').textContent = time.toFixed(2) + 's';
+  video.onseeked = () => drawFrame(time);
+}
+
+function drawFrame(time) {
+  const video = document.getElementById('frame-video');
+  const canvas = document.getElementById('frame-canvas');
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+  drawOverlays();
+}
+
+function markFrame(frameKey) {
+  const video = document.getElementById('frame-video');
+  const time = video.currentTime;
+  const step = CAM_STEPS[camState.stepIdx];
+
+  if (!camState.markedFrames[step.id]) camState.markedFrames[step.id] = {};
+  camState.markedFrames[step.id][frameKey] = time;
+
+  // Visual feedback on button
+  const btn = document.getElementById(frameKey === 'frameA' ? 'markA-btn' : 'markB-btn');
+  const label = frameKey === 'frameA' ? step.labelA : step.labelB;
+  btn.textContent = `✓ ${label} marked at ${time.toFixed(2)}s`;
+  btn.style.background = frameKey === 'frameA' ? step.overlayColor + '33' : '#4CD96433';
+
+  updateMarkedStatus();
+  drawOverlays();
+}
+
+function drawOverlays() {
+  const step = CAM_STEPS[camState.stepIdx];
+  const canvas = document.getElementById('overlay-canvas');
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  const marks = camState.markedFrames[step.id] || {};
+  const w = canvas.width;
+  const h = canvas.height;
+
+  // Draw horizontal reference lines based on step type
+  if (step.id === 'side') {
+    // Horizontal lines at top and bottom limb area
+    if (marks.frameA !== undefined) {
+      ctx.strokeStyle = step.overlayColor;
+      ctx.lineWidth = 3;
+      ctx.setLineDash([10, 5]);
+      ctx.beginPath(); ctx.moveTo(0, h * 0.2); ctx.lineTo(w, h * 0.2); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(0, h * 0.8); ctx.lineTo(w, h * 0.8); ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.font = 'bold 14px sans-serif';
+      ctx.fillStyle = step.overlayColor;
+      ctx.fillText('← ' + step.labelA, 10, h * 0.18);
+    }
+    if (marks.frameB !== undefined) {
+      ctx.strokeStyle = '#22c55e';
+      ctx.lineWidth = 3;
+      ctx.setLineDash([10, 5]);
+      ctx.beginPath(); ctx.moveTo(0, h * 0.15); ctx.lineTo(w, h * 0.15); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(0, h * 0.85); ctx.lineTo(w, h * 0.85); ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle = '#22c55e';
+      ctx.fillText('← ' + step.labelB, 10, h * 0.13);
+    }
+  } else if (step.id === 'back') {
+    // Vertical center line for string alignment
+    if (marks.frameA !== undefined) {
+      ctx.strokeStyle = step.overlayColor;
+      ctx.lineWidth = 3;
+      ctx.setLineDash([10, 5]);
+      ctx.beginPath(); ctx.moveTo(w * 0.5, 0); ctx.lineTo(w * 0.5, h); ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.font = 'bold 13px sans-serif';
+      ctx.fillStyle = step.overlayColor;
+      ctx.fillText('String center', w * 0.52, 20);
+    }
+  } else if (step.id === 'front') {
+    // Vertical riser line
+    if (marks.frameA !== undefined) {
+      ctx.strokeStyle = step.overlayColor;
+      ctx.lineWidth = 3;
+      ctx.setLineDash([10, 5]);
+      ctx.beginPath(); ctx.moveTo(w * 0.5, 0); ctx.lineTo(w * 0.5, h); ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.font = 'bold 13px sans-serif';
+      ctx.fillStyle = step.overlayColor;
+      ctx.fillText('Riser center', w * 0.52, 20);
+    }
+    if (marks.frameB !== undefined) {
+      ctx.strokeStyle = '#22c55e';
+      ctx.lineWidth = 2;
+      ctx.setLineDash([6, 4]);
+      ctx.beginPath(); ctx.moveTo(w * 0.52, 0); ctx.lineTo(w * 0.52, h); ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle = '#22c55e';
+      ctx.fillText('Follow through', w * 0.54, 40);
+    }
+  }
+}
+
+function updateMarkedStatus() {
+  const step = CAM_STEPS[camState.stepIdx];
+  const marks = camState.markedFrames[step.id] || {};
+  const hasA = marks.frameA !== undefined;
+  const hasB = marks.frameB !== undefined;
+  const both = hasA && hasB;
+
+  const status = document.getElementById('marked-frames-status');
+  status.innerHTML = `
+    <div style="display:flex; gap:10px;">
+      <div style="flex:1; padding:10px; border-radius:8px; border:1px solid ${hasA ? step.overlayColor : '#1e3a5f'}; background:${hasA ? step.overlayColor + '22' : 'transparent'}; text-align:center; font-size:12px; color:${hasA ? step.overlayColor : '#444'};">
+        ${hasA ? '✓' : '○'} ${step.labelA}<br>${hasA ? marks.frameA.toFixed(2) + 's' : 'not marked'}
+      </div>
+      <div style="flex:1; padding:10px; border-radius:8px; border:1px solid ${hasB ? '#22c55e' : '#1e3a5f'}; background:${hasB ? '#22c55e22' : 'transparent'}; text-align:center; font-size:12px; color:${hasB ? '#22c55e' : '#444'};">
+        ${hasB ? '✓' : '○'} ${step.labelB}<br>${hasB ? marks.frameB.toFixed(2) + 's' : 'not marked'}
+      </div>
+    </div>
+  `;
+
+  const analyzeBtn = document.getElementById('analyze-btn');
+  analyzeBtn.disabled = !both;
+  analyzeBtn.style.opacity = both ? '1' : '0.4';
+}
+
+function analyzeFrames() {
+  const step = CAM_STEPS[camState.stepIdx];
+  const marks = camState.markedFrames[step.id] || {};
+  const findings = step.analysis(marks, camState.bow, camState.hand);
+
+  camState.results.push({ stepId: step.id, title: step.title, findings });
+
+  const resultsDiv = document.getElementById('frame-results');
+  resultsDiv.style.display = 'block';
+  resultsDiv.innerHTML = `
+    <div style="font-size:11px; letter-spacing:2px; color:var(--gray); text-transform:uppercase; margin-bottom:12px;">
+      ${step.title} Results
+    </div>
+    ${findings.map(f => `
+      <div class="issue-card ${f.status === 'warning' ? 'warn' : 'ok'}" style="margin-bottom:10px;">
+        <div class="issue-title">${f.status === 'warning' ? '⚠️' : '✅'} ${f.title}</div>
+        ${f.fix ? `<div class="issue-fix">→ ${f.fix}</div>` : ''}
+      </div>
+    `).join('')}
+  `;
+
+  document.getElementById('analyze-btn').style.display = 'none';
+
+  const nextBtn = document.getElementById('next-cam-step-btn');
+  nextBtn.style.display = 'block';
+  nextBtn.textContent = camState.stepIdx < CAM_STEPS.length - 1
+    ? `Next: ${CAM_STEPS[camState.stepIdx + 1].title} →`
+    : '🏁 See Full Report';
+}
+
+function nextCameraStep() {
+  if (camState.stepIdx < CAM_STEPS.length - 1) {
+    camState.stepIdx++;
+    camState.videoURL = null;
+    camState.videoBlob = null;
+    renderCameraStep();
+    showScreen('s-camera-setup');
+  } else {
+    showCameraFinal();
+  }
+}
+
+function cancelFrameAnalysis() {
+  renderCameraStep();
+  showScreen('s-camera-setup');
+}
+
+// ═══════════════════════════════════════════
+// CAMERA FINAL REPORT
+// ═══════════════════════════════════════════
+
+function showCameraFinal() {
+  showScreen('s-camera-final');
+  document.getElementById('cam-final-subtitle').textContent =
+    `${camState.bow} · ${camState.hand}-handed · ${camState.results.length} angles analyzed`;
+
+  const container = document.getElementById('cam-final-results');
+  container.innerHTML = '';
+
+  camState.results.forEach(result => {
+    const warnings = result.findings.filter(f => f.status === 'warning').length;
+    container.innerHTML += `
+      <div style="font-size:13px; font-weight:700; color:var(--gold); margin:16px 0 8px; letter-spacing:1px;">
+        ${CAM_STEPS.find(s => s.id === result.stepId)?.icon} ${result.title}
+      </div>
+      ${result.findings.map(f => `
+        <div class="issue-card ${f.status === 'warning' ? 'warn' : 'ok'}" style="margin-bottom:8px;">
+          <div class="issue-title">${f.status === 'warning' ? '⚠️' : '✅'} ${f.title}</div>
+          ${f.fix ? `<div class="issue-fix">→ ${f.fix}</div>` : ''}
+        </div>
+      `).join('')}
+    `;
+  });
+
+  // Copy to AI prompt
+  const allFindings = camState.results.map(r =>
+    `${r.title}: ${r.findings.map(f => f.title + (f.fix ? ' — ' + f.fix : '')).join('; ')}`
+  ).join('\n');
+
+  const prompt = `I am a ${camState.bow}, ${camState.hand}-handed archer. I analyzed my shot from 3 camera angles. Here are my observations:
+
+${allFindings}
+
+Based on this, what tuning adjustments should I make and in what order?`;
+
+  container.innerHTML += `
+    <div style="margin-top:20px;">
+      <div style="font-size:11px; letter-spacing:2px; color:var(--gray); text-transform:uppercase; margin-bottom:10px;">🤖 Get AI Advice</div>
+      <div style="font-size:13px; color:#555; margin-bottom:10px;">Copy and paste into any AI chatbot:</div>
+      <div style="background:#0a1628; border:2px solid var(--border); border-radius:10px; padding:14px; font-size:12px; color:#8899aa; line-height:1.7; white-space:pre-wrap; font-family:monospace;">${prompt}</div>
+      <button onclick="copyCamPrompt()" id="copy-cam-btn" style="width:100%; margin-top:12px; padding:16px; font-size:15px; font-weight:800; border-radius:12px; border:none; cursor:pointer; background:var(--gold); color:#000;">
+        📋 Copy Prompt
+      </button>
+    </div>
+  `;
+  window._camPrompt = prompt;
+}
+
+function copyCamPrompt() {
+  navigator.clipboard.writeText(window._camPrompt).then(() => {
+    const btn = document.getElementById('copy-cam-btn');
+    btn.textContent = '✓ Copied!';
+    btn.style.background = '#4CD964';
+    setTimeout(() => { btn.textContent = '📋 Copy Prompt'; btn.style.background = 'var(--gold)'; }, 2000);
+  }).catch(() => {
+    const ta = document.createElement('textarea');
+    ta.value = window._camPrompt;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+  });
+}
+
 </script>
+
+<!-- ═══════════════════════════════════════════════
+     SCREEN: CAMERA HOME
+════════════════════════════════════════════════ -->
+<div id="s-camera-home" class="screen">
+  <button class="back-link" onclick="showScreen('s-home')">← <span>ALL IN</span></button>
+
+  <div style="margin-bottom:24px;">
+    <div style="font-size:11px; letter-spacing:4px; color:var(--gold); text-transform:uppercase; margin-bottom:6px;">ALL IN · BOWTUNE</div>
+    <h1 style="font-size:24px; margin-bottom:4px;">📷 Camera Tuning</h1>
+    <div class="subtitle">3 angles · Draw position · Release timing</div>
+  </div>
+
+  <!-- Bow type -->
+  <div class="card">
+    <div class="section-label">Bow Type</div>
+    <div class="seg-row" id="cam-bow-seg">
+      <button class="seg-btn active" onclick="setCamSeg('bow','barebow',this)">Barebow</button>
+      <button class="seg-btn" onclick="setCamSeg('bow','traditional',this)">Traditional</button>
+      <button class="seg-btn" onclick="setCamSeg('bow','recurve',this)">Recurve</button>
+    </div>
+  </div>
+
+  <!-- Hand -->
+  <div class="card">
+    <div class="section-label">Dominant Hand</div>
+    <div class="seg-row" id="cam-hand-seg">
+      <button class="seg-btn active" onclick="setCamSeg('hand','right',this)">🤜 Right-handed</button>
+      <button class="seg-btn" onclick="setCamSeg('hand','left',this)">🤛 Left-handed</button>
+    </div>
+  </div>
+
+  <!-- Steps overview -->
+  <div class="card">
+    <div class="section-label">3 Recording Angles</div>
+    <div style="display:flex; flex-direction:column;">
+      <div style="display:flex; gap:12px; align-items:center; padding:12px 0; border-bottom:1px solid var(--border);">
+        <span style="font-size:22px;">📐</span>
+        <div>
+          <div style="font-size:13px; font-weight:700; color:var(--text);">Side View</div>
+          <div style="font-size:11px; color:var(--gray); margin-top:2px;">Limb bend at full draw · Limb timing at release</div>
+        </div>
+        <div style="margin-left:auto; font-size:10px; color:var(--gold); font-weight:700;">⭐ Slow-mo</div>
+      </div>
+      <div style="display:flex; gap:12px; align-items:center; padding:12px 0; border-bottom:1px solid var(--border);">
+        <span style="font-size:22px;">🎯</span>
+        <div>
+          <div style="font-size:13px; font-weight:700; color:var(--text);">Back View</div>
+          <div style="font-size:11px; color:var(--gray); margin-top:2px;">String alignment at draw · Arrow clearance at release</div>
+        </div>
+        <div style="margin-left:auto; font-size:10px; color:var(--green); font-weight:700;">✅ 30fps ok</div>
+      </div>
+      <div style="display:flex; gap:12px; align-items:center; padding:12px 0;">
+        <span style="font-size:22px;">🔄</span>
+        <div>
+          <div style="font-size:13px; font-weight:700; color:var(--text);">Front View</div>
+          <div style="font-size:11px; color:var(--gray); margin-top:2px;">Riser twist · Grip torque at release</div>
+        </div>
+        <div style="margin-left:auto; font-size:10px; color:var(--green); font-weight:700;">✅ 30fps ok</div>
+      </div>
+    </div>
+  </div>
+
+  <button class="action-btn" onclick="startCameraSession()">Start Camera Tuning</button>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     SCREEN: CAMERA STEP SETUP
+════════════════════════════════════════════════ -->
+<div id="s-camera-setup" class="screen">
+  <button class="back-link" onclick="backCameraStep()">← <span>Back</span></button>
+
+  <div class="progress-row" id="cam-progress-row"></div>
+  <div style="font-size:11px; color:var(--gray); margin-bottom:20px;" id="cam-step-counter"></div>
+
+  <div class="card">
+    <div style="font-size:24px; margin-bottom:8px;" id="cam-step-icon"></div>
+    <h1 style="font-size:20px; margin-bottom:6px;" id="cam-step-title"></h1>
+    <div style="font-size:13px; color:var(--green); margin-bottom:16px; line-height:1.6;" id="cam-step-what"></div>
+
+    <!-- Placement diagram -->
+    <div class="diagram-wrap">
+      <div class="section-label">Phone Placement</div>
+      <svg id="cam-placement-svg" viewBox="0 0 300 160" height="140"></svg>
+    </div>
+
+    <!-- Recording tip -->
+    <div id="cam-rec-tip" class="info-box" style="border-color:#2a3a1a; color:#8ab88a; margin-bottom:14px;"></div>
+
+    <!-- What to capture -->
+    <div class="info-box" id="cam-capture-guide" style="margin-bottom:14px;"></div>
+
+    <!-- Record or Import -->
+    <div style="display:flex; gap:10px;">
+      <button class="action-btn" style="flex:1; margin-top:0; font-size:13px;" onclick="startCameraRecord()">
+        📷 Record Now
+      </button>
+      <button class="action-btn secondary" style="flex:1; margin-top:0; font-size:13px;" onclick="importVideo()">
+        📁 Import Slow-mo
+      </button>
+    </div>
+    <input type="file" id="video-import" accept="video/*" style="display:none;" onchange="handleVideoImport(event)">
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     SCREEN: CAMERA RECORDING
+════════════════════════════════════════════════ -->
+<div id="s-camera-record" class="screen" style="padding:0; background:#000;">
+  <div style="position:relative; width:100%; height:100vh; display:flex; flex-direction:column;">
+    <!-- Video preview -->
+    <video id="cam-preview" autoplay playsinline muted style="width:100%; flex:1; object-fit:cover; background:#000;"></video>
+
+    <!-- Top bar -->
+    <div style="position:absolute; top:0; left:0; right:0; padding:20px; padding-top:calc(env(safe-area-inset-top) + 20px); display:flex; justify-content:space-between; align-items:center; background:linear-gradient(to bottom, rgba(0,0,0,0.7), transparent);">
+      <button onclick="stopCameraRecord()" style="background:rgba(0,0,0,0.5); border:1px solid #555; color:#fff; padding:8px 16px; border-radius:20px; font-size:13px; cursor:pointer;">✕ Cancel</button>
+      <div id="cam-rec-indicator" style="display:none; align-items:center; gap:6px; background:rgba(255,0,0,0.8); padding:6px 14px; border-radius:20px;">
+        <div style="width:8px; height:8px; border-radius:50%; background:#fff; animation:pulse 1s infinite;"></div>
+        <span style="font-size:12px; font-weight:700; color:#fff;" id="cam-rec-timer">0s</span>
+      </div>
+      <button onclick="flipCamera()" style="background:rgba(0,0,0,0.5); border:1px solid #555; color:#fff; padding:8px 16px; border-radius:20px; font-size:13px; cursor:pointer;">🔄 Flip</button>
+    </div>
+
+    <!-- Countdown overlay -->
+    <div id="cam-countdown-overlay" style="display:none; position:absolute; inset:0; background:rgba(0,0,0,0.7); align-items:center; justify-content:center; flex-direction:column;">
+      <div style="font-size:11px; letter-spacing:4px; color:var(--gold); text-transform:uppercase; margin-bottom:16px;">Get Ready</div>
+      <div id="cam-countdown-num" style="font-size:120px; font-weight:900; color:#fff; line-height:1;"></div>
+      <div style="font-size:13px; color:#888; margin-top:16px;">Place phone · Walk to position · Shoot</div>
+    </div>
+
+    <!-- Bottom controls -->
+    <div style="position:absolute; bottom:0; left:0; right:0; padding:30px 20px; padding-bottom:calc(env(safe-area-inset-bottom) + 30px); display:flex; justify-content:center; align-items:center; background:linear-gradient(to top, rgba(0,0,0,0.7), transparent);">
+      <button id="cam-record-btn" onclick="toggleRecording()" style="width:72px; height:72px; border-radius:50%; border:4px solid #fff; background:var(--red); cursor:pointer; display:flex; align-items:center; justify-content:center;">
+        <div id="cam-btn-inner" style="width:36px; height:36px; border-radius:50%; background:#fff;"></div>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     SCREEN: FRAME ANALYSIS
+════════════════════════════════════════════════ -->
+<div id="s-frame-analysis" class="screen" style="padding:0; background:#000; overflow-y:auto;">
+  <div style="padding:20px; padding-top:calc(env(safe-area-inset-top) + 20px);">
+    <button class="back-link" onclick="cancelFrameAnalysis()">← <span id="frame-back-label">Back</span></button>
+    <div style="font-size:16px; font-weight:700; color:var(--text); margin-bottom:4px;" id="frame-step-title"></div>
+    <div style="font-size:12px; color:var(--gray); margin-bottom:16px;" id="frame-step-instruction"></div>
+  </div>
+
+  <!-- Video canvas -->
+  <div style="position:relative; width:100%; background:#000;" id="canvas-container">
+    <canvas id="frame-canvas" style="width:100%; display:block;"></canvas>
+    <canvas id="overlay-canvas" style="position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none;"></canvas>
+    <!-- Hidden video for frame extraction -->
+    <video id="frame-video" style="display:none;" playsinline></video>
+  </div>
+
+  <div style="padding:16px;">
+    <!-- Scrubber -->
+    <div style="margin-bottom:16px;">
+      <div style="display:flex; justify-content:space-between; font-size:11px; color:var(--gray); margin-bottom:6px;">
+        <span>Frame scrubber</span>
+        <span id="frame-time">0.0s</span>
+      </div>
+      <input type="range" id="frame-scrubber" min="0" max="100" value="0"
+        style="width:100%; accent-color:var(--gold);"
+        oninput="scrubFrame(this.value)">
+      <div style="display:flex; justify-content:space-between; font-size:10px; color:#333; margin-top:4px;">
+        <span>Start</span><span>End</span>
+      </div>
+    </div>
+
+    <!-- Mark frames -->
+    <div class="card" style="margin-bottom:14px;">
+      <div class="section-label" id="mark-instructions"></div>
+      <div style="display:flex; flex-direction:column; gap:10px;" id="mark-buttons"></div>
+    </div>
+
+    <!-- Marked frames status -->
+    <div id="marked-frames-status" style="margin-bottom:14px;"></div>
+
+    <!-- Analyze button -->
+    <button class="action-btn" id="analyze-btn" onclick="analyzeFrames()" disabled style="opacity:0.4;">
+      🔍 Analyze This Angle
+    </button>
+
+    <!-- Results -->
+    <div id="frame-results" style="margin-top:16px; display:none;"></div>
+
+    <!-- Next step -->
+    <button class="action-btn" id="next-cam-step-btn" onclick="nextCameraStep()" style="display:none; margin-top:10px;">
+      Next Angle →
+    </button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     SCREEN: CAMERA FINAL
+════════════════════════════════════════════════ -->
+<div id="s-camera-final" class="screen">
+  <button class="back-link" onclick="showScreen('s-home')">← <span>Home</span></button>
+
+  <div style="margin-bottom:20px;">
+    <div style="font-size:11px; letter-spacing:4px; color:var(--gold); text-transform:uppercase; margin-bottom:6px;">Analysis Complete</div>
+    <h1 style="font-size:22px;">📷 Camera Report</h1>
+    <div class="subtitle" id="cam-final-subtitle"></div>
+  </div>
+
+  <div id="cam-final-results"></div>
+
+  <button class="action-btn secondary" onclick="startCameraSession()" style="margin-top:16px;">↩ New Session</button>
+</div>
+
 </body>
 </html>
