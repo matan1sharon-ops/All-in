@@ -586,31 +586,134 @@ function showCaptured() {
   getQuickRead();
 }
 
-async function getQuickRead() {
+
+// ═══════════════════════════════════════════
+// RULE-BASED TUNING ANALYSIS ENGINE
+// ═══════════════════════════════════════════
+
+function analyzeAngle(diagram, rec, bow, hand) {
+  if (!rec) return 'No recording captured for this angle.';
+
+  const { peakHz, rmsDb, peakRms, duration } = rec;
+  const loud = peakRms > 60;
+  const veryLoud = peakRms > 80;
+  const quiet = peakRms < 30;
+  const lowFreq = peakHz < 200;
+  const midFreq = peakHz >= 200 && peakHz < 500;
+  const highFreq = peakHz >= 500;
+  const shortShot = parseFloat(duration) < 1.5;
+
+  if (diagram === 'dominant') {
+    if (veryLoud && highFreq) return 'High-frequency snap detected on draw side — possible string slap or arrow kicking out. Check plunger pressure and centershot alignment.';
+    if (loud && lowFreq) return 'Strong low-frequency thud on draw side — bow is releasing energy well. Monitor for any lateral arrow movement.';
+    if (quiet) return 'Low sound level on draw side — shot may be well-damped or mic was too far. Consider re-recording closer.';
+    if (highFreq && !loud) return 'Mild high-frequency noise on draw side — slight string contact possible. Check nocking point height.';
+    return 'Draw side recording looks normal. No major issues detected.';
+  }
+
+  if (diagram === 'back') {
+    if (veryLoud && lowFreq) return 'Strong low-frequency vibration from behind — limbs may be unbalanced. Check tiller measurement top vs bottom.';
+    if (highFreq && loud) return 'High-frequency noise from rear — possible limb tip vibration or loose accessory. Check limb bolts and limb pockets.';
+    if (quiet) return 'Clean, quiet release from behind — tiller and limb balance appear good.';
+    if (midFreq) return 'Mid-range frequencies from rear — typical for a balanced release. Tiller appears within range.';
+    return 'Back view recording looks balanced. No tiller issues detected.';
+  }
+
+  if (diagram === 'front') {
+    if (veryLoud && highFreq) return 'High riser vibration detected from front — possible grip torque or stiff plunger. Relax grip and check plunger spring tension.';
+    if (loud && midFreq) return 'Moderate riser noise from front — some vibration transmitting through grip. Check grip pressure and bow hand position.';
+    if (quiet && lowFreq) return 'Clean low-frequency thud from front — riser is absorbing energy well. Grip pressure looks good.';
+    if (quiet) return 'Very quiet from front — excellent energy transfer. Grip and riser setup look solid.';
+    return 'Front view shows normal vibration levels. Riser and grip appear fine.';
+  }
+
+  if (diagram === 'non-dominant') {
+    if (veryLoud) return 'High sound level on non-dominant side — possible asymmetry in arrow flight. Cross-reference with dominant side recording.';
+    if (highFreq && loud) return 'High-frequency noise on non-dominant side — arrow may be kicking inward. Try easing plunger pressure slightly.';
+    if (quiet) return 'Quiet on non-dominant side — consistent with dominant side. No asymmetry detected.';
+    return 'Non-dominant side recording consistent. No major asymmetry detected.';
+  }
+
+  return 'Recording captured. Proceed to next step.';
+}
+
+function analyzeAllRecordings(recordings, bow, hand) {
+  const findings = [];
+  const r0 = recordings[0]; // dominant side
+  const r1 = recordings[1]; // back
+  const r2 = recordings[2]; // front
+  const r3 = recordings[3]; // non-dominant
+
+  // ── STRING SLAP / PLUNGER ──
+  if (r0) {
+    if (r0.peakHz > 500 && r0.peakRms > 60) {
+      findings.push({ status:'warning', title:'String slap / plunger issue detected', fix: bow === 'recurve' ? 'Turn plunger button out ¼ turn and re-test with bare shaft at 10m.' : 'Check arrow spine match and shelf contact. Try moving nocking point up 1mm.' });
+    } else if (r0.peakHz > 300 && r0.peakRms > 45) {
+      findings.push({ status:'warning', title:'Mild arrow kick on dominant side', fix:'Fine-tune plunger pressure — try ⅛ turn adjustments. Check arrow rest height.' });
+    } else {
+      findings.push({ status:'ok', title:'Arrow release looks clean on dominant side', fix:null });
+    }
+  }
+
+  // ── TILLER / LIMB BALANCE ──
+  if (r1) {
+    if (r1.peakRms > 70 && r1.peakHz < 250) {
+      findings.push({ status:'warning', title:'Limb imbalance detected — tiller may be off', fix: bow === 'recurve' ? 'Measure tiller top and bottom. Adjust limb bolts ½ turn at a time until top tiller is 2-3mm more than bottom.' : 'Check limb alignment in pockets. Ensure limbs are seated evenly.' });
+    } else if (r1.peakHz > 400 && r1.peakRms > 55) {
+      findings.push({ status:'warning', title:'Limb tip vibration detected', fix:'Check limb tips for cracks or loose string grooves. Consider adding limb dampeners.' });
+    } else {
+      findings.push({ status:'ok', title:'Tiller and limb balance looks good', fix:null });
+    }
+  }
+
+  // ── BRACE HEIGHT ──
+  if (r0 && r2) {
+    const avgRms = ((r0.peakRms || 0) + (r2.peakRms || 0)) / 2;
+    const avgHz = ((r0.peakHz || 0) + (r2.peakHz || 0)) / 2;
+    if (avgHz > 500 && avgRms > 65) {
+      findings.push({ status:'warning', title:'Brace height may be too low', fix: bow === 'traditional' ? 'Add 1-2 twists to string to increase brace height. Ideal range is typically 7.5"–8" for longbows.' : 'Add 2 twists to string. Recheck — brace height affects arrow clearance and noise significantly.' });
+    } else if (avgHz < 150 && avgRms < 35) {
+      findings.push({ status:'warning', title:'Brace height may be too high', fix:'Remove 1-2 twists from string. High brace height reduces power stroke and can cause inconsistency.' });
+    } else {
+      findings.push({ status:'ok', title:'Brace height appears within normal range', fix:null });
+    }
+  }
+
+  // ── GRIP TORQUE ──
+  if (r2) {
+    if (r2.peakHz > 450 && r2.peakRms > 65) {
+      findings.push({ status:'warning', title:'Grip torque detected — bow hand tension', fix:'Relax your bow hand. Only the thumb pad should contact the grip. Let fingers hang loose. Try a sling to remove fear of dropping the bow.' });
+    } else {
+      findings.push({ status:'ok', title:'Grip pressure looks neutral — no torque detected', fix:null });
+    }
+  }
+
+  // ── NOCKING POINT ──
+  if (r0 && r3) {
+    const diffRms = Math.abs((r0.peakRms||0) - (r3.peakRms||0));
+    const diffHz  = Math.abs((r0.peakHz||0)  - (r3.peakHz||0));
+    if (diffRms > 30 || diffHz > 300) {
+      findings.push({ status:'warning', title:'Asymmetry between sides — nocking point suspected', fix:'Adjust nocking point up or down by 1mm and re-test. Asymmetric sound between sides often indicates incorrect nock height.' });
+    } else {
+      findings.push({ status:'ok', title:'Left/right symmetry looks consistent', fix:null });
+    }
+  }
+
+  // ── BOW-SPECIFIC ADVICE ──
+  if (bow === 'barebow') {
+    findings.push({ status:'ok', title:'Tip: Bare shaft test recommended after any plunger change', fix:null });
+  } else if (bow === 'traditional') {
+    findings.push({ status:'ok', title:'Tip: For traditional bows, spine tuning is critical — re-test after arrow changes', fix:null });
+  }
+
+  return findings;
+}
+
+function getQuickRead() {
   const rec = state.recordings[state.stepIdx];
   const step = STEPS[state.stepIdx];
-  const prompt = `You are an expert archery bow tuner. An archer just recorded a shot from the ${step.title} angle.
-Bow type: ${state.bow}. Hand: ${state.hand}-handed.
-Audio data: peak frequency ${rec.peakHz}Hz, RMS level ${rec.rmsDb}dB, peak intensity ${rec.peakRms}%, duration ${rec.duration}s.
-
-Give a SHORT (2 sentences max) quick read of what this single angle recording suggests about the bow tuning. Be specific and practical. No preamble.`;
-
-  try {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-6',
-        max_tokens: 1000,
-        messages: [{ role: 'user', content: prompt }]
-      })
-    });
-    const data = await res.json();
-    const text = data.content?.[0]?.text || 'Analysis complete.';
-    document.getElementById('quick-read-text').textContent = text;
-  } catch (e) {
-    document.getElementById('quick-read-text').textContent = 'Recording captured. Confirm to continue.';
-  }
+  const text = analyzeAngle(step.diagram, rec, state.bow, state.hand);
+  document.getElementById('quick-read-text').textContent = text;
 }
 
 function reRecord() {
@@ -634,50 +737,14 @@ function confirmStep() {
 // ═══════════════════════════════════════════
 // FINAL ANALYSIS
 // ═══════════════════════════════════════════
-async function showFinalAnalysis() {
+function showFinalAnalysis() {
   showScreen('s-final');
   document.getElementById('final-subtitle').textContent =
     `${state.bow.charAt(0).toUpperCase()+state.bow.slice(1)} · ${state.hand}-handed · 4 recordings`;
-  document.getElementById('ai-thinking').style.display = 'flex';
+  document.getElementById('ai-thinking').style.display = 'none';
   document.getElementById('final-results').style.display = 'none';
-
-  const recSummary = state.recordings.map((r, i) => {
-    if (!r) return `Step ${i+1} (${STEPS[i].title}): no recording`;
-    return `Step ${i+1} (${STEPS[i].title}): peak ${r.peakHz}Hz, ${r.rmsDb}dB, peak intensity ${r.peakRms}%, ${r.duration}s`;
-  }).join('\n');
-
-  const prompt = `You are an expert archery bow tuner analyzing sound recordings from 4 angles around an archer.
-Bow: ${state.bow}, Hand: ${state.hand}-handed.
-
-Recording data:
-${recSummary}
-
-Provide a tuning analysis with 4-6 specific findings. For each finding:
-- State what was detected (e.g. "String slap detected", "Tiller balance good")
-- If it's an issue, give one specific actionable fix (e.g. "Turn plunger out ¼ turn")
-- If it's good, just confirm it
-
-Format your response as JSON only, no markdown, like this:
-{"findings":[{"status":"warning","title":"Issue title","fix":"Specific fix instruction"},{"status":"ok","title":"Good thing","fix":null}]}`;
-
-  try {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-6',
-        max_tokens: 1000,
-        messages: [{ role: 'user', content: prompt }]
-      })
-    });
-    const data = await res.json();
-    let text = data.content?.[0]?.text || '{}';
-    text = text.replace(/```json|```/g, '').trim();
-    const parsed = JSON.parse(text);
-    renderFinalResults(parsed.findings || []);
-  } catch (e) {
-    renderFinalResults([{ status:'warning', title:'Analysis unavailable', fix:'Please check your connection and try again.' }]);
-  }
+  const findings = analyzeAllRecordings(state.recordings, state.bow, state.hand);
+  renderFinalResults(findings);
 }
 
 function renderFinalResults(findings) {
