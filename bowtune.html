@@ -142,6 +142,13 @@
   </div>
 
   <!-- Session type -->
+  <!-- Settings link -->
+  <div style="display:flex; justify-content:flex-end; margin-bottom:8px;">
+    <button onclick="showSettingsScreen()" style="background:none; border:none; color:var(--gray); font-size:12px; cursor:pointer; display:flex; align-items:center; gap:6px;">
+      ⚙️ API Key Settings
+    </button>
+  </div>
+
   <div class="card">
     <div class="section-label">What do you want to tune?</div>
     <div style="display:flex; flex-direction:column; gap:10px;">
@@ -265,7 +272,116 @@
   <button class="action-btn secondary" onclick="startSession('sound')" style="margin-top:16px;">↩ New Session</button>
 </div>
 
+<!-- ═══════════════════════════════════════════════
+     SCREEN: API KEY ONBOARDING
+════════════════════════════════════════════════ -->
+<div id="s-apikey" class="screen">
+  <div style="margin-bottom:28px;">
+    <div style="font-size:11px; letter-spacing:4px; color:var(--gold); text-transform:uppercase; margin-bottom:6px;">ALL IN · BOWTUNE</div>
+    <h1 style="font-size:24px; margin-bottom:8px;">🤖 Unlock AI Analysis</h1>
+    <div class="subtitle">Get real tuning advice powered by Claude AI</div>
+  </div>
+
+  <div class="card" style="margin-bottom:14px;">
+    <div class="section-label">What you get with AI</div>
+    <div style="display:flex; flex-direction:column; gap:10px;">
+      <div style="display:flex; align-items:center; gap:10px; font-size:13px; color:#ccc;">
+        <span style="font-size:18px;">🎯</span> Specific tuning advice based on your recordings
+      </div>
+      <div style="display:flex; align-items:center; gap:10px; font-size:13px; color:#ccc;">
+        <span style="font-size:18px;">🏹</span> Tailored to your bow type and shooting style
+      </div>
+      <div style="display:flex; align-items:center; gap:10px; font-size:13px; color:#ccc;">
+        <span style="font-size:18px;">💰</span> Each analysis costs less than $0.01
+      </div>
+      <div style="display:flex; align-items:center; gap:10px; font-size:13px; color:#ccc;">
+        <span style="font-size:18px;">🔒</span> Your key stays on this device only
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:14px;">
+    <div class="section-label">How to get your API key</div>
+    <div style="display:flex; flex-direction:column; gap:14px;">
+      <div style="display:flex; gap:12px; align-items:flex-start;">
+        <div style="width:24px; height:24px; border-radius:50%; background:var(--gold); color:#000; font-size:12px; font-weight:900; display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-top:1px;">1</div>
+        <div>
+          <div style="font-size:13px; font-weight:700; color:#fff; margin-bottom:2px;">Create an Anthropic account</div>
+          <div style="font-size:12px; color:var(--gray);">New accounts include free credits — enough for thousands of analyses</div>
+          <button onclick="window.open('https://console.anthropic.com','_blank')" style="margin-top:8px; padding:8px 16px; font-size:12px; font-weight:700; border-radius:8px; border:1px solid var(--gold); background:transparent; color:var(--gold); cursor:pointer;">
+            Open console.anthropic.com ↗
+          </button>
+        </div>
+      </div>
+      <div style="display:flex; gap:12px; align-items:flex-start;">
+        <div style="width:24px; height:24px; border-radius:50%; background:var(--gold); color:#000; font-size:12px; font-weight:900; display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-top:1px;">2</div>
+        <div style="font-size:13px; color:#ccc; line-height:1.6;">
+          Go to <strong style="color:#fff;">API Keys</strong> in the left menu → click <strong style="color:#fff;">Create Key</strong>
+        </div>
+      </div>
+      <div style="display:flex; gap:12px; align-items:flex-start;">
+        <div style="width:24px; height:24px; border-radius:50%; background:var(--gold); color:#000; font-size:12px; font-weight:900; display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-top:1px;">3</div>
+        <div style="font-size:13px; color:#ccc; line-height:1.6;">
+          Copy the key and paste it below
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:14px;">
+    <div class="section-label">Paste your API key</div>
+    <input type="password" id="api-key-input" placeholder="sk-ant-api03-..." style="width:100%; background:#0a0a0a; border:1px solid #333; color:#fff; padding:14px; border-radius:10px; font-size:13px; font-family:monospace; outline:none; margin-bottom:4px;">
+    <div style="font-size:11px; color:#333; margin-top:6px;">Stored locally on this device only — never shared</div>
+  </div>
+
+  <button onclick="saveApiKey()" class="action-btn" style="margin-bottom:10px;">
+    ✓ Save &amp; Enable AI Analysis
+  </button>
+  <button onclick="skipApiKey()" class="action-btn secondary">
+    Skip — use copy-paste instead
+  </button>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     SCREEN: API KEY SETTINGS
+════════════════════════════════════════════════ -->
+<div id="s-settings" class="screen">
+  <button class="back-link" onclick="showScreen('s-home')">← <span>Back</span></button>
+
+  <div style="margin-bottom:28px;">
+    <div style="font-size:11px; letter-spacing:4px; color:var(--gold); text-transform:uppercase; margin-bottom:6px;">BOWTUNE</div>
+    <h1 style="font-size:24px;">⚙️ Settings</h1>
+  </div>
+
+  <div class="card" style="margin-bottom:14px;">
+    <div class="section-label">AI Analysis</div>
+    <div id="key-status" style="display:flex; align-items:center; gap:10px; margin-bottom:16px;">
+      <span id="key-status-icon" style="font-size:20px;"></span>
+      <span id="key-status-text" style="font-size:13px; color:var(--gray);"></span>
+    </div>
+    <input type="password" id="settings-key-input" placeholder="sk-ant-api03-..." style="width:100%; background:#0a0a0a; border:1px solid #333; color:#fff; padding:14px; border-radius:10px; font-size:13px; font-family:monospace; outline:none; margin-bottom:10px;">
+    <button onclick="saveApiKeyFromSettings()" class="action-btn" style="margin-bottom:8px;">
+      💾 Save Key
+    </button>
+    <button onclick="removeApiKey()" class="action-btn danger">
+      🗑 Remove Key
+    </button>
+  </div>
+
+  <div class="card">
+    <div class="section-label">About API Key costs</div>
+    <div style="font-size:13px; color:var(--gray); line-height:1.8;">
+      • New Anthropic accounts include free credits<br>
+      • Each BowTune session costs ~$0.002<br>
+      • Free credits cover ~2,500 sessions<br>
+      • After that: pay-as-you-go, less than $1 per 500 sessions<br>
+      • Set a spending limit at console.anthropic.com
+    </div>
+  </div>
+</div>
+
 <script>
+
 // ═══════════════════════════════════════════
 // STATE
 // ═══════════════════════════════════════════
@@ -714,16 +830,57 @@ function confirmStep() {
 // ═══════════════════════════════════════════
 // FINAL ANALYSIS
 // ═══════════════════════════════════════════
-function showFinalAnalysis() {
+async function showFinalAnalysis() {
   showScreen('s-final');
   document.getElementById('final-subtitle').textContent =
     `${state.bow.charAt(0).toUpperCase()+state.bow.slice(1)} · ${state.hand}-handed · 4 recordings`;
-  document.getElementById('ai-thinking').style.display = 'none';
   document.getElementById('final-results').style.display = 'none';
 
-  const findings = analyzeAllRecordings(state.recordings, state.bow, state.hand);
-  renderFinalResults(findings);
-  renderCopyPrompt();
+  const key = getApiKey();
+
+  if (key) {
+    // AI mode
+    document.getElementById('ai-thinking').style.display = 'flex';
+    const lines = state.recordings.map((r, i) => {
+      if (!r) return `- ${STEPS[i].title}: no recording`;
+      return `- ${STEPS[i].title}: peak frequency ${r.peakHz}Hz, intensity ${r.peakRms}%, duration ${r.duration}s`;
+    }).join('\n');
+
+    const prompt = `You are an expert archery bow tuner. Analyze these shot sound recordings and give specific tuning advice.
+Bow: ${state.bow}, Hand: ${state.hand}-handed.
+
+Sound recordings from 4 angles:
+${lines}
+
+Give 3-5 specific findings based only on what sound can reveal: string slap, brace height (twang vs thud), and overall shot noise. 
+For each finding state if it is a warning or ok, give a title, and if warning give one specific fix.
+Format as JSON only: {"findings":[{"status":"warning","title":"...","fix":"..."},{"status":"ok","title":"...","fix":null}]}`;
+
+    const result = await getAIAnalysis(prompt);
+    document.getElementById('ai-thinking').style.display = 'none';
+
+    if (result) {
+      try {
+        const clean = result.replace(/```json|```/g, '').trim();
+        const parsed = JSON.parse(clean);
+        renderFinalResults(parsed.findings || []);
+      } catch(e) {
+        // AI returned text not JSON, show it as single finding
+        renderFinalResults([{ status:'ok', title:'AI Analysis', fix: result }]);
+      }
+    } else {
+      // Key failed, fall back to rule-based + copy prompt
+      const findings = analyzeAllRecordings(state.recordings, state.bow, state.hand);
+      renderFinalResults(findings);
+      renderCopyPrompt();
+    }
+  } else {
+    // No key — rule-based + copy prompt
+    document.getElementById('ai-thinking').style.display = 'none';
+    const findings = analyzeAllRecordings(state.recordings, state.bow, state.hand);
+    renderFinalResults(findings);
+    renderCopyPrompt();
+  }
 }
 
 function renderFinalResults(findings) {
@@ -821,12 +978,111 @@ function saveReport() {
 }
 
 // ═══════════════════════════════════════════
+// API KEY MANAGEMENT
+// ═══════════════════════════════════════════
+
+function getApiKey() {
+  return localStorage.getItem('bowtune_api_key') || null;
+}
+
+function saveApiKey() {
+  const key = document.getElementById('api-key-input').value.trim();
+  if (!key.startsWith('sk-ant-')) {
+    alert('That does not look like a valid Anthropic API key. It should start with sk-ant-');
+    return;
+  }
+  localStorage.setItem('bowtune_api_key', key);
+  localStorage.setItem('bowtune_key_set', 'true');
+  alert('API key saved! You now have full AI analysis.');
+  showScreen('s-home');
+}
+
+function skipApiKey() {
+  localStorage.setItem('bowtune_key_set', 'true');
+  showScreen('s-home');
+}
+
+function saveApiKeyFromSettings() {
+  const key = document.getElementById('settings-key-input').value.trim();
+  if (!key.startsWith('sk-ant-')) {
+    alert('That does not look like a valid Anthropic API key. It should start with sk-ant-');
+    return;
+  }
+  localStorage.setItem('bowtune_api_key', key);
+  alert('API key saved ✓');
+  renderSettingsStatus();
+}
+
+function removeApiKey() {
+  if (confirm('Remove your API key? You will fall back to copy-paste mode.')) {
+    localStorage.removeItem('bowtune_api_key');
+    document.getElementById('settings-key-input').value = '';
+    renderSettingsStatus();
+    alert('API key removed.');
+  }
+}
+
+function showSettingsScreen() {
+  renderSettingsStatus();
+  const key = getApiKey();
+  if (key) document.getElementById('settings-key-input').value = key;
+  showScreen('s-settings');
+}
+
+function renderSettingsStatus() {
+  const key = getApiKey();
+  const icon = document.getElementById('key-status-icon');
+  const text = document.getElementById('key-status-text');
+  if (key) {
+    icon.textContent = '✅';
+    text.textContent = 'AI analysis active — key saved on this device';
+    text.style.color = 'var(--green)';
+  } else {
+    icon.textContent = '❌';
+    text.textContent = 'No API key — using copy-paste mode';
+    text.style.color = 'var(--gray)';
+  }
+}
+
+async function getAIAnalysis(prompt) {
+  const key = getApiKey();
+  if (!key) return null;
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': key,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 1000,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+    const data = await res.json();
+    if (data.error) { console.error('API error:', data.error); return null; }
+    return data.content?.[0]?.text || null;
+  } catch(e) {
+    console.error('API call failed:', e);
+    return null;
+  }
+}
+
+// ═══════════════════════════════════════════
 // INIT
 // ═══════════════════════════════════════════
 window.onload = () => {
-  // Load saved gear from index.html if available
   const gear = JSON.parse(localStorage.getItem('archer_gear') || '{}');
-  // Could pre-fill bow type etc in future
+  // Show API key onboarding if first time
+  const keySeen = localStorage.getItem('bowtune_key_set');
+  if (!keySeen) {
+    showScreen('s-apikey');
+  } else {
+    showScreen('s-home');
+  }
 };
 </script>
 </body>
