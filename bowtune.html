@@ -1271,8 +1271,7 @@ function renderCameraStep() {
   document.getElementById('cam-step-title').textContent = step.title;
   document.getElementById('cam-step-what').textContent = '🎯 ' + step.what;
   document.getElementById('cam-rec-tip').textContent = step.tip;
-  document.getElementById('cam-capture-guide').innerHTML = '📋 What to capture:<br><br>' + step.capture.replace(/
-/g, '<br>');
+  document.getElementById('cam-capture-guide').innerHTML = '📋 What to capture:<br><br>' + step.capture.split('\n').join('<br>');
 
   // Render placement diagram
   renderDiagram2('cam-placement-svg', step.diagram);
