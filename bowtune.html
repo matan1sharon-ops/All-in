@@ -245,11 +245,7 @@
     <div class="waveform-bars" id="captured-bars"></div>
   </div>
 
-  <!-- Quick read -->
-  <div class="quick-read" id="quick-read-box">
-    <div class="ql">Quick Read</div>
-    <p id="quick-read-text">Analyzing...</p>
-  </div>
+
 
   <div style="display:flex; gap:10px; margin-top:8px;">
     <button class="action-btn secondary" style="flex:1; margin-top:0;" onclick="reRecord()">🔄 Re-record</button>
@@ -267,11 +263,6 @@
     <div style="font-size:11px; letter-spacing:4px; color:var(--purple); text-transform:uppercase; margin-bottom:6px;">Analysis Complete</div>
     <h1 style="font-size:22px;">🏹 Tuning Report</h1>
     <div class="subtitle" id="final-subtitle"></div>
-  </div>
-
-  <div class="ai-thinking" id="ai-thinking">
-    <div class="ai-dot"></div><div class="ai-dot"></div><div class="ai-dot"></div>
-    <span>Claude is analyzing your recordings...</span>
   </div>
 
   <div id="final-results" style="display:none;"></div>
@@ -381,7 +372,6 @@
     <h1 style="font-size:24px;">⚙️ Settings</h1>
   </div>
 
-  <!-- Status -->
   <div class="card" style="margin-bottom:14px;">
     <div class="section-label">Status</div>
     <div id="key-status" style="display:flex; align-items:center; gap:10px;">
@@ -390,7 +380,6 @@
     </div>
   </div>
 
-  <!-- How to get a key -->
   <div class="card" style="margin-bottom:14px;">
     <div class="section-label">How to get your API key</div>
     <div style="display:flex; flex-direction:column; gap:14px;">
@@ -413,7 +402,6 @@
     </div>
   </div>
 
-  <!-- Costs -->
   <div class="card" style="margin-bottom:14px;">
     <div class="section-label">💰 About costs</div>
     <div style="font-size:13px; color:var(--gray); line-height:1.9;">
@@ -425,7 +413,6 @@
     </div>
   </div>
 
-  <!-- Key input -->
   <div class="card" style="margin-bottom:14px;">
     <div class="section-label">Your API key</div>
     <input type="password" id="settings-key-input" placeholder="sk-ant-api03-..." style="width:100%; background:#0a1628; border:2px solid var(--border); color:var(--text); padding:14px; border-radius:10px; font-size:13px; font-family:monospace; outline:none; margin-bottom:8px;">
@@ -752,9 +739,7 @@ function showCaptured() {
     bar.style.background = '#FFD700';
   });
 
-  document.getElementById('quick-read-text').textContent = 'Analyzing...';
   showScreen('s-captured');
-  getQuickRead();
 }
 
 
@@ -763,183 +748,17 @@ function showCaptured() {
 // Only reports what a phone mic can actually detect
 // ═══════════════════════════════════════════
 
-function analyzeAngle(diagram, rec, bow, hand) {
-  if (!rec) return 'No recording captured for this angle.';
-
-  const { peakHz, peakRms } = rec;
-  const hasSnap  = peakHz > 600 && peakRms > 55;  // sharp high crack = string slap
-  const hasTwang = peakHz > 350 && peakHz <= 600 && peakRms > 45; // mid-high = string vibration
-  const cleanThud = peakHz < 300 && peakRms > 35;  // low thud = good clean release
-  const tooQuiet  = peakRms < 20;                  // mic too far or no shot captured
-
-  if (tooQuiet) return 'Very low sound level — mic may have been too far away. Consider re-recording closer to the bow.';
-  if (hasSnap)  return 'Sharp snap detected — possible string slap. This is the most reliable sound indicator; worth investigating plunger or arrow clearance.';
-  if (hasTwang) return 'String twang detected — bow is vibrating after release. Could indicate brace height on the low side or arrow clearance issue.';
-  if (cleanThud) return 'Clean thud — good release sound. No obvious string slap detected from this angle.';
-  return 'Recording captured. Sound level is within normal range.';
-}
-
-function analyzeAllRecordings(recordings, bow, hand) {
-  const findings = [];
-  const r0 = recordings[0]; // dominant side — best for string slap
-  const r1 = recordings[1]; // back
-  const r2 = recordings[2]; // front
-  const r3 = recordings[3]; // non-dominant
-
-  // ── STRING SLAP — detectable by sound ──
-  const snapDetected = r0 && r0.peakHz > 600 && r0.peakRms > 55;
-  const mildSnap     = r0 && r0.peakHz > 400 && r0.peakRms > 45 && !snapDetected;
-
-  if (snapDetected) {
-    findings.push({
-      status: 'warning',
-      title: 'String slap sound detected',
-      fix: bow === 'recurve'
-        ? 'Adjust plunger pressure and check centershot. Re-test with bare shaft at 10m.'
-        : 'Check arrow clearance off the shelf. Ensure arrow spine suits your draw weight.'
-    });
-  } else if (mildSnap) {
-    findings.push({
-      status: 'warning',
-      title: 'Mild string noise detected',
-      fix: 'Minor string contact possible. Fine-tune plunger or nocking point by small increments and re-test.'
-    });
-  } else if (r0) {
-    findings.push({ status: 'ok', title: 'No string slap detected', fix: null });
-  }
-
-  // ── BRACE HEIGHT — detectable by sound (twang vs thud) ──
-  const allRecs = [r0, r1, r2, r3].filter(Boolean);
-  if (allRecs.length > 0) {
-    const avgHz  = allRecs.reduce((a,b) => a + b.peakHz,  0) / allRecs.length;
-    const avgRms = allRecs.reduce((a,b) => a + b.peakRms, 0) / allRecs.length;
-
-    if (avgHz > 500 && avgRms > 55) {
-      findings.push({
-        status: 'warning',
-        title: 'High-pitched shot sound — brace height may be low',
-        fix: 'Add 2 twists to string and re-test. A low brace height increases string noise and arrow contact risk.'
-      });
-    } else if (avgHz < 200 && avgRms > 50) {
-      findings.push({ status: 'ok', title: 'Deep thud tone — brace height sounds good', fix: null });
-    } else {
-      findings.push({ status: 'ok', title: 'Shot tone within normal range', fix: null });
-    }
-  }
-
-  // ── OVERALL SHOT NOISE LEVEL ──
-  if (allRecs.length > 0) {
-    const avgRms = allRecs.reduce((a,b) => a + b.peakRms, 0) / allRecs.length;
-    if (avgRms > 75) {
-      findings.push({
-        status: 'warning',
-        title: 'Louder than average shot',
-        fix: 'Consider adding limb dampeners or a string silencer to reduce vibration noise and felt recoil.'
-      });
-    } else if (avgRms < 20) {
-      findings.push({
-        status: 'warning',
-        title: 'Very quiet recordings — mic may have been too far',
-        fix: 'Re-run the session with the phone placed closer to the bow (within 1m).'
-      });
-    } else {
-      findings.push({ status: 'ok', title: 'Overall shot noise level is normal', fix: null });
-    }
-  }
-
-  // ── HONEST DISCLAIMER ──
-  findings.push({
-    status: 'ok',
-    title: 'Note: Sound analysis has limits',
-    fix: 'Tiller, nocking point, grip torque and centershot require physical measurement or camera analysis — not detectable by mic alone.'
-  });
-
-  return findings;
-}
-
-function getQuickRead() {
-  const rec = state.recordings[state.stepIdx];
-  const step = STEPS[state.stepIdx];
-  const text = analyzeAngle(step.diagram, rec, state.bow, state.hand);
-  document.getElementById('quick-read-text').textContent = text;
-}
-
-function reRecord() {
-  state.recordings[state.stepIdx] = null;
-  renderSetup();
-  showScreen('s-setup');
-}
-
-function confirmStep() {
-  state.completedSteps.push(state.stepIdx);
-
-  if (state.stepIdx < STEPS.length - 1) {
-    state.stepIdx++;
-    renderSetup();
-    showScreen('s-setup');
-  } else {
-    showFinalAnalysis();
-  }
-}
-
 // ═══════════════════════════════════════════
 // FINAL ANALYSIS
 // ═══════════════════════════════════════════
 async function showFinalAnalysis() {
   showScreen('s-final');
   document.getElementById('final-subtitle').textContent =
-    `${state.bow.charAt(0).toUpperCase()+state.bow.slice(1)} · ${state.hand}-handed · 4 recordings`;
+    state.bow.charAt(0).toUpperCase()+state.bow.slice(1) + ' · ' + state.hand + '-handed · 4 recordings';
   document.getElementById('final-results').style.display = 'none';
-
-  const key = getApiKey();
-
-  if (key) {
-    // AI mode
-    document.getElementById('ai-thinking').style.display = 'flex';
-    const lines = state.recordings.map((r, i) => {
-      if (!r) return `- ${STEPS[i].title}: no recording`;
-      return `- ${STEPS[i].title}: peak frequency ${r.peakHz}Hz, intensity ${r.peakRms}%, duration ${r.duration}s`;
-    }).join('\n');
-
-    const prompt = `You are an expert archery bow tuner. Analyze these shot sound recordings and give specific tuning advice.
-Bow: ${state.bow}, Hand: ${state.hand}-handed.
-
-Sound recordings from 4 angles:
-${lines}
-
-Give 3-5 specific findings based only on what sound can reveal: string slap, brace height (twang vs thud), and overall shot noise. 
-For each finding state if it is a warning or ok, give a title, and if warning give one specific fix.
-Format as JSON only: {"findings":[{"status":"warning","title":"...","fix":"..."},{"status":"ok","title":"...","fix":null}]}`;
-
-    const result = await getAIAnalysis(prompt);
-    document.getElementById('ai-thinking').style.display = 'none';
-
-    if (result) {
-      try {
-        const clean = result.replace(/```json|```/g, '').trim();
-        const parsed = JSON.parse(clean);
-        renderFinalResults(parsed.findings || []);
-      } catch(e) {
-        // AI returned text not JSON, show it as single finding
-        renderFinalResults([{ status:'ok', title:'AI Analysis', fix: result }]);
-      }
-    } else {
-      // Key failed, fall back to rule-based + copy prompt
-      const findings = analyzeAllRecordings(state.recordings, state.bow, state.hand);
-      renderFinalResults(findings);
-      renderCopyPrompt();
-    }
-  } else {
-    // No key — rule-based + copy prompt
-    document.getElementById('ai-thinking').style.display = 'none';
-    const findings = analyzeAllRecordings(state.recordings, state.bow, state.hand);
-    renderFinalResults(findings);
-    renderCopyPrompt();
-  }
+  renderCopyPrompt();
 }
-
 function renderFinalResults(findings) {
-  document.getElementById('ai-thinking').style.display = 'none';
   const container = document.getElementById('final-results');
   container.style.display = 'block';
 
