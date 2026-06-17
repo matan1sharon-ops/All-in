@@ -245,11 +245,7 @@
     <div class="waveform-bars" id="captured-bars"></div>
   </div>
 
-  <!-- Quick read -->
-  <div class="quick-read" id="quick-read-box">
-    <div class="ql">Quick Read</div>
-    <p id="quick-read-text">Analyzing...</p>
-  </div>
+
 
   <div style="display:flex; gap:10px; margin-top:8px;">
     <button class="action-btn secondary" style="flex:1; margin-top:0;" onclick="reRecord()">🔄 Re-record</button>
@@ -267,11 +263,6 @@
     <div style="font-size:11px; letter-spacing:4px; color:var(--purple); text-transform:uppercase; margin-bottom:6px;">Analysis Complete</div>
     <h1 style="font-size:22px;">🏹 Tuning Report</h1>
     <div class="subtitle" id="final-subtitle"></div>
-  </div>
-
-  <div class="ai-thinking" id="ai-thinking">
-    <div class="ai-dot"></div><div class="ai-dot"></div><div class="ai-dot"></div>
-    <span>Claude is analyzing your recordings...</span>
   </div>
 
   <div id="final-results" style="display:none;"></div>
@@ -725,9 +716,7 @@ function showCaptured() {
     bar.style.background = '#FFD700';
   });
 
-  document.getElementById('quick-read-text').textContent = 'Analyzing...';
   showScreen('s-captured');
-  getQuickRead();
 }
 
 
@@ -830,12 +819,7 @@ function analyzeAllRecordings(recordings, bow, hand) {
   return findings;
 }
 
-function getQuickRead() {
-  const rec = state.recordings[state.stepIdx];
-  const step = STEPS[state.stepIdx];
-  const text = analyzeAngle(step.diagram, rec, state.bow, state.hand);
-  document.getElementById('quick-read-text').textContent = text;
-}
+
 
 function reRecord() {
   state.recordings[state.stepIdx] = null;
@@ -862,53 +846,9 @@ async function showFinalAnalysis() {
   showScreen('s-final');
   document.getElementById('final-subtitle').textContent =
     `${state.bow.charAt(0).toUpperCase()+state.bow.slice(1)} · ${state.hand}-handed · 4 recordings`;
+  document.getElementById('ai-thinking').style.display = 'none';
   document.getElementById('final-results').style.display = 'none';
-
-  const key = getApiKey();
-
-  if (key) {
-    // AI mode
-    document.getElementById('ai-thinking').style.display = 'flex';
-    const lines = state.recordings.map((r, i) => {
-      if (!r) return `- ${STEPS[i].title}: no recording`;
-      return `- ${STEPS[i].title}: peak frequency ${r.peakHz}Hz, intensity ${r.peakRms}%, duration ${r.duration}s`;
-    }).join('\n');
-
-    const prompt = `You are an expert archery bow tuner. Analyze these shot sound recordings and give specific tuning advice.
-Bow: ${state.bow}, Hand: ${state.hand}-handed.
-
-Sound recordings from 4 angles:
-${lines}
-
-Give 3-5 specific findings based only on what sound can reveal: string slap, brace height (twang vs thud), and overall shot noise. 
-For each finding state if it is a warning or ok, give a title, and if warning give one specific fix.
-Format as JSON only: {"findings":[{"status":"warning","title":"...","fix":"..."},{"status":"ok","title":"...","fix":null}]}`;
-
-    const result = await getAIAnalysis(prompt);
-    document.getElementById('ai-thinking').style.display = 'none';
-
-    if (result) {
-      try {
-        const clean = result.replace(/```json|```/g, '').trim();
-        const parsed = JSON.parse(clean);
-        renderFinalResults(parsed.findings || []);
-      } catch(e) {
-        // AI returned text not JSON, show it as single finding
-        renderFinalResults([{ status:'ok', title:'AI Analysis', fix: result }]);
-      }
-    } else {
-      // Key failed, fall back to rule-based + copy prompt
-      const findings = analyzeAllRecordings(state.recordings, state.bow, state.hand);
-      renderFinalResults(findings);
-      renderCopyPrompt();
-    }
-  } else {
-    // No key — rule-based + copy prompt
-    document.getElementById('ai-thinking').style.display = 'none';
-    const findings = analyzeAllRecordings(state.recordings, state.bow, state.hand);
-    renderFinalResults(findings);
-    renderCopyPrompt();
-  }
+  renderCopyPrompt();
 }
 
 function renderFinalResults(findings) {
