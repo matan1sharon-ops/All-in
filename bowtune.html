@@ -379,7 +379,6 @@
       <span id="key-status-text" style="font-size:13px; color:var(--gray);"></span>
     </div>
   </div>
-
   <div class="card" style="margin-bottom:14px;">
     <div class="section-label">How to get your API key</div>
     <div style="display:flex; flex-direction:column; gap:14px;">
@@ -401,7 +400,6 @@
       </div>
     </div>
   </div>
-
   <div class="card" style="margin-bottom:14px;">
     <div class="section-label">💰 About costs</div>
     <div style="font-size:13px; color:var(--gray); line-height:1.9;">
@@ -412,7 +410,6 @@
       <button onclick="window.open('https://console.anthropic.com/settings/billing','_blank')" style="margin-top:8px; padding:6px 12px; font-size:11px; font-weight:700; border-radius:6px; border:1px solid var(--border); background:transparent; color:var(--gold); cursor:pointer;">console.anthropic.com → Billing ↗</button>
     </div>
   </div>
-
   <div class="card" style="margin-bottom:14px;">
     <div class="section-label">Your API key</div>
     <input type="password" id="settings-key-input" placeholder="sk-ant-api03-..." style="width:100%; background:#0a1628; border:2px solid var(--border); color:var(--text); padding:14px; border-radius:10px; font-size:13px; font-family:monospace; outline:none; margin-bottom:8px;">
@@ -751,7 +748,7 @@ function showCaptured() {
 // ═══════════════════════════════════════════
 // FINAL ANALYSIS
 // ═══════════════════════════════════════════
-async function showFinalAnalysis() {
+function showFinalAnalysis() {
   showScreen('s-final');
   document.getElementById('final-subtitle').textContent =
     state.bow.charAt(0).toUpperCase()+state.bow.slice(1) + ' · ' + state.hand + '-handed · 4 recordings';
