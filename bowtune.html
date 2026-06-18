@@ -262,11 +262,7 @@
     <div style="font-size:11px; letter-spacing:4px; color:var(--purple); text-transform:uppercase; margin-bottom:6px;">Analysis Complete</div>
     <h1 style="font-size:22px;">🏹 Tuning Report</h1>
     <div class="subtitle" id="final-subtitle"></div>
-  </div><div class="ai-dot"></div><div class="ai-dot"></div>
-    <span>Claude is analyzing your recordings...</span>
-  </div>
-
-  <div id="final-results" style="display:none;"></div>
+  </div>  <div id="final-results"></div>
 
   <button class="action-btn secondary" onclick="startSession('sound')" style="margin-top:16px;">↩ New Session</button>
 </div>
@@ -485,26 +481,21 @@ function renderDiagram(type) {
   const targetX = 272;
 
   svg.innerHTML = `
-    <!-- Grid -->
     ${[40,80,120,160,200,240,280].map(x=>`<line x1="${x}" y1="0" x2="${x}" y2="160" stroke="#1a1a1a" stroke-width="0.5"/>`).join('')}
     ${[20,40,60,80,100,120,140,160].map(y=>`<line x1="0" y1="${y}" x2="300" y2="${y}" stroke="#1a1a1a" stroke-width="0.5"/>`).join('')}
 
-    <!-- Shooting line -->
     <line x1="10" y1="${cy}" x2="290" y2="${cy}" stroke="#222" stroke-width="1" stroke-dasharray="5,4"/>
     <text x="12" y="${cy-5}" font-size="7" fill="#333" font-family="sans-serif">shooting line</text>
 
-    <!-- LEFT / RIGHT labels -->
     <text x="${cx}" y="10" text-anchor="middle" font-size="7" fill="#333" font-family="sans-serif">← LEFT SIDE</text>
     <text x="${cx}" y="158" text-anchor="middle" font-size="7" fill="#333" font-family="sans-serif">RIGHT SIDE →</text>
     <text x="18" y="${cy-6}" text-anchor="middle" font-size="7" fill="#333" font-family="sans-serif">BACK</text>
     <text x="282" y="${cy-6}" text-anchor="middle" font-size="7" fill="#333" font-family="sans-serif">FRONT</text>
 
-    <!-- Target -->
     <circle cx="${targetX}" cy="${cy}" r="9" fill="none" stroke="#FF3B30" stroke-width="1.5"/>
     <circle cx="${targetX}" cy="${cy}" r="3" fill="#FF3B30"/>
     <text x="${targetX}" y="${cy+20}" text-anchor="middle" font-size="7" fill="#FF3B30" font-family="sans-serif">TARGET</text>
 
-    <!-- Arrow flight -->
     <defs>
       <marker id="arrowM" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto">
         <polygon points="0 0, 7 3.5, 0 7" fill="#FFD700"/>
@@ -513,16 +504,13 @@ function renderDiagram(type) {
     <line x1="${cx+16}" y1="${cy}" x2="${targetX-12}" y2="${cy}" stroke="#FFD700" stroke-width="2.5" marker-end="url(#arrowM)"/>
     <text x="${(cx+targetX)/2}" y="${cy-8}" text-anchor="middle" font-size="8" fill="#FFD700" font-family="sans-serif" font-weight="bold">→ ARROW</text>
 
-    <!-- Dashed line archer to phone -->
     <line x1="${cx}" y1="${cy}" x2="${phone.x}" y2="${phone.y}" stroke="#7c3aed" stroke-width="1.5" stroke-dasharray="5,3"/>
 
-    <!-- Archer (top-down, facing right) -->
     <circle cx="${cx}" cy="${cy}" r="13" fill="#1d4ed8"/>
     <circle cx="${cx+8}" cy="${cy-8}" r="5" fill="#93c5fd"/>
     <line x1="${cx}" y1="${cy}" x2="${cx+13}" y2="${cy}" stroke="#FFD700" stroke-width="2"/>
     <text x="${cx}" y="${cy+24}" text-anchor="middle" font-size="7" fill="#888" font-family="sans-serif">YOU</text>
 
-    <!-- Phone -->
     <rect x="${phone.x-9}" y="${phone.y-14}" width="18" height="28" rx="4" fill="#7c3aed"/>
     <rect x="${phone.x-6}" y="${phone.y-11}" width="12" height="18" rx="2" fill="#0f0f1a"/>
     <text x="${phone.x}" y="${phone.y+22}" text-anchor="middle" font-size="7" fill="#a78bfa" font-family="sans-serif" font-weight="bold">${phone.label}</text>
@@ -726,100 +714,6 @@ function showCaptured() {
 // Only reports what a phone mic can actually detect
 // ═══════════════════════════════════════════
 
-function analyzeAngle(diagram, rec, bow, hand) {
-  if (!rec) return 'No recording captured for this angle.';
-
-  const { peakHz, peakRms } = rec;
-  const hasSnap  = peakHz > 600 && peakRms > 55;  // sharp high crack = string slap
-  const hasTwang = peakHz > 350 && peakHz <= 600 && peakRms > 45; // mid-high = string vibration
-  const cleanThud = peakHz < 300 && peakRms > 35;  // low thud = good clean release
-  const tooQuiet  = peakRms < 20;                  // mic too far or no shot captured
-
-  if (tooQuiet) return 'Very low sound level — mic may have been too far away. Consider re-recording closer to the bow.';
-  if (hasSnap)  return 'Sharp snap detected — possible string slap. This is the most reliable sound indicator; worth investigating plunger or arrow clearance.';
-  if (hasTwang) return 'String twang detected — bow is vibrating after release. Could indicate brace height on the low side or arrow clearance issue.';
-  if (cleanThud) return 'Clean thud — good release sound. No obvious string slap detected from this angle.';
-  return 'Recording captured. Sound level is within normal range.';
-}
-
-function analyzeAllRecordings(recordings, bow, hand) {
-  const findings = [];
-  const r0 = recordings[0]; // dominant side — best for string slap
-  const r1 = recordings[1]; // back
-  const r2 = recordings[2]; // front
-  const r3 = recordings[3]; // non-dominant
-
-  // ── STRING SLAP — detectable by sound ──
-  const snapDetected = r0 && r0.peakHz > 600 && r0.peakRms > 55;
-  const mildSnap     = r0 && r0.peakHz > 400 && r0.peakRms > 45 && !snapDetected;
-
-  if (snapDetected) {
-    findings.push({
-      status: 'warning',
-      title: 'String slap sound detected',
-      fix: bow === 'recurve'
-        ? 'Adjust plunger pressure and check centershot. Re-test with bare shaft at 10m.'
-        : 'Check arrow clearance off the shelf. Ensure arrow spine suits your draw weight.'
-    });
-  } else if (mildSnap) {
-    findings.push({
-      status: 'warning',
-      title: 'Mild string noise detected',
-      fix: 'Minor string contact possible. Fine-tune plunger or nocking point by small increments and re-test.'
-    });
-  } else if (r0) {
-    findings.push({ status: 'ok', title: 'No string slap detected', fix: null });
-  }
-
-  // ── BRACE HEIGHT — detectable by sound (twang vs thud) ──
-  const allRecs = [r0, r1, r2, r3].filter(Boolean);
-  if (allRecs.length > 0) {
-    const avgHz  = allRecs.reduce((a,b) => a + b.peakHz,  0) / allRecs.length;
-    const avgRms = allRecs.reduce((a,b) => a + b.peakRms, 0) / allRecs.length;
-
-    if (avgHz > 500 && avgRms > 55) {
-      findings.push({
-        status: 'warning',
-        title: 'High-pitched shot sound — brace height may be low',
-        fix: 'Add 2 twists to string and re-test. A low brace height increases string noise and arrow contact risk.'
-      });
-    } else if (avgHz < 200 && avgRms > 50) {
-      findings.push({ status: 'ok', title: 'Deep thud tone — brace height sounds good', fix: null });
-    } else {
-      findings.push({ status: 'ok', title: 'Shot tone within normal range', fix: null });
-    }
-  }
-
-  // ── OVERALL SHOT NOISE LEVEL ──
-  if (allRecs.length > 0) {
-    const avgRms = allRecs.reduce((a,b) => a + b.peakRms, 0) / allRecs.length;
-    if (avgRms > 75) {
-      findings.push({
-        status: 'warning',
-        title: 'Louder than average shot',
-        fix: 'Consider adding limb dampeners or a string silencer to reduce vibration noise and felt recoil.'
-      });
-    } else if (avgRms < 20) {
-      findings.push({
-        status: 'warning',
-        title: 'Very quiet recordings — mic may have been too far',
-        fix: 'Re-run the session with the phone placed closer to the bow (within 1m).'
-      });
-    } else {
-      findings.push({ status: 'ok', title: 'Overall shot noise level is normal', fix: null });
-    }
-  }
-
-  // ── HONEST DISCLAIMER ──
-  findings.push({
-    status: 'ok',
-    title: 'Note: Sound analysis has limits',
-    fix: 'Tiller, nocking point, grip torque and centershot require physical measurement or camera analysis — not detectable by mic alone.'
-  });
-
-  return findings;
-}
-
 function reRecord() {
   state.recordings[state.stepIdx] = null;
   renderSetup();
@@ -846,31 +740,9 @@ function showFinalAnalysis() {
   document.getElementById('final-subtitle').textContent =
     state.bow.charAt(0).toUpperCase()+state.bow.slice(1) + ' · ' + state.hand + '-handed · 4 recordings';
   const container = document.getElementById('final-results');
-  container.style.display = 'block';
   container.innerHTML = '';
   renderCopyPrompt();
 }
-function renderFinalResults(findings) {
-  const container = document.getElementById('final-results');
-  container.style.display = 'block';
-
-  const warnings = findings.filter(f => f.status === 'warning');
-  const oks = findings.filter(f => f.status === 'ok');
-
-  container.innerHTML = `
-    <div style="font-size:11px; letter-spacing:2px; color:var(--gray); text-transform:uppercase; margin-bottom:12px;">
-      ${warnings.length} issue${warnings.length !== 1 ? 's' : ''} found · ${oks.length} looking good
-    </div>
-    ${findings.map(f => `
-      <div class="issue-card ${f.status === 'warning' ? 'warn' : 'ok'}">
-        <div class="issue-title">${f.status === 'warning' ? '⚠️' : '✅'} ${f.title}</div>
-        ${f.fix ? `<div class="issue-fix">→ ${f.fix}</div>` : ''}
-      </div>
-    `).join('')}
-    <button class="action-btn" style="margin-top:8px;" onclick="saveReport()">💾 Save to Profile</button>
-  `;
-}
-
 function renderCopyPrompt() {
   const lines = state.recordings.map((r, i) => {
     if (!r) return `- ${STEPS[i].title}: no recording`;
@@ -930,22 +802,6 @@ function copyPrompt() {
     }, 2000);
   });
 }
-
-function saveReport() {
-  const reports = JSON.parse(localStorage.getItem('bowtune_reports') || '[]');
-  reports.unshift({
-    date: new Date().toLocaleDateString('en-GB'),
-    bow: state.bow,
-    hand: state.hand,
-    recordings: state.recordings,
-  });
-  localStorage.setItem('bowtune_reports', JSON.stringify(reports));
-  alert('Saved ✓');
-}
-
-// ═══════════════════════════════════════════
-// API KEY MANAGEMENT
-// ═══════════════════════════════════════════
 
 function getApiKey() {
   return localStorage.getItem('bowtune_api_key') || null;
@@ -1375,6 +1231,11 @@ function handleVideoImport(event) {
 // ═══════════════════════════════════════════
 
 function loadVideoForAnalysis() {
+  dragLinesInitialized = false; activeDragLine = null; activeDragPoint = null;
+  Object.values(sideLines).forEach(l => l.locked = false);
+  arrowLine.locked = false;
+  const lbs = document.getElementById('lock-buttons-section');
+  if (lbs) lbs.style.display = 'none';
   const step = CAM_STEPS[camState.stepIdx];
   showScreen('s-frame-analysis');
 
@@ -1454,23 +1315,25 @@ function markFrame(frameKey) {
 
   updateMarkedStatus();
   drawOverlays();
+  if (CAM_STEPS[camState.stepIdx].id === 'side') {
+    initDragLines();
+    document.getElementById('lock-buttons-section').style.display = 'block';
+    updateLockButtons();
+    const m = camState.markedFrames['side'] || {};
+    if (m.frameA && m.frameB) updateLimbAnalysis();
+  }
 }
 
 function drawOverlays() {
   const step = CAM_STEPS[camState.stepIdx];
-  if (step.id === 'side') {
-    renderDraggableLines();
-    return;
-  }
-  // Back and front views - fixed center lines
+  if (step.id === 'side') { renderDraggableLines(); return; }
   const canvas = document.getElementById('overlay-canvas');
   const ctx = canvas.getContext('2d');
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   const marks = camState.markedFrames[step.id] || {};
   const w = canvas.width, h = canvas.height;
   if (step.id === 'back' && marks.frameA !== undefined) {
-    ctx.strokeStyle = step.overlayColor; ctx.lineWidth = 3;
-    ctx.setLineDash([10,5]);
+    ctx.strokeStyle = step.overlayColor; ctx.lineWidth = 3; ctx.setLineDash([10,5]);
     ctx.beginPath(); ctx.moveTo(w*0.5,0); ctx.lineTo(w*0.5,h); ctx.stroke();
     ctx.setLineDash([]);
     ctx.font = 'bold 13px sans-serif'; ctx.fillStyle = step.overlayColor;
@@ -1488,240 +1351,185 @@ function drawOverlays() {
       ctx.strokeStyle = '#22c55e'; ctx.lineWidth = 2; ctx.setLineDash([6,4]);
       ctx.beginPath(); ctx.moveTo(w*0.52,0); ctx.lineTo(w*0.52,h); ctx.stroke();
       ctx.setLineDash([]);
-      ctx.fillStyle = '#22c55e';
-      ctx.fillText('Follow through', w*0.54, 40);
+      ctx.fillStyle = '#22c55e'; ctx.fillText('Follow through', w*0.54, 40);
     }
   }
 }
 
-// ─── DRAGGABLE LINES FOR SIDE VIEW ───────────────────────────
-// 4 vertical lines (limb tips) + 1 angled line (arrow shaft)
-// Each line can be locked after positioning
-
 const sideLines = {
-  topA: { x:0.25, color:'#f97316', label:'Top limb - Full Draw',   frame:'A', locked:false },
-  botA: { x:0.45, color:'#f97316', label:'Bot limb - Full Draw',   frame:'A', locked:false },
-  topB: { x:0.55, color:'#22c55e', label:'Top limb - End Travel',  frame:'B', locked:false },
-  botB: { x:0.75, color:'#22c55e', label:'Bot limb - End Travel',  frame:'B', locked:false },
+  topA: { x:0.25, color:'#f97316', label:'Top Draw',    frame:'A', locked:false },
+  botA: { x:0.45, color:'#f97316', label:'Bot Draw',    frame:'A', locked:false },
+  topB: { x:0.55, color:'#22c55e', label:'Top Travel',  frame:'B', locked:false },
+  botB: { x:0.75, color:'#22c55e', label:'Bot Travel',  frame:'B', locked:false },
 };
-
-// Arrow line defined by two endpoints (relative coords)
 const arrowLine = {
-  p1: { x:0.1, y:0.5 },
-  p2: { x:0.9, y:0.5 },
-  color: '#3b82f6',
-  locked: false,
-  active: false,
+  p1:{ x:0.1, y:0.5 }, p2:{ x:0.9, y:0.5 },
+  color:'#3b82f6', locked:false
 };
-
 let dragLinesInitialized = false;
-let activeDragLine = null;   // key of sideLines being dragged
-let activeDragPoint = null;  // 'p1' or 'p2' for arrowLine
+let activeDragLine = null;
+let activeDragPoint = null;
 
 function initDragLines() {
   if (dragLinesInitialized) return;
   dragLinesInitialized = true;
+  const oc = document.getElementById('overlay-canvas');
 
-  const container = document.getElementById('canvas-container');
-
-  function getHitTarget(clientX, clientY) {
-    const rect = container.getBoundingClientRect();
-    const relX = (clientX - rect.left) / rect.width;
-    const relY = (clientY - rect.top) / rect.height;
+  function getHit(clientX, clientY) {
+    const rect = oc.getBoundingClientRect();
+    const rx = (clientX - rect.left) / rect.width;
+    const ry = (clientY - rect.top) / rect.height;
     const marks = camState.markedFrames['side'] || {};
-
-    // Check arrow line endpoints first (p1, p2) - 6% hit radius
     if (!arrowLine.locked) {
-      if (Math.hypot(arrowLine.p1.x - relX, arrowLine.p1.y - relY) < 0.06) return { type:'arrow', point:'p1' };
-      if (Math.hypot(arrowLine.p2.x - relX, arrowLine.p2.y - relY) < 0.06) return { type:'arrow', point:'p2' };
+      if (Math.hypot(arrowLine.p1.x-rx, arrowLine.p1.y-ry) < 0.07) return {type:'arrow',point:'p1'};
+      if (Math.hypot(arrowLine.p2.x-rx, arrowLine.p2.y-ry) < 0.07) return {type:'arrow',point:'p2'};
     }
-
-    // Check vertical lines - hit within 4% horizontally
-    let closest = null, minDist = 0.05;
-    for (const [key, line] of Object.entries(sideLines)) {
-      if (line.locked) continue;
-      if (line.frame === 'A' && !marks.frameA) continue;
-      if (line.frame === 'B' && !marks.frameB) continue;
-      const dist = Math.abs(line.x - relX);
-      if (dist < minDist) { minDist = dist; closest = key; }
+    let best = null, minD = 0.06;
+    for (const [k,l] of Object.entries(sideLines)) {
+      if (l.locked) continue;
+      if (l.frame==='A' && !marks.frameA) continue;
+      if (l.frame==='B' && !marks.frameB) continue;
+      const d = Math.abs(l.x - rx);
+      if (d < minD) { minD=d; best=k; }
     }
-    if (closest) return { type:'vertical', key: closest };
+    if (best) return {type:'vertical', key:best};
     return null;
   }
 
-  container.addEventListener('touchstart', (e) => {
+  oc.addEventListener('touchstart', (e) => {
     const t = e.touches[0];
-    const hit = getHitTarget(t.clientX, t.clientY);
+    const hit = getHit(t.clientX, t.clientY);
     if (!hit) return;
     e.preventDefault();
-    if (hit.type === 'vertical') { activeDragLine = hit.key; activeDragPoint = null; }
-    else { activeDragPoint = hit.point; activeDragLine = null; }
-  }, { passive:false });
+    if (hit.type==='vertical') { activeDragLine=hit.key; activeDragPoint=null; }
+    else { activeDragPoint=hit.point; activeDragLine=null; }
+  }, {passive:false});
 
-  container.addEventListener('touchmove', (e) => {
+  oc.addEventListener('touchmove', (e) => {
     if (!activeDragLine && !activeDragPoint) return;
     e.preventDefault();
     const t = e.touches[0];
-    const rect = container.getBoundingClientRect();
-    const relX = Math.max(0.01, Math.min(0.99, (t.clientX - rect.left) / rect.width));
-    const relY = Math.max(0.01, Math.min(0.99, (t.clientY - rect.top) / rect.height));
-
-    if (activeDragLine) {
-      sideLines[activeDragLine].x = relX;
-    } else if (activeDragPoint) {
-      arrowLine[activeDragPoint].x = relX;
-      arrowLine[activeDragPoint].y = relY;
-    }
+    const rect = oc.getBoundingClientRect();
+    const rx = Math.max(0.01, Math.min(0.99, (t.clientX-rect.left)/rect.width));
+    const ry = Math.max(0.01, Math.min(0.99, (t.clientY-rect.top)/rect.height));
+    if (activeDragLine) sideLines[activeDragLine].x = rx;
+    else if (activeDragPoint) { arrowLine[activeDragPoint].x=rx; arrowLine[activeDragPoint].y=ry; }
     renderDraggableLines();
-  }, { passive:false });
+  }, {passive:false});
 
-  container.addEventListener('touchend', () => {
-    activeDragLine = null;
-    activeDragPoint = null;
-  });
+  oc.addEventListener('touchend', () => { activeDragLine=null; activeDragPoint=null; });
 }
 
 function lockLine(key) {
-  if (key === 'arrow') {
-    arrowLine.locked = true;
-  } else {
-    sideLines[key].locked = true;
-  }
-  renderDraggableLines();
-  updateLockButtons();
-  updateLimbAnalysis();
+  if (key==='arrow') arrowLine.locked=true; else sideLines[key].locked=true;
+  renderDraggableLines(); updateLockButtons(); updateLimbAnalysis();
 }
-
 function unlockLine(key) {
-  if (key === 'arrow') {
-    arrowLine.locked = false;
-  } else {
-    sideLines[key].locked = false;
-  }
-  renderDraggableLines();
-  updateLockButtons();
+  if (key==='arrow') arrowLine.locked=false; else sideLines[key].locked=false;
+  renderDraggableLines(); updateLockButtons();
 }
 
 function updateLockButtons() {
+  const el = document.getElementById('lock-buttons-container');
+  if (!el) return;
   const marks = camState.markedFrames['side'] || {};
-  const container = document.getElementById('lock-buttons-container');
-  if (!container) return;
-  const lines = [
-    { key:'topA', label:'Top limb (draw)', show: !!marks.frameA },
-    { key:'botA', label:'Bot limb (draw)', show: !!marks.frameA },
-    { key:'topB', label:'Top limb (travel)', show: !!marks.frameB },
-    { key:'botB', label:'Bot limb (travel)', show: !!marks.frameB },
-    { key:'arrow', label:'Arrow line', show: true },
+  const items = [
+    {key:'topA', label:'Top limb (draw)', show:!!marks.frameA},
+    {key:'botA', label:'Bot limb (draw)', show:!!marks.frameA},
+    {key:'topB', label:'Top limb (travel)', show:!!marks.frameB},
+    {key:'botB', label:'Bot limb (travel)', show:!!marks.frameB},
+    {key:'arrow', label:'Arrow line', show:true},
   ];
-
-  container.innerHTML = lines.filter(l => l.show).map(l => {
-    const locked = l.key === 'arrow' ? arrowLine.locked : sideLines[l.key]?.locked;
-    return `<button onclick="${locked ? 'unlockLine' : 'lockLine'}('${l.key}')"
-      style="padding:8px 10px; font-size:11px; font-weight:700; border-radius:8px;
-      border:1px solid ${locked ? '#22c55e' : '#f97316'}; background:transparent;
-      color:${locked ? '#22c55e' : '#f97316'}; cursor:pointer; white-space:nowrap;">
-      ${locked ? '🔒' : '🔓'} ${l.label}
-    </button>`;
+  el.innerHTML = items.filter(i=>i.show).map(i => {
+    const locked = i.key==='arrow' ? arrowLine.locked : sideLines[i.key]?.locked;
+    return `<button onclick="${locked?'unlockLine':'lockLine'}('${i.key}')"
+      style="padding:8px 10px;font-size:11px;font-weight:700;border-radius:8px;
+      border:1px solid ${locked?'#22c55e':'#f97316'};background:transparent;
+      color:${locked?'#22c55e':'#f97316'};cursor:pointer;white-space:nowrap;">
+      ${locked?'\uD83D\uDD12':'\uD83D\uDD13'} ${i.label}</button>`;
   }).join('');
 }
 
 function renderDraggableLines() {
   const canvas = document.getElementById('overlay-canvas');
   const ctx = canvas.getContext('2d');
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.clearRect(0,0,canvas.width,canvas.height);
   const marks = camState.markedFrames['side'] || {};
   const w = canvas.width, h = canvas.height;
 
-  // Draw vertical limb lines
-  for (const [key, line] of Object.entries(sideLines)) {
-    if (line.frame === 'A' && !marks.frameA) continue;
-    if (line.frame === 'B' && !marks.frameB) continue;
-    const x = line.x * w;
-    ctx.strokeStyle = line.color;
-    ctx.lineWidth = activeDragLine === key ? 4 : 2.5;
-    ctx.setLineDash(line.locked ? [] : [8,4]);
-    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke();
+  for (const [k,l] of Object.entries(sideLines)) {
+    if (l.frame==='A' && !marks.frameA) continue;
+    if (l.frame==='B' && !marks.frameB) continue;
+    const x = l.x*w;
+    ctx.strokeStyle = l.color;
+    ctx.lineWidth = activeDragLine===k ? 4 : 2.5;
+    ctx.setLineDash(l.locked ? [] : [8,4]);
+    ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,h); ctx.stroke();
     ctx.setLineDash([]);
-
-    // Label
-    ctx.font = 'bold 11px sans-serif'; ctx.fillStyle = line.color;
-    const isTop = key.startsWith('top');
-    ctx.fillText(key.includes('A') ? (isTop ? 'Top Draw' : 'Bot Draw') : (isTop ? 'Top Travel' : 'Bot Travel'),
-      x+4, isTop ? 16 : h-4);
-
-    // Drag handle (only if unlocked)
-    if (!line.locked) {
-      ctx.beginPath(); ctx.arc(x, h/2, 16, 0, Math.PI*2);
-      ctx.fillStyle = line.color+'33'; ctx.fill();
-      ctx.strokeStyle = line.color; ctx.lineWidth = 2; ctx.stroke();
-      ctx.fillStyle = line.color; ctx.font = 'bold 14px sans-serif';
-      ctx.textAlign = 'center'; ctx.fillText('⟺', x, h/2+5); ctx.textAlign = 'left';
+    ctx.font = 'bold 11px sans-serif'; ctx.fillStyle = l.color;
+    ctx.textAlign = 'center';
+    ctx.fillText(l.label, x, k.startsWith('top') ? 16 : h-4);
+    if (!l.locked) {
+      ctx.beginPath(); ctx.arc(x,h/2,18,0,Math.PI*2);
+      ctx.fillStyle = l.color+'33'; ctx.fill();
+      ctx.strokeStyle = l.color; ctx.lineWidth=2; ctx.stroke();
+      ctx.fillStyle = l.color; ctx.font='bold 14px sans-serif';
+      ctx.fillText('\u21FA', x, h/2+5);
     } else {
-      ctx.beginPath(); ctx.arc(x, h/2, 8, 0, Math.PI*2);
-      ctx.fillStyle = line.color+'88'; ctx.fill();
+      ctx.beginPath(); ctx.arc(x,h/2,8,0,Math.PI*2);
+      ctx.fillStyle = l.color+'88'; ctx.fill();
     }
+    ctx.textAlign = 'left';
   }
 
-  // Draw arrow line
-  const x1 = arrowLine.p1.x * w, y1 = arrowLine.p1.y * h;
-  const x2 = arrowLine.p2.x * w, y2 = arrowLine.p2.y * h;
-  ctx.strokeStyle = arrowLine.color; ctx.lineWidth = 2.5;
-  ctx.setLineDash(arrowLine.locked ? [] : [6,3]);
+  // Arrow line
+  const x1=arrowLine.p1.x*w, y1=arrowLine.p1.y*h;
+  const x2=arrowLine.p2.x*w, y2=arrowLine.p2.y*h;
+  ctx.strokeStyle=arrowLine.color; ctx.lineWidth=2.5;
+  ctx.setLineDash(arrowLine.locked?[]:[6,3]);
   ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
   ctx.setLineDash([]);
-
-  // Arrow endpoints handles
+  ctx.fillStyle=arrowLine.color; ctx.font='bold 11px sans-serif';
+  ctx.fillText('Arrow', (x1+x2)/2-15, Math.min(y1,y2)-6);
   if (!arrowLine.locked) {
-    [{ p: arrowLine.p1, label:'P1' }, { p: arrowLine.p2, label:'P2' }].forEach(({p, label}) => {
-      const px = p.x*w, py = p.y*h;
-      ctx.beginPath(); ctx.arc(px, py, 16, 0, Math.PI*2);
-      ctx.fillStyle = arrowLine.color+'33'; ctx.fill();
-      ctx.strokeStyle = arrowLine.color; ctx.lineWidth = 2; ctx.stroke();
-      ctx.fillStyle = arrowLine.color; ctx.font = 'bold 18px sans-serif';
-      ctx.textAlign = 'center'; ctx.fillText('●', px, py+6); ctx.textAlign = 'left';
+    [{p:arrowLine.p1},{p:arrowLine.p2}].forEach(({p}) => {
+      const px=p.x*w, py=p.y*h;
+      ctx.beginPath(); ctx.arc(px,py,18,0,Math.PI*2);
+      ctx.fillStyle=arrowLine.color+'33'; ctx.fill();
+      ctx.strokeStyle=arrowLine.color; ctx.lineWidth=2; ctx.stroke();
+      ctx.fillStyle=arrowLine.color; ctx.font='bold 16px sans-serif';
+      ctx.textAlign='center'; ctx.fillText('\u25CF', px, py+6); ctx.textAlign='left';
     });
   }
-  ctx.fillStyle = arrowLine.color; ctx.font = 'bold 11px sans-serif';
-  ctx.fillText('Arrow', (x1+x2)/2-15, Math.min(y1,y2)-8);
 }
 
 function updateLimbAnalysis() {
   const marks = camState.markedFrames['side'] || {};
   if (!marks.frameA || !marks.frameB) return;
   const w = document.getElementById('overlay-canvas').width;
-  const topTravel = Math.abs(sideLines.topB.x - sideLines.topA.x) * w;
-  const botTravel = Math.abs(sideLines.botB.x - sideLines.botA.x) * w;
-  const diff = Math.abs(topTravel - botTravel);
-  const pct = Math.max(topTravel, botTravel) > 0
-    ? Math.round(diff / Math.max(topTravel, botTravel) * 100) : 0;
+  const topT = Math.abs(sideLines.topB.x-sideLines.topA.x)*w;
+  const botT = Math.abs(sideLines.botB.x-sideLines.botA.x)*w;
+  const diff = Math.abs(topT-botT);
+  const pct = Math.max(topT,botT)>0 ? Math.round(diff/Math.max(topT,botT)*100) : 0;
 
-  const resultsDiv = document.getElementById('frame-results');
-  resultsDiv.style.display = 'block';
-  let findings = [];
-  if (topTravel < 3 && botTravel < 3) {
-    findings.push({ status:'warning', title:'Lines not moved yet', fix:'Drag the orange lines to top/bottom limb tips at full draw, then green lines at end of travel.' });
-  } else if (pct > 20) {
-    const which = topTravel > botTravel ? 'Top' : 'Bottom';
-    findings.push({ status:'warning', title:`${which} limb traveled ${pct}% more than the other`, fix:'Tiller may need adjustment. Measure tiller top vs bottom and adjust limb bolts.' });
+  const rd = document.getElementById('frame-results');
+  rd.style.display='block';
+  let html = '<div style="font-size:11px;letter-spacing:2px;color:var(--gray);text-transform:uppercase;margin-bottom:12px;">Side View Results</div>';
+  if (topT<3 && botT<3) {
+    html += '<div class="issue-card warn"><div class="issue-title">\u26A0\uFE0F Lines not moved yet</div><div class="issue-fix">\u2192 Drag orange lines to limb tips at full draw, green lines at end of travel.</div></div>';
+  } else if (pct>20) {
+    const which = topT>botT ? 'Top' : 'Bottom';
+    html += `<div class="issue-card warn"><div class="issue-title">\u26A0\uFE0F ${which} limb traveled ${pct}% more</div><div class="issue-fix">\u2192 Tiller may need adjustment. Check tiller top vs bottom.</div></div>`;
   } else {
-    findings.push({ status:'ok', title:`Limb travel looks symmetric (${pct}% difference)`, fix:null });
+    html += `<div class="issue-card ok"><div class="issue-title">\u2705 Limb travel symmetric (${pct}% difference)</div></div>`;
   }
+  rd.innerHTML = html;
 
-  resultsDiv.innerHTML = `
-    <div style="font-size:11px; letter-spacing:2px; color:var(--gray); text-transform:uppercase; margin-bottom:12px;">Side View Results</div>
-    ${findings.map(f => `
-      <div class="issue-card ${f.status==='warning'?'warn':'ok'}" style="margin-bottom:10px;">
-        <div class="issue-title">${f.status==='warning'?'⚠️':'✅'} ${f.title}</div>
-        ${f.fix?`<div class="issue-fix">→ ${f.fix}</div>`:''}
-      </div>
-    `).join('')}
-  `;
-
-  document.getElementById('analyze-btn').style.display = 'none';
-  const nextBtn = document.getElementById('next-cam-step-btn');
-  nextBtn.style.display = 'block';
-  nextBtn.textContent = camState.stepIdx < CAM_STEPS.length-1
-    ? `Next: ${CAM_STEPS[camState.stepIdx+1].title} →` : '🏁 See Full Report';
+  document.getElementById('analyze-btn').style.display='none';
+  const nb = document.getElementById('next-cam-step-btn');
+  nb.style.display='block';
+  nb.textContent = camState.stepIdx < CAM_STEPS.length-1
+    ? `Next: ${CAM_STEPS[camState.stepIdx+1].title} →` : '\uD83C\uDFC1 See Full Report';
 }
 
 
@@ -2017,7 +1825,7 @@ function copyCamPrompt() {
   <!-- Video canvas -->
   <div style="position:relative; width:100%; background:#000;" id="canvas-container">
     <canvas id="frame-canvas" style="width:100%; display:block;"></canvas>
-    <canvas id="overlay-canvas" style="position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none;"></canvas>
+    <canvas id="overlay-canvas" style="position:absolute; top:0; left:0; width:100%; height:100%; "></canvas>
     <!-- Hidden video for frame extraction -->
     <video id="frame-video" style="display:none;" playsinline></video>
   </div>
@@ -2042,14 +1850,10 @@ function copyCamPrompt() {
       <div class="section-label" id="mark-instructions"></div>
       <div style="display:flex; flex-direction:column; gap:10px;" id="mark-buttons"></div>
     </div>
-
-    <!-- Lock buttons (side view only) -->
     <div id="lock-buttons-section" style="display:none; margin-bottom:14px;">
-      <div style="font-size:10px; font-weight:900; color:var(--gray); letter-spacing:2px; text-transform:uppercase; margin-bottom:8px;">
-        Lock lines in place
-      </div>
-      <div style="display:flex; flex-wrap:wrap; gap:8px;" id="lock-buttons-container"></div>
-      <div style="font-size:11px; color:#334155; margin-top:8px;">Tap to lock a line. Locked lines cannot be moved accidentally.</div>
+      <div style="font-size:10px;font-weight:900;color:var(--gray);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;">Lock lines in place</div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;" id="lock-buttons-container"></div>
+      <div style="font-size:11px;color:#334155;margin-top:8px;">Tap to lock. Locked lines cannot be moved.</div>
     </div>
 
     <!-- Marked frames status -->
