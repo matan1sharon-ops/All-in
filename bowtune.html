@@ -721,6 +721,24 @@ function showCaptured() {
 }
 
 
+function reRecord() {
+  state.recordings[state.stepIdx] = null;
+  renderSetup();
+  showScreen('s-setup');
+}
+
+function confirmStep() {
+  state.completedSteps.push(state.stepIdx);
+
+  if (state.stepIdx < STEPS.length - 1) {
+    state.stepIdx++;
+    renderSetup();
+    showScreen('s-setup');
+  } else {
+    showFinalAnalysis();
+  }
+}
+
 // ═══════════════════════════════════════════
 // FINAL ANALYSIS
 // ═══════════════════════════════════════════
@@ -792,6 +810,10 @@ function copyPrompt() {
     }, 2000);
   });
 }
+
+// ═══════════════════════════════════════════
+// API KEY MANAGEMENT
+// ═══════════════════════════════════════════
 
 function getApiKey() {
   return localStorage.getItem('bowtune_api_key') || null;
