@@ -262,9 +262,11 @@
     <div style="font-size:11px; letter-spacing:4px; color:var(--purple); text-transform:uppercase; margin-bottom:6px;">Analysis Complete</div>
     <h1 style="font-size:22px;">🏹 Tuning Report</h1>
     <div class="subtitle" id="final-subtitle"></div>
+  </div><div class="ai-dot"></div><div class="ai-dot"></div>
+    <span>Claude is analyzing your recordings...</span>
   </div>
 
-  <div id="final-results"></div>
+  <div id="final-results" style="display:none;"></div>
 
   <button class="action-btn secondary" onclick="startSession('sound')" style="margin-top:16px;">↩ New Session</button>
 </div>
@@ -1373,8 +1375,6 @@ function handleVideoImport(event) {
 // ═══════════════════════════════════════════
 
 function loadVideoForAnalysis() {
-  dragLinesInitialized = false;
-  activeDragLine = null;
   const step = CAM_STEPS[camState.stepIdx];
   showScreen('s-frame-analysis');
 
@@ -1393,10 +1393,7 @@ function loadVideoForAnalysis() {
     </button>
   `;
 
-  const isSide = CAM_STEPS[camState.stepIdx].id === 'side';
-  document.getElementById('mark-instructions').textContent = isSide
-    ? 'Mark each frame then drag the lines to your limb tips'
-    : 'Scrub to each key moment and mark it';
+  document.getElementById('mark-instructions').textContent = 'Scrub to each key moment and mark it';
 
   // Load video
   const video = document.getElementById('frame-video');
@@ -1457,66 +1454,69 @@ function markFrame(frameKey) {
 
   updateMarkedStatus();
   drawOverlays();
-  if (CAM_STEPS[camState.stepIdx].id === 'side') {
-    initDragLines();
-    if (camState.markedFrames['side']?.frameA && camState.markedFrames['side']?.frameB) {
-      updateLimbAnalysis();
-    }
-  }
 }
 
 function drawOverlays() {
   const step = CAM_STEPS[camState.stepIdx];
-  if (step.id !== 'side') {
-    // Non-side views: draw fixed center lines
-    const canvas = document.getElementById('overlay-canvas');
-    const ctx = canvas.getContext('2d');
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    const marks = camState.markedFrames[step.id] || {};
-    const w = canvas.width, h = canvas.height;
-    if (step.id === 'back' && marks.frameA !== undefined) {
-      ctx.strokeStyle = step.overlayColor;
-      ctx.lineWidth = 3;
-      ctx.setLineDash([10, 5]);
-      ctx.beginPath(); ctx.moveTo(w*0.5, 0); ctx.lineTo(w*0.5, h); ctx.stroke();
-      ctx.setLineDash([]);
-      ctx.font = 'bold 13px sans-serif';
-      ctx.fillStyle = step.overlayColor;
-      ctx.fillText('String center', w*0.52, 20);
-    }
-    if (step.id === 'front') {
-      if (marks.frameA !== undefined) {
-        ctx.strokeStyle = step.overlayColor;
-        ctx.lineWidth = 3; ctx.setLineDash([10,5]);
-        ctx.beginPath(); ctx.moveTo(w*0.5,0); ctx.lineTo(w*0.5,h); ctx.stroke();
-        ctx.setLineDash([]);
-        ctx.font = 'bold 13px sans-serif'; ctx.fillStyle = step.overlayColor;
-        ctx.fillText('Full draw', w*0.52, 20);
-      }
-      if (marks.frameB !== undefined) {
-        ctx.strokeStyle = '#22c55e';
-        ctx.lineWidth = 2; ctx.setLineDash([6,4]);
-        ctx.beginPath(); ctx.moveTo(w*0.52,0); ctx.lineTo(w*0.52,h); ctx.stroke();
-        ctx.setLineDash([]);
-        ctx.fillStyle = '#22c55e'; ctx.fillText('Follow through', w*0.54, 40);
-      }
-    }
+  if (step.id === 'side') {
+    renderDraggableLines();
     return;
   }
-  // Side view: draw draggable lines
-  renderDraggableLines();
+  // Back and front views - fixed center lines
+  const canvas = document.getElementById('overlay-canvas');
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  const marks = camState.markedFrames[step.id] || {};
+  const w = canvas.width, h = canvas.height;
+  if (step.id === 'back' && marks.frameA !== undefined) {
+    ctx.strokeStyle = step.overlayColor; ctx.lineWidth = 3;
+    ctx.setLineDash([10,5]);
+    ctx.beginPath(); ctx.moveTo(w*0.5,0); ctx.lineTo(w*0.5,h); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.font = 'bold 13px sans-serif'; ctx.fillStyle = step.overlayColor;
+    ctx.fillText('String center', w*0.52, 20);
+  }
+  if (step.id === 'front') {
+    if (marks.frameA !== undefined) {
+      ctx.strokeStyle = step.overlayColor; ctx.lineWidth = 3; ctx.setLineDash([10,5]);
+      ctx.beginPath(); ctx.moveTo(w*0.5,0); ctx.lineTo(w*0.5,h); ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.font = 'bold 13px sans-serif'; ctx.fillStyle = step.overlayColor;
+      ctx.fillText('Full draw', w*0.52, 20);
+    }
+    if (marks.frameB !== undefined) {
+      ctx.strokeStyle = '#22c55e'; ctx.lineWidth = 2; ctx.setLineDash([6,4]);
+      ctx.beginPath(); ctx.moveTo(w*0.52,0); ctx.lineTo(w*0.52,h); ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle = '#22c55e';
+      ctx.fillText('Follow through', w*0.54, 40);
+    }
+  }
 }
 
-// ─── DRAGGABLE LINES FOR SIDE VIEW ───────────────────────────────
-// 4 vertical lines: topA(orange), botA(orange), topB(green), botB(green)
-const dragLines = {
-  topA: { x: 0.3, color: '#f97316', label: 'Top limb — Full Draw',    frame: 'A', active: false },
-  botA: { x: 0.5, color: '#f97316', label: 'Bot limb — Full Draw',    frame: 'A', active: false },
-  topB: { x: 0.35, color: '#22c55e', label: 'Top limb — End Travel', frame: 'B', active: false },
-  botB: { x: 0.55, color: '#22c55e', label: 'Bot limb — End Travel', frame: 'B', active: false },
+// ─── DRAGGABLE LINES FOR SIDE VIEW ───────────────────────────
+// 4 vertical lines (limb tips) + 1 angled line (arrow shaft)
+// Each line can be locked after positioning
+
+const sideLines = {
+  topA: { x:0.25, color:'#f97316', label:'Top limb - Full Draw',   frame:'A', locked:false },
+  botA: { x:0.45, color:'#f97316', label:'Bot limb - Full Draw',   frame:'A', locked:false },
+  topB: { x:0.55, color:'#22c55e', label:'Top limb - End Travel',  frame:'B', locked:false },
+  botB: { x:0.75, color:'#22c55e', label:'Bot limb - End Travel',  frame:'B', locked:false },
 };
+
+// Arrow line defined by two endpoints (relative coords)
+const arrowLine = {
+  p1: { x:0.1, y:0.5 },
+  p2: { x:0.9, y:0.5 },
+  color: '#3b82f6',
+  locked: false,
+  active: false,
+};
+
 let dragLinesInitialized = false;
-let activeDragLine = null;
+let activeDragLine = null;   // key of sideLines being dragged
+let activeDragPoint = null;  // 'p1' or 'p2' for arrowLine
 
 function initDragLines() {
   if (dragLinesInitialized) return;
@@ -1524,37 +1524,105 @@ function initDragLines() {
 
   const container = document.getElementById('canvas-container');
 
-  function getLineAtX(clientX) {
+  function getHitTarget(clientX, clientY) {
     const rect = container.getBoundingClientRect();
     const relX = (clientX - rect.left) / rect.width;
+    const relY = (clientY - rect.top) / rect.height;
     const marks = camState.markedFrames['side'] || {};
+
+    // Check arrow line endpoints first (p1, p2) - 6% hit radius
+    if (!arrowLine.locked) {
+      if (Math.hypot(arrowLine.p1.x - relX, arrowLine.p1.y - relY) < 0.06) return { type:'arrow', point:'p1' };
+      if (Math.hypot(arrowLine.p2.x - relX, arrowLine.p2.y - relY) < 0.06) return { type:'arrow', point:'p2' };
+    }
+
+    // Check vertical lines - hit within 4% horizontally
     let closest = null, minDist = 0.05;
-    for (const [key, line] of Object.entries(dragLines)) {
+    for (const [key, line] of Object.entries(sideLines)) {
+      if (line.locked) continue;
       if (line.frame === 'A' && !marks.frameA) continue;
       if (line.frame === 'B' && !marks.frameB) continue;
       const dist = Math.abs(line.x - relX);
       if (dist < minDist) { minDist = dist; closest = key; }
     }
-    return closest;
+    if (closest) return { type:'vertical', key: closest };
+    return null;
   }
 
   container.addEventListener('touchstart', (e) => {
-    const touch = e.touches[0];
-    activeDragLine = getLineAtX(touch.clientX);
-    if (activeDragLine) e.preventDefault();
-  }, { passive: false });
+    const t = e.touches[0];
+    const hit = getHitTarget(t.clientX, t.clientY);
+    if (!hit) return;
+    e.preventDefault();
+    if (hit.type === 'vertical') { activeDragLine = hit.key; activeDragPoint = null; }
+    else { activeDragPoint = hit.point; activeDragLine = null; }
+  }, { passive:false });
 
   container.addEventListener('touchmove', (e) => {
-    if (!activeDragLine) return;
+    if (!activeDragLine && !activeDragPoint) return;
     e.preventDefault();
-    const touch = e.touches[0];
+    const t = e.touches[0];
     const rect = container.getBoundingClientRect();
-    dragLines[activeDragLine].x = Math.max(0.02, Math.min(0.98, (touch.clientX - rect.left) / rect.width));
-    renderDraggableLines();
-    updateLimbAnalysis();
-  }, { passive: false });
+    const relX = Math.max(0.01, Math.min(0.99, (t.clientX - rect.left) / rect.width));
+    const relY = Math.max(0.01, Math.min(0.99, (t.clientY - rect.top) / rect.height));
 
-  container.addEventListener('touchend', () => { activeDragLine = null; });
+    if (activeDragLine) {
+      sideLines[activeDragLine].x = relX;
+    } else if (activeDragPoint) {
+      arrowLine[activeDragPoint].x = relX;
+      arrowLine[activeDragPoint].y = relY;
+    }
+    renderDraggableLines();
+  }, { passive:false });
+
+  container.addEventListener('touchend', () => {
+    activeDragLine = null;
+    activeDragPoint = null;
+  });
+}
+
+function lockLine(key) {
+  if (key === 'arrow') {
+    arrowLine.locked = true;
+  } else {
+    sideLines[key].locked = true;
+  }
+  renderDraggableLines();
+  updateLockButtons();
+  updateLimbAnalysis();
+}
+
+function unlockLine(key) {
+  if (key === 'arrow') {
+    arrowLine.locked = false;
+  } else {
+    sideLines[key].locked = false;
+  }
+  renderDraggableLines();
+  updateLockButtons();
+}
+
+function updateLockButtons() {
+  const marks = camState.markedFrames['side'] || {};
+  const container = document.getElementById('lock-buttons-container');
+  if (!container) return;
+  const lines = [
+    { key:'topA', label:'Top limb (draw)', show: !!marks.frameA },
+    { key:'botA', label:'Bot limb (draw)', show: !!marks.frameA },
+    { key:'topB', label:'Top limb (travel)', show: !!marks.frameB },
+    { key:'botB', label:'Bot limb (travel)', show: !!marks.frameB },
+    { key:'arrow', label:'Arrow line', show: true },
+  ];
+
+  container.innerHTML = lines.filter(l => l.show).map(l => {
+    const locked = l.key === 'arrow' ? arrowLine.locked : sideLines[l.key]?.locked;
+    return `<button onclick="${locked ? 'unlockLine' : 'lockLine'}('${l.key}')"
+      style="padding:8px 10px; font-size:11px; font-weight:700; border-radius:8px;
+      border:1px solid ${locked ? '#22c55e' : '#f97316'}; background:transparent;
+      color:${locked ? '#22c55e' : '#f97316'}; cursor:pointer; white-space:nowrap;">
+      ${locked ? '🔒' : '🔓'} ${l.label}
+    </button>`;
+  }).join('');
 }
 
 function renderDraggableLines() {
@@ -1564,73 +1632,93 @@ function renderDraggableLines() {
   const marks = camState.markedFrames['side'] || {};
   const w = canvas.width, h = canvas.height;
 
-  for (const [key, line] of Object.entries(dragLines)) {
+  // Draw vertical limb lines
+  for (const [key, line] of Object.entries(sideLines)) {
     if (line.frame === 'A' && !marks.frameA) continue;
     if (line.frame === 'B' && !marks.frameB) continue;
     const x = line.x * w;
     ctx.strokeStyle = line.color;
     ctx.lineWidth = activeDragLine === key ? 4 : 2.5;
-    ctx.setLineDash([8, 4]);
+    ctx.setLineDash(line.locked ? [] : [8,4]);
     ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke();
     ctx.setLineDash([]);
-    ctx.fillStyle = line.color;
-    ctx.font = 'bold 11px sans-serif';
-    const shortLabel = key === 'topA' ? 'Top Draw' : key === 'botA' ? 'Bot Draw' : key === 'topB' ? 'Top Travel' : 'Bot Travel';
-    ctx.fillText(shortLabel, x + 4, key.includes('top') ? 20 : h - 8);
-    // Drag handle circle
-    ctx.beginPath();
-    ctx.arc(x, h/2, 14, 0, Math.PI*2);
-    ctx.fillStyle = line.color + '44';
-    ctx.fill();
-    ctx.strokeStyle = line.color;
-    ctx.lineWidth = 2;
-    ctx.stroke();
-    ctx.fillStyle = line.color;
-    ctx.font = 'bold 16px sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText('⟺', x, h/2 + 6);
-    ctx.textAlign = 'left';
+
+    // Label
+    ctx.font = 'bold 11px sans-serif'; ctx.fillStyle = line.color;
+    const isTop = key.startsWith('top');
+    ctx.fillText(key.includes('A') ? (isTop ? 'Top Draw' : 'Bot Draw') : (isTop ? 'Top Travel' : 'Bot Travel'),
+      x+4, isTop ? 16 : h-4);
+
+    // Drag handle (only if unlocked)
+    if (!line.locked) {
+      ctx.beginPath(); ctx.arc(x, h/2, 16, 0, Math.PI*2);
+      ctx.fillStyle = line.color+'33'; ctx.fill();
+      ctx.strokeStyle = line.color; ctx.lineWidth = 2; ctx.stroke();
+      ctx.fillStyle = line.color; ctx.font = 'bold 14px sans-serif';
+      ctx.textAlign = 'center'; ctx.fillText('⟺', x, h/2+5); ctx.textAlign = 'left';
+    } else {
+      ctx.beginPath(); ctx.arc(x, h/2, 8, 0, Math.PI*2);
+      ctx.fillStyle = line.color+'88'; ctx.fill();
+    }
   }
+
+  // Draw arrow line
+  const x1 = arrowLine.p1.x * w, y1 = arrowLine.p1.y * h;
+  const x2 = arrowLine.p2.x * w, y2 = arrowLine.p2.y * h;
+  ctx.strokeStyle = arrowLine.color; ctx.lineWidth = 2.5;
+  ctx.setLineDash(arrowLine.locked ? [] : [6,3]);
+  ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Arrow endpoints handles
+  if (!arrowLine.locked) {
+    [{ p: arrowLine.p1, label:'P1' }, { p: arrowLine.p2, label:'P2' }].forEach(({p, label}) => {
+      const px = p.x*w, py = p.y*h;
+      ctx.beginPath(); ctx.arc(px, py, 16, 0, Math.PI*2);
+      ctx.fillStyle = arrowLine.color+'33'; ctx.fill();
+      ctx.strokeStyle = arrowLine.color; ctx.lineWidth = 2; ctx.stroke();
+      ctx.fillStyle = arrowLine.color; ctx.font = 'bold 18px sans-serif';
+      ctx.textAlign = 'center'; ctx.fillText('●', px, py+6); ctx.textAlign = 'left';
+    });
+  }
+  ctx.fillStyle = arrowLine.color; ctx.font = 'bold 11px sans-serif';
+  ctx.fillText('Arrow', (x1+x2)/2-15, Math.min(y1,y2)-8);
 }
 
 function updateLimbAnalysis() {
   const marks = camState.markedFrames['side'] || {};
   if (!marks.frameA || !marks.frameB) return;
   const w = document.getElementById('overlay-canvas').width;
-
-  // Calculate limb travel in pixels
-  const topTravel = Math.abs(dragLines.topB.x - dragLines.topA.x) * w;
-  const botTravel = Math.abs(dragLines.botB.x - dragLines.botA.x) * w;
+  const topTravel = Math.abs(sideLines.topB.x - sideLines.topA.x) * w;
+  const botTravel = Math.abs(sideLines.botB.x - sideLines.botA.x) * w;
   const diff = Math.abs(topTravel - botTravel);
   const pct = Math.max(topTravel, botTravel) > 0
     ? Math.round(diff / Math.max(topTravel, botTravel) * 100) : 0;
 
   const resultsDiv = document.getElementById('frame-results');
-  const nextBtn = document.getElementById('next-cam-step-btn');
-
   resultsDiv.style.display = 'block';
   let findings = [];
-  if (topTravel < 5 && botTravel < 5) {
-    findings.push({ status:'warning', title:'Lines not moved yet', fix:'Drag the lines to align with your limb tips in each frame.' });
+  if (topTravel < 3 && botTravel < 3) {
+    findings.push({ status:'warning', title:'Lines not moved yet', fix:'Drag the orange lines to top/bottom limb tips at full draw, then green lines at end of travel.' });
   } else if (pct > 20) {
     const which = topTravel > botTravel ? 'Top' : 'Bottom';
-    findings.push({ status:'warning', title:`${which} limb traveled ${pct}% more than the other`, fix:'Limbs are not symmetric — tiller may need adjustment. Measure tiller top vs bottom and adjust limb bolts.' });
+    findings.push({ status:'warning', title:`${which} limb traveled ${pct}% more than the other`, fix:'Tiller may need adjustment. Measure tiller top vs bottom and adjust limb bolts.' });
   } else {
-    findings.push({ status:'ok', title:`Limb travel looks symmetric (${pct}% difference)`, fix: null });
+    findings.push({ status:'ok', title:`Limb travel looks symmetric (${pct}% difference)`, fix:null });
   }
-  findings.push({ status:'ok', title:'Tip: drag lines precisely to limb tips for best accuracy', fix: null });
 
   resultsDiv.innerHTML = `
     <div style="font-size:11px; letter-spacing:2px; color:var(--gray); text-transform:uppercase; margin-bottom:12px;">Side View Results</div>
     ${findings.map(f => `
       <div class="issue-card ${f.status==='warning'?'warn':'ok'}" style="margin-bottom:10px;">
         <div class="issue-title">${f.status==='warning'?'⚠️':'✅'} ${f.title}</div>
-        ${f.fix ? `<div class="issue-fix">→ ${f.fix}</div>` : ''}
+        ${f.fix?`<div class="issue-fix">→ ${f.fix}</div>`:''}
       </div>
     `).join('')}
   `;
 
   document.getElementById('analyze-btn').style.display = 'none';
+  const nextBtn = document.getElementById('next-cam-step-btn');
   nextBtn.style.display = 'block';
   nextBtn.textContent = camState.stepIdx < CAM_STEPS.length-1
     ? `Next: ${CAM_STEPS[camState.stepIdx+1].title} →` : '🏁 See Full Report';
@@ -1953,6 +2041,15 @@ function copyCamPrompt() {
     <div class="card" style="margin-bottom:14px;">
       <div class="section-label" id="mark-instructions"></div>
       <div style="display:flex; flex-direction:column; gap:10px;" id="mark-buttons"></div>
+    </div>
+
+    <!-- Lock buttons (side view only) -->
+    <div id="lock-buttons-section" style="display:none; margin-bottom:14px;">
+      <div style="font-size:10px; font-weight:900; color:var(--gray); letter-spacing:2px; text-transform:uppercase; margin-bottom:8px;">
+        Lock lines in place
+      </div>
+      <div style="display:flex; flex-wrap:wrap; gap:8px;" id="lock-buttons-container"></div>
+      <div style="font-size:11px; color:#334155; margin-top:8px;">Tap to lock a line. Locked lines cannot be moved accidentally.</div>
     </div>
 
     <!-- Marked frames status -->
