@@ -844,6 +844,7 @@ function showFinalAnalysis() {
   document.getElementById('final-subtitle').textContent =
     state.bow.charAt(0).toUpperCase()+state.bow.slice(1) + ' · ' + state.hand + '-handed · 4 recordings';
   const container = document.getElementById('final-results');
+  container.style.display = 'block';
   container.innerHTML = '';
   renderCopyPrompt();
 }
@@ -1372,6 +1373,8 @@ function handleVideoImport(event) {
 // ═══════════════════════════════════════════
 
 function loadVideoForAnalysis() {
+  dragLinesInitialized = false;
+  activeDragLine = null;
   const step = CAM_STEPS[camState.stepIdx];
   showScreen('s-frame-analysis');
 
@@ -1390,7 +1393,10 @@ function loadVideoForAnalysis() {
     </button>
   `;
 
-  document.getElementById('mark-instructions').textContent = 'Scrub to each key moment and mark it';
+  const isSide = CAM_STEPS[camState.stepIdx].id === 'side';
+  document.getElementById('mark-instructions').textContent = isSide
+    ? 'Mark each frame then drag the lines to your limb tips'
+    : 'Scrub to each key moment and mark it';
 
   // Load video
   const video = document.getElementById('frame-video');
@@ -1451,77 +1457,185 @@ function markFrame(frameKey) {
 
   updateMarkedStatus();
   drawOverlays();
+  if (CAM_STEPS[camState.stepIdx].id === 'side') {
+    initDragLines();
+    if (camState.markedFrames['side']?.frameA && camState.markedFrames['side']?.frameB) {
+      updateLimbAnalysis();
+    }
+  }
 }
 
 function drawOverlays() {
   const step = CAM_STEPS[camState.stepIdx];
+  if (step.id !== 'side') {
+    // Non-side views: draw fixed center lines
+    const canvas = document.getElementById('overlay-canvas');
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    const marks = camState.markedFrames[step.id] || {};
+    const w = canvas.width, h = canvas.height;
+    if (step.id === 'back' && marks.frameA !== undefined) {
+      ctx.strokeStyle = step.overlayColor;
+      ctx.lineWidth = 3;
+      ctx.setLineDash([10, 5]);
+      ctx.beginPath(); ctx.moveTo(w*0.5, 0); ctx.lineTo(w*0.5, h); ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.font = 'bold 13px sans-serif';
+      ctx.fillStyle = step.overlayColor;
+      ctx.fillText('String center', w*0.52, 20);
+    }
+    if (step.id === 'front') {
+      if (marks.frameA !== undefined) {
+        ctx.strokeStyle = step.overlayColor;
+        ctx.lineWidth = 3; ctx.setLineDash([10,5]);
+        ctx.beginPath(); ctx.moveTo(w*0.5,0); ctx.lineTo(w*0.5,h); ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.font = 'bold 13px sans-serif'; ctx.fillStyle = step.overlayColor;
+        ctx.fillText('Full draw', w*0.52, 20);
+      }
+      if (marks.frameB !== undefined) {
+        ctx.strokeStyle = '#22c55e';
+        ctx.lineWidth = 2; ctx.setLineDash([6,4]);
+        ctx.beginPath(); ctx.moveTo(w*0.52,0); ctx.lineTo(w*0.52,h); ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.fillStyle = '#22c55e'; ctx.fillText('Follow through', w*0.54, 40);
+      }
+    }
+    return;
+  }
+  // Side view: draw draggable lines
+  renderDraggableLines();
+}
+
+// ─── DRAGGABLE LINES FOR SIDE VIEW ───────────────────────────────
+// 4 vertical lines: topA(orange), botA(orange), topB(green), botB(green)
+const dragLines = {
+  topA: { x: 0.3, color: '#f97316', label: 'Top limb — Full Draw',    frame: 'A', active: false },
+  botA: { x: 0.5, color: '#f97316', label: 'Bot limb — Full Draw',    frame: 'A', active: false },
+  topB: { x: 0.35, color: '#22c55e', label: 'Top limb — End Travel', frame: 'B', active: false },
+  botB: { x: 0.55, color: '#22c55e', label: 'Bot limb — End Travel', frame: 'B', active: false },
+};
+let dragLinesInitialized = false;
+let activeDragLine = null;
+
+function initDragLines() {
+  if (dragLinesInitialized) return;
+  dragLinesInitialized = true;
+
+  const container = document.getElementById('canvas-container');
+
+  function getLineAtX(clientX) {
+    const rect = container.getBoundingClientRect();
+    const relX = (clientX - rect.left) / rect.width;
+    const marks = camState.markedFrames['side'] || {};
+    let closest = null, minDist = 0.05;
+    for (const [key, line] of Object.entries(dragLines)) {
+      if (line.frame === 'A' && !marks.frameA) continue;
+      if (line.frame === 'B' && !marks.frameB) continue;
+      const dist = Math.abs(line.x - relX);
+      if (dist < minDist) { minDist = dist; closest = key; }
+    }
+    return closest;
+  }
+
+  container.addEventListener('touchstart', (e) => {
+    const touch = e.touches[0];
+    activeDragLine = getLineAtX(touch.clientX);
+    if (activeDragLine) e.preventDefault();
+  }, { passive: false });
+
+  container.addEventListener('touchmove', (e) => {
+    if (!activeDragLine) return;
+    e.preventDefault();
+    const touch = e.touches[0];
+    const rect = container.getBoundingClientRect();
+    dragLines[activeDragLine].x = Math.max(0.02, Math.min(0.98, (touch.clientX - rect.left) / rect.width));
+    renderDraggableLines();
+    updateLimbAnalysis();
+  }, { passive: false });
+
+  container.addEventListener('touchend', () => { activeDragLine = null; });
+}
+
+function renderDraggableLines() {
   const canvas = document.getElementById('overlay-canvas');
   const ctx = canvas.getContext('2d');
   ctx.clearRect(0, 0, canvas.width, canvas.height);
+  const marks = camState.markedFrames['side'] || {};
+  const w = canvas.width, h = canvas.height;
 
-  const marks = camState.markedFrames[step.id] || {};
-  const w = canvas.width;
-  const h = canvas.height;
-
-  // Draw horizontal reference lines based on step type
-  if (step.id === 'side') {
-    // Horizontal lines at top and bottom limb area
-    if (marks.frameA !== undefined) {
-      ctx.strokeStyle = step.overlayColor;
-      ctx.lineWidth = 3;
-      ctx.setLineDash([10, 5]);
-      ctx.beginPath(); ctx.moveTo(0, h * 0.2); ctx.lineTo(w, h * 0.2); ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(0, h * 0.8); ctx.lineTo(w, h * 0.8); ctx.stroke();
-      ctx.setLineDash([]);
-      ctx.font = 'bold 14px sans-serif';
-      ctx.fillStyle = step.overlayColor;
-      ctx.fillText('← ' + step.labelA, 10, h * 0.18);
-    }
-    if (marks.frameB !== undefined) {
-      ctx.strokeStyle = '#22c55e';
-      ctx.lineWidth = 3;
-      ctx.setLineDash([10, 5]);
-      ctx.beginPath(); ctx.moveTo(0, h * 0.15); ctx.lineTo(w, h * 0.15); ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(0, h * 0.85); ctx.lineTo(w, h * 0.85); ctx.stroke();
-      ctx.setLineDash([]);
-      ctx.fillStyle = '#22c55e';
-      ctx.fillText('← ' + step.labelB, 10, h * 0.13);
-    }
-  } else if (step.id === 'back') {
-    // Vertical center line for string alignment
-    if (marks.frameA !== undefined) {
-      ctx.strokeStyle = step.overlayColor;
-      ctx.lineWidth = 3;
-      ctx.setLineDash([10, 5]);
-      ctx.beginPath(); ctx.moveTo(w * 0.5, 0); ctx.lineTo(w * 0.5, h); ctx.stroke();
-      ctx.setLineDash([]);
-      ctx.font = 'bold 13px sans-serif';
-      ctx.fillStyle = step.overlayColor;
-      ctx.fillText('String center', w * 0.52, 20);
-    }
-  } else if (step.id === 'front') {
-    // Vertical riser line
-    if (marks.frameA !== undefined) {
-      ctx.strokeStyle = step.overlayColor;
-      ctx.lineWidth = 3;
-      ctx.setLineDash([10, 5]);
-      ctx.beginPath(); ctx.moveTo(w * 0.5, 0); ctx.lineTo(w * 0.5, h); ctx.stroke();
-      ctx.setLineDash([]);
-      ctx.font = 'bold 13px sans-serif';
-      ctx.fillStyle = step.overlayColor;
-      ctx.fillText('Riser center', w * 0.52, 20);
-    }
-    if (marks.frameB !== undefined) {
-      ctx.strokeStyle = '#22c55e';
-      ctx.lineWidth = 2;
-      ctx.setLineDash([6, 4]);
-      ctx.beginPath(); ctx.moveTo(w * 0.52, 0); ctx.lineTo(w * 0.52, h); ctx.stroke();
-      ctx.setLineDash([]);
-      ctx.fillStyle = '#22c55e';
-      ctx.fillText('Follow through', w * 0.54, 40);
-    }
+  for (const [key, line] of Object.entries(dragLines)) {
+    if (line.frame === 'A' && !marks.frameA) continue;
+    if (line.frame === 'B' && !marks.frameB) continue;
+    const x = line.x * w;
+    ctx.strokeStyle = line.color;
+    ctx.lineWidth = activeDragLine === key ? 4 : 2.5;
+    ctx.setLineDash([8, 4]);
+    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = line.color;
+    ctx.font = 'bold 11px sans-serif';
+    const shortLabel = key === 'topA' ? 'Top Draw' : key === 'botA' ? 'Bot Draw' : key === 'topB' ? 'Top Travel' : 'Bot Travel';
+    ctx.fillText(shortLabel, x + 4, key.includes('top') ? 20 : h - 8);
+    // Drag handle circle
+    ctx.beginPath();
+    ctx.arc(x, h/2, 14, 0, Math.PI*2);
+    ctx.fillStyle = line.color + '44';
+    ctx.fill();
+    ctx.strokeStyle = line.color;
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.fillStyle = line.color;
+    ctx.font = 'bold 16px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('⟺', x, h/2 + 6);
+    ctx.textAlign = 'left';
   }
 }
+
+function updateLimbAnalysis() {
+  const marks = camState.markedFrames['side'] || {};
+  if (!marks.frameA || !marks.frameB) return;
+  const w = document.getElementById('overlay-canvas').width;
+
+  // Calculate limb travel in pixels
+  const topTravel = Math.abs(dragLines.topB.x - dragLines.topA.x) * w;
+  const botTravel = Math.abs(dragLines.botB.x - dragLines.botA.x) * w;
+  const diff = Math.abs(topTravel - botTravel);
+  const pct = Math.max(topTravel, botTravel) > 0
+    ? Math.round(diff / Math.max(topTravel, botTravel) * 100) : 0;
+
+  const resultsDiv = document.getElementById('frame-results');
+  const nextBtn = document.getElementById('next-cam-step-btn');
+
+  resultsDiv.style.display = 'block';
+  let findings = [];
+  if (topTravel < 5 && botTravel < 5) {
+    findings.push({ status:'warning', title:'Lines not moved yet', fix:'Drag the lines to align with your limb tips in each frame.' });
+  } else if (pct > 20) {
+    const which = topTravel > botTravel ? 'Top' : 'Bottom';
+    findings.push({ status:'warning', title:`${which} limb traveled ${pct}% more than the other`, fix:'Limbs are not symmetric — tiller may need adjustment. Measure tiller top vs bottom and adjust limb bolts.' });
+  } else {
+    findings.push({ status:'ok', title:`Limb travel looks symmetric (${pct}% difference)`, fix: null });
+  }
+  findings.push({ status:'ok', title:'Tip: drag lines precisely to limb tips for best accuracy', fix: null });
+
+  resultsDiv.innerHTML = `
+    <div style="font-size:11px; letter-spacing:2px; color:var(--gray); text-transform:uppercase; margin-bottom:12px;">Side View Results</div>
+    ${findings.map(f => `
+      <div class="issue-card ${f.status==='warning'?'warn':'ok'}" style="margin-bottom:10px;">
+        <div class="issue-title">${f.status==='warning'?'⚠️':'✅'} ${f.title}</div>
+        ${f.fix ? `<div class="issue-fix">→ ${f.fix}</div>` : ''}
+      </div>
+    `).join('')}
+  `;
+
+  document.getElementById('analyze-btn').style.display = 'none';
+  nextBtn.style.display = 'block';
+  nextBtn.textContent = camState.stepIdx < CAM_STEPS.length-1
+    ? `Next: ${CAM_STEPS[camState.stepIdx+1].title} →` : '🏁 See Full Report';
+}
+
 
 function updateMarkedStatus() {
   const step = CAM_STEPS[camState.stepIdx];
