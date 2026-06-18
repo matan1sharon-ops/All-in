@@ -722,123 +722,6 @@ function showCaptured() {
 
 
 // ═══════════════════════════════════════════
-// SOUND-ONLY TUNING ANALYSIS ENGINE
-// Only reports what a phone mic can actually detect
-// ═══════════════════════════════════════════
-
-function analyzeAngle(diagram, rec, bow, hand) {
-  if (!rec) return 'No recording captured for this angle.';
-
-  const { peakHz, peakRms } = rec;
-  const hasSnap  = peakHz > 600 && peakRms > 55;  // sharp high crack = string slap
-  const hasTwang = peakHz > 350 && peakHz <= 600 && peakRms > 45; // mid-high = string vibration
-  const cleanThud = peakHz < 300 && peakRms > 35;  // low thud = good clean release
-  const tooQuiet  = peakRms < 20;                  // mic too far or no shot captured
-
-  if (tooQuiet) return 'Very low sound level — mic may have been too far away. Consider re-recording closer to the bow.';
-  if (hasSnap)  return 'Sharp snap detected — possible string slap. This is the most reliable sound indicator; worth investigating plunger or arrow clearance.';
-  if (hasTwang) return 'String twang detected — bow is vibrating after release. Could indicate brace height on the low side or arrow clearance issue.';
-  if (cleanThud) return 'Clean thud — good release sound. No obvious string slap detected from this angle.';
-  return 'Recording captured. Sound level is within normal range.';
-}
-
-function analyzeAllRecordings(recordings, bow, hand) {
-  const findings = [];
-  const r0 = recordings[0]; // dominant side — best for string slap
-  const r1 = recordings[1]; // back
-  const r2 = recordings[2]; // front
-  const r3 = recordings[3]; // non-dominant
-
-  // ── STRING SLAP — detectable by sound ──
-  const snapDetected = r0 && r0.peakHz > 600 && r0.peakRms > 55;
-  const mildSnap     = r0 && r0.peakHz > 400 && r0.peakRms > 45 && !snapDetected;
-
-  if (snapDetected) {
-    findings.push({
-      status: 'warning',
-      title: 'String slap sound detected',
-      fix: bow === 'recurve'
-        ? 'Adjust plunger pressure and check centershot. Re-test with bare shaft at 10m.'
-        : 'Check arrow clearance off the shelf. Ensure arrow spine suits your draw weight.'
-    });
-  } else if (mildSnap) {
-    findings.push({
-      status: 'warning',
-      title: 'Mild string noise detected',
-      fix: 'Minor string contact possible. Fine-tune plunger or nocking point by small increments and re-test.'
-    });
-  } else if (r0) {
-    findings.push({ status: 'ok', title: 'No string slap detected', fix: null });
-  }
-
-  // ── BRACE HEIGHT — detectable by sound (twang vs thud) ──
-  const allRecs = [r0, r1, r2, r3].filter(Boolean);
-  if (allRecs.length > 0) {
-    const avgHz  = allRecs.reduce((a,b) => a + b.peakHz,  0) / allRecs.length;
-    const avgRms = allRecs.reduce((a,b) => a + b.peakRms, 0) / allRecs.length;
-
-    if (avgHz > 500 && avgRms > 55) {
-      findings.push({
-        status: 'warning',
-        title: 'High-pitched shot sound — brace height may be low',
-        fix: 'Add 2 twists to string and re-test. A low brace height increases string noise and arrow contact risk.'
-      });
-    } else if (avgHz < 200 && avgRms > 50) {
-      findings.push({ status: 'ok', title: 'Deep thud tone — brace height sounds good', fix: null });
-    } else {
-      findings.push({ status: 'ok', title: 'Shot tone within normal range', fix: null });
-    }
-  }
-
-  // ── OVERALL SHOT NOISE LEVEL ──
-  if (allRecs.length > 0) {
-    const avgRms = allRecs.reduce((a,b) => a + b.peakRms, 0) / allRecs.length;
-    if (avgRms > 75) {
-      findings.push({
-        status: 'warning',
-        title: 'Louder than average shot',
-        fix: 'Consider adding limb dampeners or a string silencer to reduce vibration noise and felt recoil.'
-      });
-    } else if (avgRms < 20) {
-      findings.push({
-        status: 'warning',
-        title: 'Very quiet recordings — mic may have been too far',
-        fix: 'Re-run the session with the phone placed closer to the bow (within 1m).'
-      });
-    } else {
-      findings.push({ status: 'ok', title: 'Overall shot noise level is normal', fix: null });
-    }
-  }
-
-  // ── HONEST DISCLAIMER ──
-  findings.push({
-    status: 'ok',
-    title: 'Note: Sound analysis has limits',
-    fix: 'Tiller, nocking point, grip torque and centershot require physical measurement or camera analysis — not detectable by mic alone.'
-  });
-
-  return findings;
-}
-
-function reRecord() {
-  state.recordings[state.stepIdx] = null;
-  renderSetup();
-  showScreen('s-setup');
-}
-
-function confirmStep() {
-  state.completedSteps.push(state.stepIdx);
-
-  if (state.stepIdx < STEPS.length - 1) {
-    state.stepIdx++;
-    renderSetup();
-    showScreen('s-setup');
-  } else {
-    showFinalAnalysis();
-  }
-}
-
-// ═══════════════════════════════════════════
 // FINAL ANALYSIS
 // ═══════════════════════════════════════════
 function showFinalAnalysis() {
@@ -850,27 +733,6 @@ function showFinalAnalysis() {
   container.innerHTML = '';
   renderCopyPrompt();
 }
-function renderFinalResults(findings) {
-  const container = document.getElementById('final-results');
-  container.style.display = 'block';
-
-  const warnings = findings.filter(f => f.status === 'warning');
-  const oks = findings.filter(f => f.status === 'ok');
-
-  container.innerHTML = `
-    <div style="font-size:11px; letter-spacing:2px; color:var(--gray); text-transform:uppercase; margin-bottom:12px;">
-      ${warnings.length} issue${warnings.length !== 1 ? 's' : ''} found · ${oks.length} looking good
-    </div>
-    ${findings.map(f => `
-      <div class="issue-card ${f.status === 'warning' ? 'warn' : 'ok'}">
-        <div class="issue-title">${f.status === 'warning' ? '⚠️' : '✅'} ${f.title}</div>
-        ${f.fix ? `<div class="issue-fix">→ ${f.fix}</div>` : ''}
-      </div>
-    `).join('')}
-    <button class="action-btn" style="margin-top:8px;" onclick="saveReport()">💾 Save to Profile</button>
-  `;
-}
-
 function renderCopyPrompt() {
   const lines = state.recordings.map((r, i) => {
     if (!r) return `- ${STEPS[i].title}: no recording`;
@@ -930,22 +792,6 @@ function copyPrompt() {
     }, 2000);
   });
 }
-
-function saveReport() {
-  const reports = JSON.parse(localStorage.getItem('bowtune_reports') || '[]');
-  reports.unshift({
-    date: new Date().toLocaleDateString('en-GB'),
-    bow: state.bow,
-    hand: state.hand,
-    recordings: state.recordings,
-  });
-  localStorage.setItem('bowtune_reports', JSON.stringify(reports));
-  alert('Saved ✓');
-}
-
-// ═══════════════════════════════════════════
-// API KEY MANAGEMENT
-// ═══════════════════════════════════════════
 
 function getApiKey() {
   return localStorage.getItem('bowtune_api_key') || null;
