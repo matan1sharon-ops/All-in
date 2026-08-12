@@ -86,7 +86,6 @@
     </style>
 </head>
 <body>
-
 <div class="app-container">
     <div id="participant-modal" class="modal-overlay">
          <div style="width:100%; display:flex; align-items:center; margin-bottom:4px;">
@@ -102,13 +101,11 @@
         <div id="participant-names-container" style="width:100%; display:flex; flex-direction:column; gap:10px;"></div>
         <button class="next-btn" onclick="confirmParticipants()">START SESSION</button>
     </div>
-
     <div id="target-choice-modal" class="modal-overlay">
         <h2 style="font-weight: 900; letter-spacing: 1px;">TARGET SCORING</h2>
         <button class="next-btn" style="width:80%;" onclick="confirmTargetMode('pad')">SCORING BY PAD</button>
         <button class="next-btn" style="width:80%; background:#fff;" onclick="confirmTargetMode('face')">SCORING BY FACE</button>
     </div>
-
     <div id="home" class="screen active-screen">
         <div style="text-align:center; margin-top:40px;">
             <div class="logo-badge">
@@ -118,34 +115,27 @@
             <p id="l-tagline" style="color:var(--gray); font-size:12px;"></p>
         </div>
         <div class="menu-list" id="main-menu"></div>
-
-
         <div class="home-footer"><div class="gear-link" onclick="showGearScreen()"><span>⚙️</span><span id="l-gear-link" class="gear-text"></span></div></div>
     </div>
-
     <div id="scoring" class="screen">
         <header>
     <div style="display: flex; align-items: center; gap: 12px;">
         <button onclick="exitScoring()" style="background:none; border:none; color:var(--gray); font-size:22px;">←</button>
         <button onclick="manualSave()" style="background:none; border:none; color:var(--green); font-size:20px;">💾</button>
     </div>
-
     <div class="header-center">
         <div id="mode-display" style="color:#fff; font-weight:800; text-transform:uppercase; font-size:11px;"></div>
         <div id="t-text" class="timer-text"></div>
     </div>
-
     <div class="header-right">
         <button id="timer-btn" onclick="toggleTimer()" style="background:none; border:none; color:var(--gray); font-size:20px;">⏰</button>
         <div style="display:flex; flex-direction:column;"><span id="l-avg" class="stat-label"></span><span id="avg-score" class="stat-val">0.0</span></div>
         <div style="display:flex; flex-direction:column;"><span id="l-total" class="stat-label"></span><span id="total-score" class="stat-val" style="color:var(--accent);">0</span></div>
     </div>
 </header>
-
         <div id="archer-tabs" class="archer-tabs"></div>
         <div class="timer-container" id="t-cont"><div class="timer-bar" id="t-bar"></div></div>
         <div id="score-list"></div>
-
         <div style="padding-bottom:30px; border-top: 1px solid #222; background: var(--bg);">
             <div class="control-row">
                 <button id="back-btn" class="back-btn" onclick="undoLastMarker()">⌫</button>
@@ -154,17 +144,14 @@
             <div id="button-grid" class="btn-grid"></div>
         </div>
     </div>
-
     <div id="history-screen" class="screen">
         <header><button onclick="showScreen('home')" style="background:none; border:none; color:var(--gray); font-size:22px;">←</button><div class="header-center"><div id="history-title" class="stat-label" style="color:#fff;"></div></div><button id="l-clear" onclick="clearHistory()" style="background:none; border:none; color:var(--gray); font-size:10px; font-weight:bold;"></button></header>
         <div id="history-list"></div>
     </div>
-
     <div id="detail-screen" class="screen">
         <header><button onclick="showScreen('history-screen')" style="background:none; border:none; color:var(--gray); font-size:22px;">←</button><div class="header-center"><div id="detail-title" class="stat-label" style="color:#fff;"></div></div><div style="width:30px;"></div></header>
         <div id="detail-list"></div>
     </div>
-
     <div id="gear-screen" class="screen">
         <header><button onclick="showScreen('home')" style="background:none; border:none; color:var(--gray); font-size:22px;">←</button><div class="header-center"><div id="l-setup-title" class="stat-label" style="color:#fff;"></div></div><button id="l-save" onclick="saveGear()" style="background:none; border:none; color:var(--accent); font-weight:bold;"></button></header>
         <div id="gear-list" style="padding-bottom: 40px;">
@@ -184,23 +171,19 @@
         </div>
     </div>
 </div>
-
 <script>
     const i18n = {
         en: { tagline: "ARCHERY TRACKER", gear: "Gear / Setup", avg: "AVG", total: "TOTAL", clear: "CLEAR", setup: "MY SETUP", save: "SAVE", next: "NEXT END", update: "UPDATE END", finish: "FINISH SESSION", exit: "Exit?", delSess: "Delete this session?", wipe: "Wipe all history?", riser: "Riser Details", riserMake: "Riser Make", riserLen: "Riser Length", limbs: "Limb Details", limbMake: "Limb Make", limbLen: "Limb Length", limbWeight: "Limb Weight", arrows: "Arrow Details", arrMake: "Arrow Make", arrSpine: "Arrow Spine", arrLen: "Arrow Length", point: "Point Weight", nock: "Nock Details", vanes: "Vanes Details", crawls: "Barebow Crawls", history: "HISTORY", detail: "SESSION DETAIL", arrowsS: "ARROWS", prep: "PREP", stamina: "Stamina Trend", hits: "Hits Breakdown", heatmap: "SESSION HEAT MAP", modes: ["3D PRACTICE", "FIELD PRACTICE", "TARGET INDOOR", "TARGET OUTDOOR"], nextArcher: "Next Archer", nextEnd: "Next End", },
         he: { tagline: "מעקב קליעה בקשת", gear: "ציוד / הגדרות", avg: "ממוצע", total: "סה״כ", clear: "נקה", setup: "הציוד שלי", save: "שמור", next: "סבב הבא", update: "עדכן סבב", finish: "סיים אימון", exit: "לצאת מהאימון?", delSess: "למחוק אימון זה?", wipe: "למחוק את כל ההיסטוריה?", riser: "רייזר", riserMake: "יצרן רייזר", riserLen: "אורך רייזר", limbs: "כנפיים", limbMake: "יצרן כנפיים", limbLen: "אורך כנפיים", limbWeight: "כח כנפיים", arrows: "פרטי חצים", arrMake: "יצרן חץ", arrSpine: "ספיין חץ", arrLen: "אורך חץ", point: "משקל פוינט", nock: "פרטי נוק", vanes: "פרטי כנפונים", crawls: "Crawls", history: "היסטוריה", detail: "פירוט אימון", arrowsS: "חצים", prep: "הכנה", stamina: "מגמת עייפות", hits: "פירוט פגיעות", heatmap: "מפת פגיעות", modes: ["3D", "פילד", "טארגט אולם", "טארגט חוץ"], nextArcher: "קשת הבא", nextEnd: "מקצה הבא", }
     };
-
     let state = { current: [], history: [], arrows: 2, ends: 24, mode: '', editingIndex: -1, lang: 'en', scoringType: 'pad', markers: [], participants: [], activeArcherIdx: 0 };
     let timer = { interval: null, timeLeft: 0, totalTime: 0, active: false, phase: 'READY', startTime: null };
     let targetSelectionState = { mode: '', arrows: 0, ends: 0 };
     let wakeLock = null;
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-
     function backupActiveSession() {
         localStorage.setItem('active_session_backup', JSON.stringify(state));
     }
-
     function setParticipantCount(num, btn) {
         document.querySelectorAll('.p-count-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
@@ -213,7 +196,6 @@
             container.innerHTML += `<input type="text" id="archer-name-${i}" class="gear-input participant-name-input" style="text-align:center" placeholder="Archer ${i+1}" value="${nameToUse}">`;
         }
     }
-
     function confirmParticipants() {
         const inputs = document.querySelectorAll('.participant-name-input');
         state.participants = Array.from(inputs).map((input, idx) => ({
@@ -230,7 +212,6 @@
         }
         backupActiveSession();
     }
-
     function switchArcher(idx) {
         if (state.current.length === state.arrows) {
             const newEnd = { rawScores: [...state.current], displayScores: [...state.current].map(s => s === 0 ? 'M' : s), total: state.current.reduce((a, b) => a + getVal(b), 0), markers: [...state.markers] };
@@ -252,13 +233,11 @@
         renderUI();
         backupActiveSession();
     }
-
     function renderTabs() {
         const container = document.getElementById('archer-tabs');
         if (state.participants.length <= 1) { container.innerHTML = ''; return; }
         container.innerHTML = state.participants.map((p, i) => `<div class="archer-tab ${i === state.activeArcherIdx ? 'active' : ''}" onclick="switchArcher(${i})">${p.name}</div>`).join('');
     }
-
     function handleMainAction() {
         if(state.current.length === state.arrows) {
             const newEnd = { rawScores: [...state.current], displayScores: [...state.current].map(s => s === 0 ? 'M' : s), total: state.current.reduce((a, b) => a + getVal(b), 0), markers: [...state.markers] };
@@ -299,7 +278,6 @@
             }
         }
     }
-
     function toggleLang(lang) {
         state.lang = lang; const t = i18n[lang];
         const ids = ['l-tagline', 'l-gear-link', 'l-avg', 'l-total', 'l-clear', 'l-setup-title', 'l-save', 'l-riser-title', 'l-r-make', 'l-r-len', 'l-limb-title', 'l-l-make', 'l-l-len', 'l-l-weight', 'l-arrow-title', 'l-a-make', 'l-a-spine', 'l-a-len', 'l-a-point', 'l-a-nock', 'l-a-vanes', 'l-crawl-title'];
@@ -307,16 +285,13 @@
         ids.forEach((id, i) => { if(document.getElementById(id)) document.getElementById(id).innerText = t[keys[i]]; });
         renderMainMenu(); localStorage.setItem('archer_lang', lang);
     }
-
     function renderMainMenu() {
         const menu = document.getElementById('main-menu'); menu.innerHTML = '';
         const mNames = i18n[state.lang].modes, rawNames = i18n.en.modes, configs = [[2, 24], [3, 24], [3, 20], [6, 12]];
         rawNames.forEach((name, i) => { menu.insertAdjacentHTML('beforeend', `<div class="menu-row"><button class="menu-btn" onclick="startApp('${name}', ${configs[i][0]}, ${configs[i][1]})">${mNames[i]}</button><button class="history-btn" onclick="showHistory('${name}')">📜</button></div>`); });
     }
-
     async function requestWakeLock() { try { if ('wakeLock' in navigator) wakeLock = await navigator.wakeLock.request('screen'); } catch (err) {} }
     function releaseWakeLock() { if (wakeLock !== null) { wakeLock.release().then(() => wakeLock = null); } }
-
     function playBip(count) {
         if (!state.mode.includes('TARGET')) return;
         for(let i=0; i<count; i++) {
@@ -328,7 +303,6 @@
             }, i * 700); 
         }
     }
-
     function toggleTimer() { if (timer.active) { stopTimer(); return; } requestWakeLock(); if (state.mode.includes('TARGET')) startPrep(); else startDirect(); }
     function startPrep() { timer.active = true; timer.phase = 'PREP'; timer.totalTime = 10; timer.timeLeft = 10; timer.startTime = Date.now(); playBip(2); showTimerUI(); runTimer(); }
     function startDirect() { timer.active = true; timer.phase = 'SHOOT'; timer.totalTime = state.mode.includes('3D') ? 120 : 180; timer.timeLeft = timer.totalTime; timer.startTime = Date.now(); showTimerUI(); runTimer(); }
@@ -346,7 +320,6 @@
             updateTimerDisplay();
         }, 200);
     }
-
     function stopTimer() { clearInterval(timer.interval); timer.active = false; timer.phase = 'READY'; releaseWakeLock(); document.getElementById('t-cont').style.display = 'none'; document.getElementById('t-text').innerText = ''; document.getElementById('timer-btn').style.color = 'var(--gray)'; }
     function showTimerUI() { document.getElementById('t-cont').style.display = 'block'; document.getElementById('timer-btn').style.color = 'var(--accent)'; updateTimerDisplay(); }
     function updateTimerDisplay() {
@@ -359,9 +332,7 @@
             else { bar.style.background = 'var(--green)'; txt.style.color = 'var(--green)'; }
         }
     }
-
     function showScreen(id) { document.querySelectorAll('.screen').forEach(s => s.classList.remove('active-screen')); document.getElementById(id).classList.add('active-screen'); }
-
     function startApp(mode, arrows, ends) { 
         if (audioCtx.state === 'suspended') audioCtx.resume();
         targetSelectionState = { mode, arrows, ends };
@@ -372,12 +343,10 @@
             if (owner && firstInput) firstInput.value = owner;
         }, 100); 
     }
-
     function confirmTargetMode(type) {
         document.getElementById('target-choice-modal').style.display = 'none';
         initScoring(targetSelectionState.mode, targetSelectionState.arrows, targetSelectionState.ends, type);
     }
-
     function initScoring(mode, arrows, ends, type) {
         state.history = []; state.current = []; state.markers = []; state.arrows = arrows; state.ends = ends; state.mode = mode; state.editingIndex = -1; state.scoringType = type; state.activeArcherIdx = 0;
         stopTimer(); 
@@ -387,13 +356,10 @@
         renderTabs(); renderUI(); showScreen('scoring'); 
         backupActiveSession();
     }
-
     let facePendingScore = 0, lastMarkerPos = { x: 0, y: 0 };
-
     function getTargetSvg(idPrefix, hasX) {
         return `<circle cx="50" cy="50" r="50" fill="#fff" stroke="#000" stroke-width="0.1"/><circle cx="50" cy="50" r="45" fill="#fff" stroke="#000" stroke-width="0.1"/><circle cx="50" cy="50" r="40" fill="#000" stroke="#fff" stroke-width="0.1"/><circle cx="50" cy="50" r="35" fill="#000" stroke="#fff" stroke-width="0.1"/><circle cx="50" cy="50" r="30" fill="#007AFF" stroke="#000" stroke-width="0.1"/><circle cx="50" cy="50" r="25" fill="#007AFF" stroke="#000" stroke-width="0.1"/><circle cx="50" cy="50" r="20" fill="#FF3B30" stroke="#000" stroke-width="0.1"/><circle cx="50" cy="50" r="15" fill="#FF3B30" stroke="#000" stroke-width="0.1"/><circle cx="50" cy="50" r="10" fill="#FFD700" stroke="#000" stroke-width="0.1"/><circle cx="50" cy="50" r="5" fill="#FFD700" stroke="#000" stroke-width="0.1"/>${hasX ? '<circle cx="50" cy="50" r="2.5" fill="#FFD700" stroke="#000" stroke-width="0.1"/>' : ''}<g id="${idPrefix}-markers"></g>`;
     }
-
     function renderTargetFace() {
         const grid = document.getElementById('button-grid'); grid.innerHTML = ''; grid.style.gridTemplateColumns = '1fr';
         const hasX = state.mode.includes('OUTDOOR');
@@ -416,24 +382,20 @@
         container.addEventListener('touchmove', (e) => { updatePos(e); e.preventDefault(); }, {passive: false});
         container.addEventListener('touchend', () => { mag.style.display = 'none'; if(state.current.length < state.arrows) { state.current.push(facePendingScore); state.markers.push({...lastMarkerPos}); updateFaceMarkers(); renderUI(); backupActiveSession(); } });
     }
-
     function updateFaceMarkers() {
         const mG = document.getElementById('main-markers'), mgG = document.getElementById('mag-markers');
         if(!mG || !mgG) return;
         const html = state.markers.map(m => `<circle cx="${m.x}" cy="${m.y}" r="0.8" fill="white" stroke="black" stroke-width="0.2" />`).join('');
         mG.innerHTML = html; mgG.innerHTML = html;
     }
-
     function undoLastMarker() { state.current.pop(); if(state.scoringType === 'face') { state.markers.pop(); updateFaceMarkers(); } renderUI(); backupActiveSession(); }
     function exitScoring() { if(confirm(i18n[state.lang].exit)) { stopTimer(); showScreen('home'); } }
-
     function getArrowColor(s) {
         if (state.mode.includes('TARGET')) { if (s === 'X' || s >= 9) return '#FFD700'; if (s >= 7) return '#FF3B30'; if (s >= 5) return '#007AFF'; if (s >= 3) return '#333'; if (s >= 1) return '#FFF'; }
         else if (state.mode.includes('3D')) { if (s === 11) return '#FFD700'; if (s === 10) return '#FFF176'; if (s === 8) return '#FF3B30'; if (s === 5) return '#007AFF'; }
         else if (state.mode.includes('FIELD')) { if (s >= 5) return '#FFD700'; if (s >= 1) return '#333'; }
         return '#34C759';
     }
-
     function renderButtons() {
         const grid = document.getElementById('button-grid'); grid.innerHTML = '';
         let scores = state.mode.includes('3D') ? [11, 10, 8, 5, 0] : state.mode.includes('TARGET INDOOR') ? [10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0] : state.mode.includes('TARGET') ? ['X', 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0] : [6,5,4,3,2,1,0];
@@ -446,10 +408,8 @@
             grid.appendChild(b);
         });
     }
-
     function getVal(s) { return s === 'X' ? 10 : (parseInt(s) || 0); }
     function editEnd(index) { state.editingIndex = index; state.current = [...state.history[index].rawScores]; state.markers = [...(state.history[index].markers || [])]; renderUI(); if(state.scoringType === 'face') renderTargetFace(); else renderButtons(); }
-
     function renderUI() {
         const t = i18n[state.lang], histTot = state.history.reduce((acc, end, idx) => acc + (idx === state.editingIndex ? 0 : end.total), 0), curTot = state.current.reduce((a, b) => a + getVal(b), 0), grandTot = histTot + curTot;
         document.getElementById('total-score').innerText = grandTot;
@@ -457,20 +417,28 @@
         const modeIdx = i18n.en.modes.indexOf(state.mode);
         if(document.getElementById('mode-display')) document.getElementById('mode-display').innerText = `${i18n[state.lang].modes[modeIdx]} (${state.history.length}/${state.ends})`;
         const list = document.getElementById('score-list'); list.innerHTML = '';
+
+        // ── END CARDS with running total ──
+        let runningTotal = 0;
         state.history.forEach((end, i) => {
             const active = state.editingIndex === i;
-            list.insertAdjacentHTML('beforeend', `<div class="end-card ${active ? '' : 'clickable-end'}" ${active ? 'style="border:1px solid var(--accent); background:#1a1500;"' : `onclick="editEnd(${i})"`}><div><div class="stat-label">END ${i+1}${active ? ' (EDIT)' : ''}</div><b>${active ? (state.current.map(s => s === 0 ? 'M' : s).join(' · ') || '---') : end.displayScores.join(' · ')}</b></div><div style="color:var(--accent); font-weight:900; font-size:20px;">${active ? curTot : end.total}</div></div>`);
+            if (!active) runningTotal += end.total;
+            const endDisplay = active ? curTot : end.total;
+            const runDisplay = active ? (runningTotal + curTot) : runningTotal;
+            list.insertAdjacentHTML('beforeend', `<div class="end-card ${active ? '' : 'clickable-end'}" ${active ? 'style="border:1px solid var(--accent); background:#1a1500;"' : `onclick="editEnd(${i})"`}><div class="stat-label">END ${i+1}${active ? ' (EDIT)' : ''}</div><div style="display:flex; align-items:center; gap:10px; flex:1; justify-content:space-between;"><b>${active ? (state.current.map(s => s === 0 ? 'M' : s).join(' · ') || '---') : end.displayScores.join(' · ')}</b><div style="display:flex; gap:10px; align-items:center; flex-shrink:0;"><span style="color:var(--accent); font-weight:900; font-size:20px;">${endDisplay}</span><span style="color:var(--green); font-weight:900; font-size:20px;">${runDisplay}</span></div></div></div>`);
         });
+
         if (state.editingIndex === -1 && state.history.length < state.ends) {
             const actDisp = state.current.map(s => s === 0 ? 'M' : s).join(' · ') || '---';
-            list.insertAdjacentHTML('beforeend', `<div class="end-card" style="border:1px solid var(--accent); background: #1a1500;"><div><div class="stat-label">END ${state.history.length + 1}</div><b>${actDisp}</b></div><div style="color:var(--accent); font-weight:900; font-size:20px;">${curTot}</div></div>`);
+            const curRunning = runningTotal + curTot;
+            list.insertAdjacentHTML('beforeend', `<div class="end-card" style="border:1px solid var(--accent); background: #1a1500;"><div class="stat-label">END ${state.history.length + 1}</div><div style="display:flex; align-items:center; gap:10px; flex:1; justify-content:space-between;"><b>${actDisp}</b><div style="display:flex; gap:10px; align-items:center; flex-shrink:0;"><span style="color:var(--accent); font-weight:900; font-size:20px;">${curTot}</span><span style="color:var(--green); font-weight:900; font-size:20px;">${curRunning}</span></div></div></div>`);
         }
+
         const btn = document.getElementById('next-btn'); btn.disabled = state.current.length < state.arrows;
         if (state.editingIndex !== -1) btn.innerText = t.update; else if (state.history.length === state.ends - 1 && state.activeArcherIdx === state.participants.length - 1) btn.innerText = t.finish; else btn.innerText = (state.activeArcherIdx === state.participants.length - 1) ? t.nextEnd : t.nextArcher;
         btn.style.background = state.editingIndex !== -1 ? "#fff" : "var(--accent)";
         list.scrollTop = list.scrollHeight;
     }
-
     function manualSave() {
         const msg = state.lang === 'he' ? "לשמור גיבוי?" : "Save a backup?";
         if (!confirm(msg)) return;
@@ -481,7 +449,6 @@
         localStorage.setItem(state.mode, JSON.stringify(allHist));
         alert(state.lang === 'he' ? "נשמר ✓" : "Saved ✓");
     }
-
     function saveSession() {
         const sessionData = state.participants.map(p => ({ archer: p.name, score: p.history.reduce((a, b) => a + b.total, 0), avg: (p.history.reduce((a, b) => a + b.total, 0) / (p.history.length * state.arrows)).toFixed(1), ends: [...p.history] }));
         const mainSession = { id: Date.now() + Math.random(), date: new Date().toLocaleDateString('en-GB'), archers: sessionData, arrowsPerEnd: state.arrows, totalEndsPlanned: state.ends, scoringType: state.scoringType };
@@ -489,7 +456,6 @@
         localStorage.removeItem('active_session_backup');
         showScreen('home');
     }
-
     function showHistory(mode) {
         state.mode = mode; showScreen('history-screen');
         document.getElementById('history-title').innerText = i18n[state.lang].modes[i18n.en.modes.indexOf(mode)] + " " + i18n[state.lang].history;
@@ -508,7 +474,6 @@
             list.appendChild(row);
         });
     }
-
     function resetCards() { document.querySelectorAll('.history-card').forEach(c => c.style.transform = 'translateX(0)'); }
     function deleteSession(id) { if(confirm(i18n[state.lang].delSess)) { let data = JSON.parse(localStorage.getItem(state.mode) || "[]"); data = data.filter(s => s.id !== id); localStorage.setItem(state.mode, JSON.stringify(data)); showHistory(state.mode); } else resetCards(); }
     
@@ -536,7 +501,6 @@
         };
         renderArcherDetail(0);
     }
-
     function showGearScreen() {
         const g = JSON.parse(localStorage.getItem('archer_gear') || "{}");
         document.getElementById('g-owner-name').value = g.ownerName || ""; document.getElementById('lang-select').value = state.lang;
@@ -544,15 +508,12 @@
         for(let d=5; d<=50; d+=5) { if(document.getElementById(`c-${d}`)) document.getElementById(`c-${d}`).value = (g.crawls && g.crawls[d]) ? g.crawls[d] : ""; }
         showScreen('gear-screen');
     }
-
     function saveGear() {
         const crawls = {}; for(let d=5; d<=50; d+=5) { const el = document.getElementById(`c-${d}`); if(el) crawls[d] = el.value; }
         const gear = { ownerName: document.getElementById('g-owner-name')?.value || "", r_make: document.getElementById('g-r-make')?.value || "", r_len: document.getElementById('g-r-len')?.value || "", l_make: document.getElementById('g-l-make')?.value || "", l_len: document.getElementById('g-l-len')?.value || "", l_weight: document.getElementById('g-l-weight')?.value || "", a_make: document.getElementById('g-a-make')?.value || "", a_spine: document.getElementById('g-a-spine')?.value || "", a_len: document.getElementById('g-a-len')?.value || "", a_point: document.getElementById('g-a-point')?.value || "", a_nock: document.getElementById('g-a-nock')?.value || "", a_vanes: document.getElementById('g-a-vanes')?.value || "", crawls: crawls };
         localStorage.setItem('archer_gear', JSON.stringify(gear)); state.gear = gear; showScreen('home');
     }
-
     function clearHistory() { if(confirm(i18n[state.lang].wipe)) { localStorage.removeItem(state.mode); showHistory(state.mode); } }
-
     window.onload = () => { 
         toggleLang(localStorage.getItem('archer_lang') || 'en'); 
         state.gear = JSON.parse(localStorage.getItem('archer_gear') || '{"ownerName":""}');
