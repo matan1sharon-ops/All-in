@@ -53,6 +53,26 @@
         .back-btn { background: #444; color: #fff; width: 75px; padding: 18px; border-radius: 12px; font-size: 20px; font-weight: 900; border: none; flex-shrink: 0; }
         .btn-grid { display: grid; gap: 8px; margin-top: 10px; }
         .score-btn { height: 60px; border-radius: 12px; border: 1px solid #333; font-size: 22px; font-weight: 900; color: #fff; background: #222; }
+        @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;900&display=swap');
+        .archer-tab-target { flex: 1; padding: 12px 8px; border-radius: 8px; font-size: 14px; font-family: 'Barlow Condensed', sans-serif; font-weight: 900; letter-spacing: 0.5px; }
+        .archer-tab.active.archer-tab-target { background: #1e88e5; color: #fff; border-color: #1e88e5; }
+        #score-list.score-list-table { display: block; padding: 0; background: #fff; color: #111; }
+        .sc-half-header { display: grid; grid-template-columns: 1fr 36px 36px; background: #444; color: #fff; font-family: 'Barlow Condensed', sans-serif; font-size: 10px; font-weight: 700; letter-spacing: 0.5px; text-align: center; padding: 3px 0; }
+        .sc-half-header .sc-half-title { text-align: left; padding-left: 10px; }
+        .sc-table { width: 100%; border-collapse: collapse; table-layout: fixed; font-size: 13px; border: 1.5px solid #999; margin-bottom: 0; }
+        .sc-table td { border: 1px solid #ccc; text-align: center; height: 30px; padding: 0; font-family: 'Barlow Condensed', sans-serif; font-size: 14px; font-weight: 600; }
+        .sc-end-label { background: #f0f0f0; font-weight: 700; font-size: 10px; color: #333; border-right: 1.5px solid #999; width: 42px; }
+        .sc-sum-box { background: #f5f5f5; border-left: 1px solid #bbb; color: #555; font-size: 12px; width: 32px; }
+        .sc-end-total { background: #1b5e2033; font-weight: 700; border-left: 1.5px solid #999; color: var(--green); width: 36px; font-size: 18px; }
+        .sc-running { background: #3e2000; font-weight: 700; color: var(--accent); border-left: 1.5px solid #999; border-right: 1.5px solid #999; font-size: 14px; width: 42px; }
+        .sc-stat { font-size: 11px; color: #555; background: #fafafa; width: 28px; }
+        .sc-no-entry { background-image: repeating-linear-gradient(135deg, transparent, transparent 4px, #e0e0e0 4px, #e0e0e0 5px); width: 36px; }
+        .sc-gold { background-color: #fff9c4 !important; color: #5d4037 !important; font-weight: 700; }
+        .sc-active { background-color: #fff3e0 !important; outline: 2.5px solid #FF9800; outline-offset: -2px; position: relative; z-index: 10; }
+        .sc-editing { background-color: #e3f2fd !important; outline: 2.5px solid #2196f3; outline-offset: -2px; position: relative; z-index: 11; }
+        .sc-end-sep td { border-bottom: 1.5px solid #999 !important; }
+        .sc-half-total { background: #37474f !important; color: #fff !important; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 13px; height: 28px; }
+        .sc-half-total td { border-color: #546e7a; color: #fff; }
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 100; align-items: center; justify-content: center; flex-direction: column; gap: 20px; padding: 20px; padding-top: calc(env(safe-area-inset-top) + 20px); }
         .p-count-row { display: flex; gap: 10px; margin-bottom: 10px; width: 100%; }
         .p-count-btn { flex: 1; background: #222; border: 1px solid #444; color: #fff; padding: 15px; border-radius: 10px; font-weight: 900; }
@@ -129,6 +149,8 @@
     </div>
     <div class="header-right">
         <button id="timer-btn" onclick="toggleTimer()" style="background:none; border:none; color:var(--gray); font-size:20px;">⏰</button>
+        <div style="display:none; flex-direction:column;" id="x-stat-wrap"><span class="stat-label">X</span><span id="x-score" class="stat-val" style="color:var(--accent);">0</span></div>
+        <div style="display:none; flex-direction:column;" id="ten-stat-wrap"><span class="stat-label">10</span><span id="ten-score" class="stat-val" style="color:var(--accent);">0</span></div>
         <div style="display:flex; flex-direction:column;"><span id="l-avg" class="stat-label"></span><span id="avg-score" class="stat-val">0.0</span></div>
         <div style="display:flex; flex-direction:column;"><span id="l-total" class="stat-label"></span><span id="total-score" class="stat-val" style="color:var(--accent);">0</span></div>
     </div>
@@ -235,8 +257,10 @@
     }
     function renderTabs() {
         const container = document.getElementById('archer-tabs');
-        if (state.participants.length <= 1) { container.innerHTML = ''; return; }
-        container.innerHTML = state.participants.map((p, i) => `<div class="archer-tab ${i === state.activeArcherIdx ? 'active' : ''}" onclick="switchArcher(${i})">${p.name}</div>`).join('');
+        const isTargetTable = (state.mode === 'TARGET OUTDOOR' || state.mode === 'TARGET INDOOR') && state.scoringType === 'pad';
+        if (state.participants.length <= 1 && !isTargetTable) { container.innerHTML = ''; return; }
+        const slots = ['A', 'B', 'C', 'D'];
+        container.innerHTML = state.participants.map((p, i) => `<div class="archer-tab ${i === state.activeArcherIdx ? 'active' : ''} ${isTargetTable ? 'archer-tab-target' : ''}" onclick="switchArcher(${i})">${isTargetTable ? slots[i] + ' · ' + p.name : p.name}</div>`).join('');
     }
     function handleMainAction() {
         if(state.current.length === state.arrows) {
@@ -396,19 +420,134 @@
         else if (state.mode.includes('FIELD')) { if (s >= 5) return '#FFD700'; if (s >= 1) return '#333'; }
         return '#34C759';
     }
+    function getTargetPadColors(s) {
+        if (s === 'X' || s === 10 || s === 9) return { bg: '#FFD700', color: '#3e2000', border: 'none' };
+        if (s === 8 || s === 7) return { bg: '#e53935', color: '#fff', border: 'none' };
+        if (s === 6 || s === 5) return { bg: '#1e88e5', color: '#fff', border: 'none' };
+        if (s === 4 || s === 3) return { bg: '#2d2d2d', color: '#fff', border: '1px solid #555' };
+        if (s === 2 || s === 1) return { bg: '#f5f5f5', color: '#111', border: '1px solid #ccc' };
+        return { bg: '#757575', color: '#fff', border: 'none' };
+    }
     function renderButtons() {
         const grid = document.getElementById('button-grid'); grid.innerHTML = '';
         let scores = state.mode.includes('3D') ? [11, 10, 8, 5, 0] : state.mode.includes('TARGET INDOOR') ? [10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0] : state.mode.includes('TARGET') ? ['X', 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0] : [6,5,4,3,2,1,0];
         grid.style.gridTemplateColumns = scores.length > 5 ? 'repeat(4, 1fr)' : 'repeat(3, 1fr)';
+        const isTarget = state.mode.includes('TARGET');
         scores.forEach(s => {
-            const b = document.createElement('button'); b.className = 'score-btn'; 
-            const color = getArrowColor(s === 'X' ? 10 : s);
-            Object.assign(b.style, { backgroundColor: color, color: (color === '#FFF' || color === '#FFD700' || color === '#FFF176') ? '#000' : '#fff' });
+            const b = document.createElement('button'); b.className = 'score-btn';
+            if (isTarget) {
+                const p = getTargetPadColors(s);
+                Object.assign(b.style, { backgroundColor: p.bg, color: p.color, border: p.border });
+            } else {
+                const color = getArrowColor(s === 'X' ? 10 : s);
+                Object.assign(b.style, { backgroundColor: color, color: (color === '#FFF' || color === '#FFD700' || color === '#FFF176') ? '#000' : '#fff' });
+            }
             b.innerText = s === 0 ? 'M' : s; b.onclick = () => { if(state.current.length < state.arrows) { state.current.push(s); renderUI(); backupActiveSession(); } };
             grid.appendChild(b);
         });
     }
     function getVal(s) { return s === 'X' ? 10 : (parseInt(s) || 0); }
+    function buildEndsArray() {
+        const arr = [];
+        for (let i = 0; i < state.ends; i++) {
+            if (state.editingIndex === i) arr.push(state.current);
+            else if (i < state.history.length) arr.push(state.history[i].rawScores);
+            else if (i === state.history.length && state.editingIndex === -1) arr.push(state.current);
+            else arr.push([]);
+        }
+        return arr;
+    }
+    function scCellHtml(val, isActive, isEditing, endIdx, canEdit) {
+        const classes = [];
+        if (val === 'X' || val === 10 || val === 9) classes.push('sc-gold');
+        if (isEditing) classes.push('sc-editing'); else if (isActive) classes.push('sc-active');
+        let display;
+        if (val === 0) display = 'M';
+        else if (val === undefined || val === '') display = '';
+        else display = val;
+        const onclick = canEdit ? ` onclick="editEnd(${endIdx})"` : '';
+        return `<td class="${classes.join(' ')}"${onclick}>${display}</td>`;
+    }
+    function renderTrgOutdoor(ends, startEnd, endEnd, bodyId, curEnd) {
+        let html = '', running = 0, tens = 0, xs = 0;
+        for (let e = startEnd; e < endEnd; e++) {
+            const ea = ends[e] || [];
+            const isCompleted = e < state.history.length;
+            const isActive = e === curEnd && state.editingIndex === -1;
+            const isEditing = state.editingIndex === e;
+            const v = ea.map(x => getVal(x));
+            const s1 = (ea.length >= 3) ? v[0] + v[1] + v[2] : '';
+            const s2 = (ea.length >= 6) ? v[3] + v[4] + v[5] : '';
+            const et = s2 !== '' ? (Number(s1) || 0) + s2 : '';
+            if (et !== '') running += et;
+            const c10 = ea.filter(x => x === 10 || x === 'X').length, cx = ea.filter(x => x === 'X').length;
+            if (ea.length > 0) { tens += c10; xs += cx; }
+            const ra = (isActive || isEditing) && ea.length < 3;
+            const r2 = (isActive || isEditing) && ea.length >= 3 && ea.length < 6;
+            const labelOnclick = isCompleted ? ` onclick="editEnd(${e})"` : '';
+            html += `<tr><td rowspan="2" class="sc-end-label"${labelOnclick}>End ${e + 1}${isActive ? ' ▶' : isEditing ? ' ✏' : ''}</td>`
+                + scCellHtml(ea[0], ra && ea.length === 0, isEditing && ea.length === 0, e, isCompleted)
+                + scCellHtml(ea[1], ra && ea.length === 1, isEditing && ea.length === 1, e, isCompleted)
+                + scCellHtml(ea[2], ra && ea.length === 2, isEditing && ea.length === 2, e, isCompleted)
+                + `<td class="sc-sum-box">${s1}</td><td class="sc-no-entry"></td>`
+                + `<td rowspan="2" class="sc-running">${et !== '' ? running : ''}</td>`
+                + `<td class="sc-stat">${ea.length > 0 ? c10 : ''}</td><td class="sc-stat">${ea.length > 0 ? cx : ''}</td></tr>`
+                + `<tr class="sc-end-sep">`
+                + scCellHtml(ea[3], r2 && ea.length === 3, isEditing && ea.length === 3, e, isCompleted)
+                + scCellHtml(ea[4], r2 && ea.length === 4, isEditing && ea.length === 4, e, isCompleted)
+                + scCellHtml(ea[5], r2 && ea.length === 5, isEditing && ea.length === 5, e, isCompleted)
+                + `<td class="sc-sum-box">${s2}</td><td class="sc-end-total">${et}</td><td class="sc-stat"></td><td class="sc-stat"></td></tr>`;
+        }
+        html += `<tr class="sc-half-total"><td colspan="5">HALF TOTAL</td><td>${running}</td><td></td><td>${tens}</td><td>${xs}</td></tr>`;
+        document.getElementById(bodyId).innerHTML = html;
+    }
+    function renderTrgIndoor(ends, startEnd, endEnd, bodyId, curEnd) {
+        let html = '', running = 0, tens = 0, nines = 0;
+        for (let e = startEnd; e < endEnd; e++) {
+            const ea = ends[e] || [];
+            const isCompleted = e < state.history.length;
+            const isActive = e === curEnd && state.editingIndex === -1;
+            const isEditing = state.editingIndex === e;
+            const v = ea.map(x => getVal(x));
+            const et = (ea.length >= 3) ? v[0] + v[1] + v[2] : '';
+            if (et !== '') running += et;
+            const c10 = ea.filter(x => x === 10 || x === 'X').length, c9 = ea.filter(x => x === 9).length;
+            if (ea.length > 0) { tens += c10; nines += c9; }
+            const labelOnclick = isCompleted ? ` onclick="editEnd(${e})"` : '';
+            html += `<tr class="sc-end-sep"><td class="sc-end-label"${labelOnclick}>End ${e + 1}${isActive ? ' ▶' : isEditing ? ' ✏' : ''}</td>`
+                + scCellHtml(ea[0], isActive && ea.length === 0, isEditing && ea.length === 0, e, isCompleted)
+                + scCellHtml(ea[1], isActive && ea.length === 1, isEditing && ea.length === 1, e, isCompleted)
+                + scCellHtml(ea[2], isActive && ea.length === 2, isEditing && ea.length === 2, e, isCompleted)
+                + `<td class="sc-end-total">${et}</td><td class="sc-running">${et !== '' ? running : ''}</td>`
+                + `<td class="sc-stat">${ea.length > 0 ? c10 : ''}</td><td class="sc-stat">${ea.length > 0 ? c9 : ''}</td></tr>`;
+        }
+        html += `<tr class="sc-half-total"><td colspan="4">HALF TOTAL</td><td>${running}</td><td></td><td>${tens}</td><td>${nines}</td></tr>`;
+        document.getElementById(bodyId).innerHTML = html;
+    }
+    function renderScoreListTable() {
+        const list = document.getElementById('score-list');
+        list.classList.add('score-list-table');
+        const ends = buildEndsArray();
+        const curEnd = state.editingIndex !== -1 ? state.editingIndex : state.history.length;
+        if (state.mode === 'TARGET OUTDOOR') {
+            list.innerHTML = `<div class="sc-half-header"><div class="sc-half-title">1st HALF (Ends 1–6)</div><div>10+X</div><div>X</div></div>`
+                + `<table class="sc-table"><colgroup><col style="width:42px"><col><col><col><col style="width:32px"><col style="width:36px"><col style="width:42px"><col style="width:28px"><col style="width:28px"></colgroup><tbody id="trg-body-1"></tbody></table>`
+                + `<div class="sc-half-header" style="margin-top:6px;"><div class="sc-half-title">2nd HALF (Ends 7–12)</div><div>10+X</div><div>X</div></div>`
+                + `<table class="sc-table"><colgroup><col style="width:42px"><col><col><col><col style="width:32px"><col style="width:36px"><col style="width:42px"><col style="width:28px"><col style="width:28px"></colgroup><tbody id="trg-body-2"></tbody></table>`
+                + `<div style="height:10px;"></div>`;
+            renderTrgOutdoor(ends, 0, 6, 'trg-body-1', curEnd);
+            renderTrgOutdoor(ends, 6, 12, 'trg-body-2', curEnd);
+        } else {
+            list.innerHTML = `<div class="sc-half-header"><div class="sc-half-title">1st HALF (Ends 1–10)</div><div>10</div><div>9</div></div>`
+                + `<table class="sc-table"><colgroup><col style="width:42px"><col><col><col><col style="width:36px"><col style="width:42px"><col style="width:28px"><col style="width:28px"></colgroup><tbody id="trg-body-1"></tbody></table>`
+                + `<div class="sc-half-header" style="margin-top:6px;"><div class="sc-half-title">2nd HALF (Ends 11–20)</div><div>10</div><div>9</div></div>`
+                + `<table class="sc-table"><colgroup><col style="width:42px"><col><col><col><col style="width:36px"><col style="width:42px"><col style="width:28px"><col style="width:28px"></colgroup><tbody id="trg-body-2"></tbody></table>`
+                + `<div style="height:10px;"></div>`;
+            renderTrgIndoor(ends, 0, 10, 'trg-body-1', curEnd);
+            renderTrgIndoor(ends, 10, 20, 'trg-body-2', curEnd);
+        }
+        setTimeout(() => { const a = list.querySelector('.sc-active,.sc-editing'); if (a) a.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 50);
+    }
     function editEnd(index) { state.editingIndex = index; state.current = [...state.history[index].rawScores]; state.markers = [...(state.history[index].markers || [])]; renderUI(); if(state.scoringType === 'face') renderTargetFace(); else renderButtons(); }
     function renderUI() {
         const t = i18n[state.lang], histTot = state.history.reduce((acc, end, idx) => acc + (idx === state.editingIndex ? 0 : end.total), 0), curTot = state.current.reduce((a, b) => a + getVal(b), 0), grandTot = histTot + curTot;
@@ -416,28 +555,49 @@
         document.getElementById('avg-score').innerText = (grandTot / ((state.history.length * state.arrows) + (state.editingIndex === -1 ? state.current.length : 0) || 1)).toFixed(1);
         const modeIdx = i18n.en.modes.indexOf(state.mode);
         if(document.getElementById('mode-display')) document.getElementById('mode-display').innerText = `${i18n[state.lang].modes[modeIdx]} (${state.history.length}/${state.ends})`;
-        const list = document.getElementById('score-list'); list.innerHTML = '';
+        const list = document.getElementById('score-list');
+        const isTargetTable = (state.mode === 'TARGET OUTDOOR' || state.mode === 'TARGET INDOOR') && state.scoringType === 'pad';
 
-        // ── END CARDS with running total ──
-        let runningTotal = 0;
-        state.history.forEach((end, i) => {
-            const active = state.editingIndex === i;
-            if (!active) runningTotal += end.total;
-            const endDisplay = active ? curTot : end.total;
-            const runDisplay = active ? (runningTotal + curTot) : runningTotal;
-            list.insertAdjacentHTML('beforeend', `<div class="end-card ${active ? '' : 'clickable-end'}" ${active ? 'style="border:1px solid var(--accent); background:#1a1500;"' : `onclick="editEnd(${i})"`}><div class="stat-label">END ${i+1}${active ? ' (EDIT)' : ''}</div><div style="display:flex; align-items:center; gap:10px; flex:1; justify-content:space-between;"><b>${active ? (state.current.map(s => s === 0 ? 'M' : s).join(' · ') || '---') : end.displayScores.join(' · ')}</b><div style="display:flex; gap:10px; align-items:center; flex-shrink:0;"><span style="color:var(--accent); font-weight:900; font-size:20px;">${endDisplay}</span><span style="color:var(--green); font-weight:900; font-size:20px;">${runDisplay}</span></div></div></div>`);
-        });
+        if (document.getElementById('x-stat-wrap')) {
+            if (isTargetTable) {
+                const allArrows = [...state.history.flatMap(e => e.rawScores), ...(state.editingIndex === -1 ? state.current : [])];
+                document.getElementById('x-score').innerText = allArrows.filter(v => v === 'X').length;
+                document.getElementById('ten-score').innerText = allArrows.filter(v => v === 10).length;
+                document.getElementById('x-stat-wrap').style.display = 'flex';
+                document.getElementById('ten-stat-wrap').style.display = 'flex';
+            } else {
+                document.getElementById('x-stat-wrap').style.display = 'none';
+                document.getElementById('ten-stat-wrap').style.display = 'none';
+            }
+        }
 
-        if (state.editingIndex === -1 && state.history.length < state.ends) {
-            const actDisp = state.current.map(s => s === 0 ? 'M' : s).join(' · ') || '---';
-            const curRunning = runningTotal + curTot;
-            list.insertAdjacentHTML('beforeend', `<div class="end-card" style="border:1px solid var(--accent); background: #1a1500;"><div class="stat-label">END ${state.history.length + 1}</div><div style="display:flex; align-items:center; gap:10px; flex:1; justify-content:space-between;"><b>${actDisp}</b><div style="display:flex; gap:10px; align-items:center; flex-shrink:0;"><span style="color:var(--accent); font-weight:900; font-size:20px;">${curTot}</span><span style="color:var(--green); font-weight:900; font-size:20px;">${curRunning}</span></div></div></div>`);
+        if (isTargetTable) {
+            renderScoreListTable();
+        } else {
+            list.classList.remove('score-list-table');
+            list.innerHTML = '';
+
+            // ── END CARDS with running total ──
+            let runningTotal = 0;
+            state.history.forEach((end, i) => {
+                const active = state.editingIndex === i;
+                if (!active) runningTotal += end.total;
+                const endDisplay = active ? curTot : end.total;
+                const runDisplay = active ? (runningTotal + curTot) : runningTotal;
+                list.insertAdjacentHTML('beforeend', `<div class="end-card ${active ? '' : 'clickable-end'}" ${active ? 'style="border:1px solid var(--accent); background:#1a1500;"' : `onclick="editEnd(${i})"`}><div class="stat-label">END ${i+1}${active ? ' (EDIT)' : ''}</div><div style="display:flex; align-items:center; gap:10px; flex:1; justify-content:space-between;"><b>${active ? (state.current.map(s => s === 0 ? 'M' : s).join(' · ') || '---') : end.displayScores.join(' · ')}</b><div style="display:flex; gap:10px; align-items:center; flex-shrink:0;"><span style="color:var(--accent); font-weight:900; font-size:20px;">${endDisplay}</span><span style="color:var(--green); font-weight:900; font-size:20px;">${runDisplay}</span></div></div></div>`);
+            });
+
+            if (state.editingIndex === -1 && state.history.length < state.ends) {
+                const actDisp = state.current.map(s => s === 0 ? 'M' : s).join(' · ') || '---';
+                const curRunning = runningTotal + curTot;
+                list.insertAdjacentHTML('beforeend', `<div class="end-card" style="border:1px solid var(--accent); background: #1a1500;"><div class="stat-label">END ${state.history.length + 1}</div><div style="display:flex; align-items:center; gap:10px; flex:1; justify-content:space-between;"><b>${actDisp}</b><div style="display:flex; gap:10px; align-items:center; flex-shrink:0;"><span style="color:var(--accent); font-weight:900; font-size:20px;">${curTot}</span><span style="color:var(--green); font-weight:900; font-size:20px;">${curRunning}</span></div></div></div>`);
+            }
+            list.scrollTop = list.scrollHeight;
         }
 
         const btn = document.getElementById('next-btn'); btn.disabled = state.current.length < state.arrows;
         if (state.editingIndex !== -1) btn.innerText = t.update; else if (state.history.length === state.ends - 1 && state.activeArcherIdx === state.participants.length - 1) btn.innerText = t.finish; else btn.innerText = (state.activeArcherIdx === state.participants.length - 1) ? t.nextEnd : t.nextArcher;
         btn.style.background = state.editingIndex !== -1 ? "#fff" : "var(--accent)";
-        list.scrollTop = list.scrollHeight;
     }
     function manualSave() {
         const msg = state.lang === 'he' ? "לשמור גיבוי?" : "Save a backup?";
