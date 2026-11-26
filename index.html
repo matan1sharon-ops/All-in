@@ -259,7 +259,7 @@
     }
     function renderTabs() {
         const container = document.getElementById('archer-tabs');
-        const isTargetTable = ((state.mode === 'TARGET OUTDOOR' || state.mode === 'TARGET INDOOR') && state.scoringType === 'pad') || state.mode === 'FIELD PRACTICE';
+        const isTargetTable = ((state.mode === 'TARGET OUTDOOR' || state.mode === 'TARGET INDOOR') && state.scoringType === 'pad') || state.mode === 'FIELD PRACTICE' || state.mode === '3D PRACTICE';
         if (state.participants.length <= 1 && !isTargetTable) { container.innerHTML = ''; return; }
         const slots = ['A', 'B', 'C', 'D'];
         container.innerHTML = state.participants.map((p, i) => `<div class="archer-tab ${i === state.activeArcherIdx ? 'active' : ''} ${isTargetTable ? 'archer-tab-target' : ''}" onclick="switchArcher(${i})">${isTargetTable ? slots[i] + ' · ' + p.name : p.name}</div>`).join('');
@@ -468,7 +468,7 @@
     }
     function scCellHtml(val, isActive, isEditing, endIdx, canEdit) {
         const classes = [];
-        if (state.mode === 'FIELD PRACTICE' ? (val === 6 || val === 5) : (val === 'X' || val === 10 || val === 9)) classes.push('sc-gold');
+        if (state.mode === 'FIELD PRACTICE' ? (val === 6 || val === 5) : state.mode === '3D PRACTICE' ? (val === 11 || val === 10) : (val === 'X' || val === 10 || val === 9)) classes.push('sc-gold');
         if (isEditing) classes.push('sc-editing'); else if (isActive) classes.push('sc-active');
         let display;
         if (val === 0) display = 'M';
@@ -518,20 +518,19 @@
             const isActive = !readOnly && e === curEnd && state.editingIndex === -1;
             const isEditing = !readOnly && state.editingIndex === e;
             const v = ea.map(x => getVal(x));
-            const et = (ea.length >= 3) ? v[0] + v[1] + v[2] : '';
+            const n3d = state.mode === '3D PRACTICE', nA = n3d ? 2 : 3;
+            const et = (ea.length >= nA) ? v.slice(0, nA).reduce((x, y) => x + y, 0) : '';
             if (et !== '') running += et;
             const fld = state.mode === 'FIELD PRACTICE';
-            const c10 = fld ? ea.filter(x => x === 6).length : ea.filter(x => x === 10 || x === 'X').length, c9 = ea.filter(x => x === (fld ? 5 : 9)).length;
+            const c10 = n3d ? ea.filter(x => x === 11).length : fld ? ea.filter(x => x === 6).length : ea.filter(x => x === 10 || x === 'X').length, c9 = ea.filter(x => x === (n3d ? 10 : fld ? 5 : 9)).length;
             if (ea.length > 0) { tens += c10; nines += c9; }
             const labelOnclick = isCompleted ? ` onclick="editEnd(${e})"` : '';
-            html += `<tr class="sc-end-sep"><td class="sc-end-label"${labelOnclick}>${state.mode === 'FIELD PRACTICE' ? 'T' : 'End '}${e + 1}${isActive ? ' ▶' : isEditing ? ' ✏' : ''}</td>`
-                + scCellHtml(ea[0], isActive && ea.length === 0, isEditing && ea.length === 0, e, isCompleted)
-                + scCellHtml(ea[1], isActive && ea.length === 1, isEditing && ea.length === 1, e, isCompleted)
-                + scCellHtml(ea[2], isActive && ea.length === 2, isEditing && ea.length === 2, e, isCompleted)
+            html += `<tr class="sc-end-sep"><td class="sc-end-label"${labelOnclick}>${fld || n3d ? 'T' : 'End '}${e + 1}${isActive ? ' ▶' : isEditing ? ' ✏' : ''}</td>`
+                + Array.from({ length: nA }, (_, k) => scCellHtml(ea[k], isActive && ea.length === k, isEditing && ea.length === k, e, isCompleted)).join('')
                 + `<td class="sc-end-total">${et}</td><td class="sc-running">${et !== '' ? running : ''}</td>`
                 + `<td class="sc-stat">${ea.length > 0 ? c10 : ''}</td><td class="sc-stat">${ea.length > 0 ? c9 : ''}</td></tr>`;
         }
-        html += `<tr class="sc-half-total"><td colspan="4">${state.mode === 'FIELD PRACTICE' ? 'UNIT TOTAL' : 'HALF TOTAL'}</td><td>${running}</td><td></td><td>${tens}</td><td>${nines}</td></tr>`;
+        html += `<tr class="sc-half-total"><td colspan="${state.mode === '3D PRACTICE' ? 3 : 4}">${state.mode === 'FIELD PRACTICE' || state.mode === '3D PRACTICE' ? 'UNIT TOTAL' : 'HALF TOTAL'}</td><td>${running}</td><td></td><td>${tens}</td><td>${nines}</td></tr>`;
         document.getElementById(bodyId).innerHTML = html;
     }
     function scTableShell(mode, prefix) {
@@ -540,6 +539,13 @@
                 + `<table class="sc-table"><colgroup><col style="width:42px"><col><col><col><col style="width:32px"><col style="width:36px"><col style="width:42px"><col style="width:28px"><col style="width:28px"></colgroup><tbody id="${prefix}-1"></tbody></table>`
                 + `<div class="sc-half-header" style="margin-top:6px;"><div class="sc-half-title">2nd HALF (Ends 7–12)</div><div>10+X</div><div>X</div></div>`
                 + `<table class="sc-table"><colgroup><col style="width:42px"><col><col><col><col style="width:32px"><col style="width:36px"><col style="width:42px"><col style="width:28px"><col style="width:28px"></colgroup><tbody id="${prefix}-2"></tbody></table>`
+                + `<div style="height:10px;"></div>`;
+        }
+        if (mode === '3D PRACTICE') {
+            return `<div class="sc-half-header"><div class="sc-half-title">UNIT 1 (Targets 1–12)</div><div>11s</div><div>10s</div></div>`
+                + `<table class="sc-table"><colgroup><col style="width:42px"><col><col><col style="width:36px"><col style="width:42px"><col style="width:28px"><col style="width:28px"></colgroup><tbody id="${prefix}-1"></tbody></table>`
+                + `<div class="sc-half-header" style="margin-top:6px;"><div class="sc-half-title">UNIT 2 (Targets 13–24)</div><div>11s</div><div>10s</div></div>`
+                + `<table class="sc-table"><colgroup><col style="width:42px"><col><col><col style="width:36px"><col style="width:42px"><col style="width:28px"><col style="width:28px"></colgroup><tbody id="${prefix}-2"></tbody></table>`
                 + `<div style="height:10px;"></div>`;
         }
         if (mode === 'FIELD PRACTICE') {
@@ -557,10 +563,11 @@
     }
     function fillScTable(mode, ends, prefix, curEnd, readOnly) {
         if (mode === 'TARGET OUTDOOR') { renderTrgOutdoor(ends, 0, 6, prefix + '-1', curEnd, readOnly); renderTrgOutdoor(ends, 6, 12, prefix + '-2', curEnd, readOnly); }
-        else if (mode === 'FIELD PRACTICE') {
+        else if (mode === 'FIELD PRACTICE' || mode === '3D PRACTICE') {
+            const is3d = mode === '3D PRACTICE', nA = is3d ? 2 : 3, hi = is3d ? 11 : 6, lo = is3d ? 10 : 5;
             renderTrgIndoor(ends, 0, 12, prefix + '-1', curEnd, readOnly); renderTrgIndoor(ends, 12, 24, prefix + '-2', curEnd, readOnly);
-            const done = ends.slice(0, 24).filter(ea => ea.length >= 3), all = ends.slice(0, 24).flat();
-            document.getElementById(prefix + '-2').insertAdjacentHTML('beforeend', `<tr class="sc-half-total" style="background:#000 !important;"><td colspan="4">TOTAL</td><td>${done.reduce((x, ea) => x + ea.reduce((y, v) => y + getVal(v), 0), 0)}</td><td></td><td>${all.filter(v => v === 6).length}</td><td>${all.filter(v => v === 5).length}</td></tr>`);
+            const done = ends.slice(0, 24).filter(ea => ea.length >= nA), all = ends.slice(0, 24).flat();
+            document.getElementById(prefix + '-2').insertAdjacentHTML('beforeend', `<tr class="sc-half-total" style="background:#000 !important;"><td colspan="${nA + 1}">TOTAL</td><td>${done.reduce((x, ea) => x + ea.reduce((y, v) => y + getVal(v), 0), 0)}</td><td></td><td>${all.filter(v => v === hi).length}</td><td>${all.filter(v => v === lo).length}</td></tr>`);
         }
         else { renderTrgIndoor(ends, 0, 10, prefix + '-1', curEnd, readOnly); renderTrgIndoor(ends, 10, 20, prefix + '-2', curEnd, readOnly); }
     }
@@ -596,7 +603,7 @@
             }
         }
 
-        if (isTargetTable || state.mode === 'FIELD PRACTICE') {
+        if (isTargetTable || state.mode === 'FIELD PRACTICE' || state.mode === '3D PRACTICE') {
             renderScoreListTable();
         } else {
             list.classList.remove('score-list-table');
@@ -744,7 +751,7 @@
                 const legend = slices.map(sk => `<div style="display:flex; align-items:center; gap:6px; font-size:13px; font-weight:800;"><span style="width:10px; height:10px; border-radius:2px; background:${pieCol[sk] || '#888'}; border:1px solid #333; flex-shrink:0;"></span>${sk === 0 ? 'M' : sk}<span style="color:var(--gray); font-weight:700;">${Math.round(hits[sk] / nHits * 100)}%</span></div>`).join('');
                 list.insertAdjacentHTML('beforeend', `<div class="chart-box"><div class="chart-title">${t.pie}</div><div style="display:flex; align-items:center; gap:15px;"><svg viewBox="0 0 100 100" style="width:45%; flex-shrink:0;">${pie}</svg><div style="flex:1; display:grid; grid-template-columns:1fr 1fr; gap:6px 10px;">${legend}</div></div></div>`);
             }
-            const asTable = ((state.mode === 'TARGET OUTDOOR' || state.mode === 'TARGET INDOOR') && session.scoringType !== 'face') || state.mode === 'FIELD PRACTICE';
+            const asTable = ((state.mode === 'TARGET OUTDOOR' || state.mode === 'TARGET INDOOR') && session.scoringType !== 'face') || state.mode === 'FIELD PRACTICE' || state.mode === '3D PRACTICE';
             let cardHtml;
             if (asTable) cardHtml = scTableShell(state.mode, 'hist-body');
             else { let run = 0; cardHtml = a.ends.map((e, i) => { run += e.total; return `<div class="end-card"><div class="stat-label">END ${i+1}</div><div style="display:flex; align-items:center; gap:10px; flex:1; justify-content:space-between;"><b>${e.displayScores.join(' · ')}</b><div style="display:flex; gap:10px; align-items:center; flex-shrink:0;"><span style="color:var(--accent); font-weight:900; font-size:20px;">${e.total}</span><span style="color:var(--green); font-weight:900; font-size:20px;">${run}</span></div></div></div>`; }).join(''); }
