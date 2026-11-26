@@ -137,7 +137,7 @@
             <p id="l-tagline" style="color:var(--gray); font-size:12px;"></p>
         </div>
         <div class="menu-list" id="main-menu"></div>
-        <div class="home-footer"><div class="gear-link" onclick="showGearScreen()"><span>⚙️</span><span id="l-gear-link" class="gear-text"></span></div></div>
+        <div class="home-footer" style="gap:10px;"><div class="gear-link" onclick="showGearScreen()"><span>⚙️</span><span id="l-gear-link" class="gear-text"></span></div><div class="gear-link" onclick="importSession()"><span>📥</span><span id="l-import" class="gear-text"></span></div></div>
     </div>
     <div id="scoring" class="screen">
         <header>
@@ -173,7 +173,7 @@
         <div id="history-list"></div>
     </div>
     <div id="detail-screen" class="screen">
-        <header><button onclick="showScreen('history-screen')" style="background:none; border:none; color:var(--gray); font-size:22px;">←</button><div class="header-center"><div id="detail-title" class="stat-label" style="color:#fff;"></div></div><div style="width:30px;"></div></header>
+        <header><button onclick="detailBack()" style="background:none; border:none; color:var(--gray); font-size:22px;">←</button><div class="header-center"><div id="detail-title" class="stat-label" style="color:#fff;"></div></div><div id="detail-action" style="min-width:30px; text-align:right;"></div></header>
         <div id="detail-list"></div>
     </div>
     <div id="gear-screen" class="screen">
@@ -197,8 +197,8 @@
 </div>
 <script>
     const i18n = {
-        en: { tagline: "ARCHERY TRACKER", gear: "Gear / Setup", avg: "AVG", total: "TOTAL", clear: "CLEAR", setup: "MY SETUP", save: "SAVE", next: "NEXT END", update: "UPDATE END", finish: "FINISH SESSION", close: "CLOSE SCORING", exit: "Exit?", delSess: "Delete this session?", wipe: "Wipe all history?", riser: "Riser Details", riserMake: "Riser Make", riserLen: "Riser Length", limbs: "Limb Details", limbMake: "Limb Make", limbLen: "Limb Length", limbWeight: "Limb Weight", arrows: "Arrow Details", arrMake: "Arrow Make", arrSpine: "Arrow Spine", arrLen: "Arrow Length", point: "Point Weight", nock: "Nock Details", vanes: "Vanes Details", crawls: "Barebow Crawls", history: "HISTORY", detail: "SESSION DETAIL", arrowsS: "ARROWS", prep: "PREP", stamina: "Stamina Trend", hits: "Hits Breakdown", pie: "Score Distribution", heatmap: "SESSION HEAT MAP", compare: "Vs Previous Sessions (avg per arrow)", vsLast: "VS LAST", pb: "BEST", newPb: "NEW BEST!", last5: "LAST 5 AVG", noPrev: "No previous sessions yet", insights: "Session Insights", best: "BEST END", worst: "WORST END", consistency: "CONSISTENCY", halves: "1st Half vs 2nd Half (avg per arrow)", half1: "1ST HALF", half2: "2ND HALF", diff: "CHANGE", pct: "Hit Percentages", gold: "GOLD 9+", redUp: "RED+ 7+", misses: "MISSES", arrowPos: "Avg by Arrow Position", arrowN: "ARROW", group: "GROUP CENTER", groupSize: "GROUP SIZE", rings: "rings", centered: "Centered", high: "high", low: "low", left: "left", right: "right", endW: "End", showCard: "SHOW SCORECARD", hideCard: "HIDE SCORECARD", modes: ["3D PRACTICE", "FIELD PRACTICE", "TARGET INDOOR", "TARGET OUTDOOR"], nextArcher: "Next Archer", nextEnd: "Next End", },
-        he: { tagline: "מעקב קליעה בקשת", gear: "ציוד / הגדרות", avg: "ממוצע", total: "סה״כ", clear: "נקה", setup: "הציוד שלי", save: "שמור", next: "סבב הבא", update: "עדכן סבב", finish: "סיים אימון", close: "סגור ניקוד", exit: "לצאת מהאימון?", delSess: "למחוק אימון זה?", wipe: "למחוק את כל ההיסטוריה?", riser: "רייזר", riserMake: "יצרן רייזר", riserLen: "אורך רייזר", limbs: "כנפיים", limbMake: "יצרן כנפיים", limbLen: "אורך כנפיים", limbWeight: "כח כנפיים", arrows: "פרטי חצים", arrMake: "יצרן חץ", arrSpine: "ספיין חץ", arrLen: "אורך חץ", point: "משקל פוינט", nock: "פרטי נוק", vanes: "פרטי כנפונים", crawls: "Crawls", history: "היסטוריה", detail: "פירוט אימון", arrowsS: "חצים", prep: "הכנה", stamina: "מגמת עייפות", hits: "פירוט פגיעות", pie: "התפלגות ניקוד", heatmap: "מפת פגיעות", compare: "השוואה לאימונים קודמים (ממוצע לחץ)", vsLast: "מול הקודם", pb: "שיא", newPb: "שיא חדש!", last5: "ממוצע 5 אחרונים", noPrev: "אין עדיין אימונים קודמים", insights: "סיכום אימון", best: "סבב הכי טוב", worst: "סבב הכי חלש", consistency: "יציבות", halves: "חצי ראשון מול שני (ממוצע לחץ)", half1: "חצי 1", half2: "חצי 2", diff: "שינוי", pct: "אחוזי פגיעה", gold: "זהב 9+", redUp: "אדום+ 7+", misses: "החטאות", arrowPos: "ממוצע לפי מיקום חץ", arrowN: "חץ", group: "מרכז קבוצה", groupSize: "גודל קבוצה", rings: "טבעות", centered: "ממורכז", high: "גבוה", low: "נמוך", left: "שמאל", right: "ימין", endW: "סבב", showCard: "הצג כרטיס ניקוד", hideCard: "הסתר כרטיס ניקוד", modes: ["3D", "פילד", "טארגט אולם", "טארגט חוץ"], nextArcher: "קשת הבא", nextEnd: "מקצה הבא", }
+        en: { tagline: "ARCHERY TRACKER", gear: "Gear / Setup", avg: "AVG", total: "TOTAL", clear: "CLEAR", setup: "MY SETUP", save: "SAVE", next: "NEXT END", update: "UPDATE END", finish: "FINISH SESSION", close: "CLOSE SCORING", exit: "Exit?", delSess: "Delete this session?", wipe: "Wipe all history?", riser: "Riser Details", riserMake: "Riser Make", riserLen: "Riser Length", limbs: "Limb Details", limbMake: "Limb Make", limbLen: "Limb Length", limbWeight: "Limb Weight", arrows: "Arrow Details", arrMake: "Arrow Make", arrSpine: "Arrow Spine", arrLen: "Arrow Length", point: "Point Weight", nock: "Nock Details", vanes: "Vanes Details", crawls: "Barebow Crawls", history: "HISTORY", detail: "SESSION DETAIL", arrowsS: "ARROWS", prep: "PREP", stamina: "Stamina Trend", hits: "Hits Breakdown", pie: "Score Distribution", importBtn: "Import", linkCopied: "Link copied ✓", savedMsg: "Saved ✓\n\niPhone with the ALL IN app installed? Open the app and tap IMPORT on the home screen.", importPrompt: "Paste the session link:", imported: "Session imported ✓", alreadySaved: "This session is already saved", badLink: "This link is not a valid session", heatmap: "SESSION HEAT MAP", compare: "Vs Previous Sessions (avg per arrow)", vsLast: "VS LAST", pb: "BEST", newPb: "NEW BEST!", last5: "LAST 5 AVG", noPrev: "No previous sessions yet", insights: "Session Insights", best: "BEST END", worst: "WORST END", consistency: "CONSISTENCY", halves: "1st Half vs 2nd Half (avg per arrow)", half1: "1ST HALF", half2: "2ND HALF", diff: "CHANGE", pct: "Hit Percentages", gold: "GOLD 9+", redUp: "RED+ 7+", misses: "MISSES", arrowPos: "Avg by Arrow Position", arrowN: "ARROW", group: "GROUP CENTER", groupSize: "GROUP SIZE", rings: "rings", centered: "Centered", high: "high", low: "low", left: "left", right: "right", endW: "End", showCard: "SHOW SCORECARD", hideCard: "HIDE SCORECARD", modes: ["3D PRACTICE", "FIELD PRACTICE", "TARGET INDOOR", "TARGET OUTDOOR"], nextArcher: "Next Archer", nextEnd: "Next End", },
+        he: { tagline: "מעקב קליעה בקשת", gear: "ציוד / הגדרות", avg: "ממוצע", total: "סה״כ", clear: "נקה", setup: "הציוד שלי", save: "שמור", next: "סבב הבא", update: "עדכן סבב", finish: "סיים אימון", close: "סגור ניקוד", exit: "לצאת מהאימון?", delSess: "למחוק אימון זה?", wipe: "למחוק את כל ההיסטוריה?", riser: "רייזר", riserMake: "יצרן רייזר", riserLen: "אורך רייזר", limbs: "כנפיים", limbMake: "יצרן כנפיים", limbLen: "אורך כנפיים", limbWeight: "כח כנפיים", arrows: "פרטי חצים", arrMake: "יצרן חץ", arrSpine: "ספיין חץ", arrLen: "אורך חץ", point: "משקל פוינט", nock: "פרטי נוק", vanes: "פרטי כנפונים", crawls: "Crawls", history: "היסטוריה", detail: "פירוט אימון", arrowsS: "חצים", prep: "הכנה", stamina: "מגמת עייפות", hits: "פירוט פגיעות", pie: "התפלגות ניקוד", importBtn: "ייבוא", linkCopied: "הקישור הועתק ✓", savedMsg: "נשמר ✓\n\nיש לך אייפון עם אפליקציית ALL IN? פתח את האפליקציה ולחץ על ייבוא במסך הבית.", importPrompt: "הדבק את קישור האימון:", imported: "האימון יובא ✓", alreadySaved: "האימון הזה כבר שמור", badLink: "הקישור אינו אימון תקין", heatmap: "מפת פגיעות", compare: "השוואה לאימונים קודמים (ממוצע לחץ)", vsLast: "מול הקודם", pb: "שיא", newPb: "שיא חדש!", last5: "ממוצע 5 אחרונים", noPrev: "אין עדיין אימונים קודמים", insights: "סיכום אימון", best: "סבב הכי טוב", worst: "סבב הכי חלש", consistency: "יציבות", halves: "חצי ראשון מול שני (ממוצע לחץ)", half1: "חצי 1", half2: "חצי 2", diff: "שינוי", pct: "אחוזי פגיעה", gold: "זהב 9+", redUp: "אדום+ 7+", misses: "החטאות", arrowPos: "ממוצע לפי מיקום חץ", arrowN: "חץ", group: "מרכז קבוצה", groupSize: "גודל קבוצה", rings: "טבעות", centered: "ממורכז", high: "גבוה", low: "נמוך", left: "שמאל", right: "ימין", endW: "סבב", showCard: "הצג כרטיס ניקוד", hideCard: "הסתר כרטיס ניקוד", modes: ["3D", "פילד", "טארגט אולם", "טארגט חוץ"], nextArcher: "קשת הבא", nextEnd: "מקצה הבא", }
     };
     let state = { current: [], history: [], arrows: 2, ends: 24, mode: '', editingIndex: -1, lang: 'en', scoringType: 'pad', markers: [], participants: [], activeArcherIdx: 0 };
     let timer = { interval: null, timeLeft: 0, totalTime: 0, active: false, phase: 'READY', startTime: null };
@@ -313,8 +313,8 @@
     }
     function toggleLang(lang) {
         state.lang = lang; const t = i18n[lang];
-        const ids = ['l-tagline', 'l-gear-link', 'l-avg', 'l-total', 'l-clear', 'l-setup-title', 'l-save', 'l-riser-title', 'l-r-make', 'l-r-len', 'l-limb-title', 'l-l-make', 'l-l-len', 'l-l-weight', 'l-arrow-title', 'l-a-make', 'l-a-spine', 'l-a-len', 'l-a-point', 'l-a-nock', 'l-a-vanes', 'l-crawl-title'];
-        const keys = ['tagline', 'gear', 'avg', 'total', 'clear', 'setup', 'save', 'riser', 'riserMake', 'riserLen', 'limbs', 'limbMake', 'limbLen', 'limbWeight', 'arrows', 'arrMake', 'arrSpine', 'arrLen', 'point', 'nock', 'vanes', 'crawls'];
+        const ids = ['l-tagline', 'l-gear-link', 'l-avg', 'l-total', 'l-clear', 'l-setup-title', 'l-save', 'l-riser-title', 'l-r-make', 'l-r-len', 'l-limb-title', 'l-l-make', 'l-l-len', 'l-l-weight', 'l-arrow-title', 'l-a-make', 'l-a-spine', 'l-a-len', 'l-a-point', 'l-a-nock', 'l-a-vanes', 'l-crawl-title', 'l-import'];
+        const keys = ['tagline', 'gear', 'avg', 'total', 'clear', 'setup', 'save', 'riser', 'riserMake', 'riserLen', 'limbs', 'limbMake', 'limbLen', 'limbWeight', 'arrows', 'arrMake', 'arrSpine', 'arrLen', 'point', 'nock', 'vanes', 'crawls', 'importBtn'];
         ids.forEach((id, i) => { if(document.getElementById(id)) document.getElementById(id).innerText = t[keys[i]]; });
         renderMainMenu(); localStorage.setItem('archer_lang', lang);
     }
@@ -637,7 +637,7 @@
         data.forEach(s => {
             const archerCount = s.archers ? s.archers.length : 1, pName = s.archers ? s.archers[0].archer : s.archer, pScore = s.archers ? s.archers[0].score : s.score, pAvg = s.archers ? s.archers[0].avg : s.avg;
             const row = document.createElement('div'); row.className = 'history-row';
-            row.innerHTML = `<div class="bin-btn" onclick="deleteSession(${s.id})">🗑️</div><div class="history-card" id="card-${s.id}"><div><span style="margin-right:15px; font-size:13px; color:var(--gray);">${s.date}</span><span style="color:var(--accent); font-weight:bold; font-size:11px">${archerCount > 1 ? `👤 x${archerCount} ` : ''}${pName}</span><br><span class="hist-avg">${i18n[state.lang].avg}: ${pAvg}</span></div><div style="display:flex; align-items:center; gap:8px;"><div class="hist-total" style="font-weight:900; font-size:20px;">${pScore}</div><span style="color:var(--gray); font-size:18px;">›</span></div></div>`;
+            row.innerHTML = `<div class="bin-btn" onclick="deleteSession(${s.id})">🗑️</div><div class="history-card" id="card-${s.id}"><div><span style="margin-right:15px; font-size:13px; color:var(--gray);">${escHtml(s.date)}</span><span style="color:var(--accent); font-weight:bold; font-size:11px">${archerCount > 1 ? `👤 x${archerCount} ` : ''}${escHtml(pName)}</span><br><span class="hist-avg">${i18n[state.lang].avg}: ${pAvg}</span></div><div style="display:flex; align-items:center; gap:8px;"><div class="hist-total" style="font-weight:900; font-size:20px;">${pScore}</div><span style="color:var(--gray); font-size:18px;">›</span></div></div>`;
             const card = row.querySelector('.history-card'); let sX = 0, cX = 0;
             card.onclick = () => { if(cX === 0) openSessionDetail(s.id); else resetCards(); };
             card.addEventListener('touchstart', e => { sX = e.touches[0].clientX; card.style.transition = 'none'; }, {passive: true});
@@ -649,13 +649,19 @@
     function resetCards() { document.querySelectorAll('.history-card').forEach(c => c.style.transform = 'translateX(0)'); }
     function deleteSession(id) { if(confirm(i18n[state.lang].delSess)) { let data = JSON.parse(localStorage.getItem(state.mode) || "[]"); data = data.filter(s => s.id !== id); localStorage.setItem(state.mode, JSON.stringify(data)); showHistory(state.mode); } else resetCards(); }
     
-    function openSessionDetail(sessionId) {
-        const data = JSON.parse(localStorage.getItem(state.mode) || "[]"), session = data.find(s => s.id === sessionId); if(!session) return;
+    let detailCtx = null;
+    function openSessionDetail(sessionId, shared) {
+        const data = shared ? [] : JSON.parse(localStorage.getItem(state.mode) || "[]"), session = shared ? shared.session : data.find(s => s.id === sessionId); if(!session) return;
         const archers = session.archers || [{ archer: session.archer, score: session.score, avg: session.avg, ends: session.ends }];
         const t = i18n[state.lang]; showScreen('detail-screen'); document.getElementById('detail-title').innerText = `${t.detail}`;
         const list = document.getElementById('detail-list');
         const renderArcherDetail = (idx) => {
             list.innerHTML = ''; const a = archers[idx];
+            detailCtx = { session, archer: a, shared };
+            document.getElementById('detail-action').innerHTML = shared
+                ? `<button onclick="saveSharedFromView()" style="background:none; border:none; color:var(--accent); font-weight:bold;">${t.save}</button>`
+                : `<button onclick="shareArcher()" style="background:none; border:none; font-size:20px;">📤</button>`;
+            if (shared) list.insertAdjacentHTML('beforeend', `<div style="text-align:center; padding:2px 0 4px; flex-shrink:0;"><div style="font-size:20px; font-weight:900;">${escHtml(a.archer)}</div><div class="stat-label" style="margin-top:3px;">${t.modes[i18n.en.modes.indexOf(state.mode)]} · ${escHtml(session.date)}</div></div>`);
             if (archers.length > 1) {
                 const tabContainer = document.createElement('div'); tabContainer.className = 'archer-tabs'; tabContainer.style.cssText = "margin-bottom: 12px; flex-shrink: 0; padding-bottom: 4px;";
                 archers.forEach((arch, i) => { const tab = document.createElement('div'); tab.className = `archer-tab ${i === idx ? 'active' : ''}`; tab.innerText = arch.archer; tab.onclick = () => renderArcherDetail(i); tabContainer.appendChild(tab); });
@@ -674,7 +680,7 @@
                 const dLast = curAvg - prevAvgs[0], pb = Math.max(...prevAvgs), l5 = prevAvgs.slice(0, 5).reduce((x, y) => x + y, 0) / Math.min(5, prevAvgs.length);
                 cmpHtml = `<div class="ins-grid">${pill(t.vsLast, sign(dLast), col(dLast))}${pill(t.pb, curAvg > pb ? t.newPb : pb.toFixed(1), curAvg > pb ? 'var(--accent)' : '')}${pill(t.last5, `${l5.toFixed(1)} <span style="font-size:11px; color:${col(curAvg - l5)}">(${sign(curAvg - l5)})</span>`)}</div>`;
             }
-            list.insertAdjacentHTML('beforeend', `<div class="chart-box"><div class="chart-title">${t.compare}</div>${cmpHtml}</div>`);
+            if (!shared) list.insertAdjacentHTML('beforeend', `<div class="chart-box"><div class="chart-title">${t.compare}</div>${cmpHtml}</div>`);
             if (ends.length) {
                 // 2 + 3. Best / worst end, consistency
                 let bI = 0, wI = 0; totals.forEach((v, i) => { if (v > totals[bI]) bI = i; if (v < totals[wI]) wI = i; });
@@ -738,6 +744,58 @@
         };
         renderArcherDetail(0);
     }
+    function escHtml(v) { return String(v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]); }
+    function b64urlEncode(str) { let bin = ''; new TextEncoder().encode(str).forEach(b => bin += String.fromCharCode(b)); return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); }
+    function b64urlDecode(code) { let b = code.replace(/-/g, '+').replace(/_/g, '/'); while (b.length % 4) b += '='; return new TextDecoder().decode(Uint8Array.from(atob(b), c => c.charCodeAt(0))); }
+    function encodeShare(session, archer, mode) {
+        const p = { v: 1, i: session.id, m: mode, d: session.date, n: archer.archer, a: session.arrowsPerEnd, p: session.totalEndsPlanned, t: session.scoringType, s: archer.ends.map(e => e.rawScores) };
+        if (session.scoringType === 'face') p.k = archer.ends.map(e => (e.markers || []).map(m => [Math.round(m.x * 10) / 10, Math.round(m.y * 10) / 10]));
+        return b64urlEncode(JSON.stringify(p));
+    }
+    function decodeShare(code) {
+        const p = JSON.parse(b64urlDecode(code));
+        if (!p || p.v !== 1 || !i18n.en.modes.includes(p.m) || !Array.isArray(p.s) || !(p.a > 0)) throw new Error('bad');
+        const ok = v => v === 'X' || (typeof v === 'number' && v >= 0 && v <= 11);
+        const ends = p.s.map((raw, i) => { if (!Array.isArray(raw) || !raw.every(ok)) throw new Error('bad'); return { rawScores: raw, displayScores: raw.map(v => v === 0 ? 'M' : v), total: raw.reduce((x, v) => x + getVal(v), 0), markers: ((p.k && p.k[i]) || []).map(([x, y]) => ({ x: +x, y: +y })) }; });
+        const score = ends.reduce((x, e) => x + e.total, 0);
+        return { mode: p.m, session: { id: Date.now() + Math.random(), sharedId: `${p.i}|${p.n}`, date: String(p.d || ''), archers: [{ archer: String(p.n || 'Archer'), score, avg: (score / (ends.length * p.a || 1)).toFixed(1), ends }], arrowsPerEnd: p.a, totalEndsPlanned: p.p || ends.length, scoringType: p.t === 'face' ? 'face' : 'pad' } };
+    }
+    function storeShared(obj) {
+        const hist = JSON.parse(localStorage.getItem(obj.mode) || "[]");
+        if (hist.some(s => s.sharedId === obj.session.sharedId)) return false;
+        hist.unshift(obj.session); localStorage.setItem(obj.mode, JSON.stringify(hist)); return true;
+    }
+    function shareArcher() {
+        if (!detailCtx) return;
+        const t = i18n[state.lang], { session, archer } = detailCtx;
+        const url = location.origin + location.pathname + '#s=' + encodeShare(session, archer, state.mode);
+        const text = `ALL IN · ${archer.archer} · ${t.modes[i18n.en.modes.indexOf(state.mode)]} · ${session.date} · ${archer.score} (${t.avg} ${archer.avg})`;
+        if (navigator.share) navigator.share({ title: 'ALL IN Archery', text, url }).catch(() => {});
+        else if (navigator.clipboard) navigator.clipboard.writeText(text + '\n' + url).then(() => alert(t.linkCopied)).catch(() => prompt('', url));
+        else prompt('', url);
+    }
+    function saveSharedFromView() {
+        if (!detailCtx || !detailCtx.shared) return;
+        const t = i18n[state.lang], fresh = storeShared(detailCtx.shared);
+        const done = () => alert(fresh ? t.savedMsg : t.alreadySaved + '\n\n' + t.savedMsg.split('\n\n')[1]);
+        if (navigator.clipboard) navigator.clipboard.writeText(location.href).then(done, done); else done();
+    }
+    function detailBack() {
+        if (detailCtx && detailCtx.shared) { detailCtx = null; history.replaceState(null, '', location.pathname); showScreen('home'); }
+        else showScreen('history-screen');
+    }
+    async function importSession() {
+        const t = i18n[state.lang];
+        let txt = '';
+        try { txt = await navigator.clipboard.readText(); } catch (e) {}
+        if (!/#s=/.test(txt)) txt = prompt(t.importPrompt) || '';
+        const m = txt.match(/#s=([A-Za-z0-9_-]+)/);
+        if (!m) { if (txt) alert(t.badLink); return; }
+        let obj; try { obj = decodeShare(m[1]); } catch (e) { alert(t.badLink); return; }
+        const fresh = storeShared(obj);
+        alert(fresh ? t.imported : t.alreadySaved);
+        showHistory(obj.mode);
+    }
     function toggleHistCard(btn) {
         const wrap = btn.nextElementSibling, open = wrap.style.display === 'none';
         wrap.style.display = open ? 'block' : 'none';
@@ -763,6 +821,11 @@
         const cC = document.getElementById('crawl-inputs');
         if (cC) { cC.innerHTML = ''; for(let d=5; d<=50; d+=5) cC.innerHTML += `<div class="crawl-item"><div class="crawl-dist">${d}m</div><input type="text" id="c-${d}" class="crawl-val"></div>`; }
         if (document.getElementById('g-owner-name')) document.getElementById('g-owner-name').value = state.gear.ownerName;
+        const sm = location.hash.match(/^#s=([A-Za-z0-9_-]+)/);
+        if (sm) {
+            try { const obj = decodeShare(sm[1]); state.mode = obj.mode; openSessionDetail(null, obj); return; }
+            catch (e) { alert(i18n[state.lang].badLink); history.replaceState(null, '', location.pathname); }
+        }
         const backup = localStorage.getItem('active_session_backup');
         if (backup && confirm("Restore previous session? / שחזר אימון קודם?")) {
             state = JSON.parse(backup);
