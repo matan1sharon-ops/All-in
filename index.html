@@ -195,8 +195,8 @@
 </div>
 <script>
     const i18n = {
-        en: { tagline: "ARCHERY TRACKER", gear: "Gear / Setup", avg: "AVG", total: "TOTAL", clear: "CLEAR", setup: "MY SETUP", save: "SAVE", next: "NEXT END", update: "UPDATE END", finish: "FINISH SESSION", exit: "Exit?", delSess: "Delete this session?", wipe: "Wipe all history?", riser: "Riser Details", riserMake: "Riser Make", riserLen: "Riser Length", limbs: "Limb Details", limbMake: "Limb Make", limbLen: "Limb Length", limbWeight: "Limb Weight", arrows: "Arrow Details", arrMake: "Arrow Make", arrSpine: "Arrow Spine", arrLen: "Arrow Length", point: "Point Weight", nock: "Nock Details", vanes: "Vanes Details", crawls: "Barebow Crawls", history: "HISTORY", detail: "SESSION DETAIL", arrowsS: "ARROWS", prep: "PREP", stamina: "Stamina Trend", hits: "Hits Breakdown", heatmap: "SESSION HEAT MAP", modes: ["3D PRACTICE", "FIELD PRACTICE", "TARGET INDOOR", "TARGET OUTDOOR"], nextArcher: "Next Archer", nextEnd: "Next End", },
-        he: { tagline: "מעקב קליעה בקשת", gear: "ציוד / הגדרות", avg: "ממוצע", total: "סה״כ", clear: "נקה", setup: "הציוד שלי", save: "שמור", next: "סבב הבא", update: "עדכן סבב", finish: "סיים אימון", exit: "לצאת מהאימון?", delSess: "למחוק אימון זה?", wipe: "למחוק את כל ההיסטוריה?", riser: "רייזר", riserMake: "יצרן רייזר", riserLen: "אורך רייזר", limbs: "כנפיים", limbMake: "יצרן כנפיים", limbLen: "אורך כנפיים", limbWeight: "כח כנפיים", arrows: "פרטי חצים", arrMake: "יצרן חץ", arrSpine: "ספיין חץ", arrLen: "אורך חץ", point: "משקל פוינט", nock: "פרטי נוק", vanes: "פרטי כנפונים", crawls: "Crawls", history: "היסטוריה", detail: "פירוט אימון", arrowsS: "חצים", prep: "הכנה", stamina: "מגמת עייפות", hits: "פירוט פגיעות", heatmap: "מפת פגיעות", modes: ["3D", "פילד", "טארגט אולם", "טארגט חוץ"], nextArcher: "קשת הבא", nextEnd: "מקצה הבא", }
+        en: { tagline: "ARCHERY TRACKER", gear: "Gear / Setup", avg: "AVG", total: "TOTAL", clear: "CLEAR", setup: "MY SETUP", save: "SAVE", next: "NEXT END", update: "UPDATE END", finish: "FINISH SESSION", close: "CLOSE SCORING", exit: "Exit?", delSess: "Delete this session?", wipe: "Wipe all history?", riser: "Riser Details", riserMake: "Riser Make", riserLen: "Riser Length", limbs: "Limb Details", limbMake: "Limb Make", limbLen: "Limb Length", limbWeight: "Limb Weight", arrows: "Arrow Details", arrMake: "Arrow Make", arrSpine: "Arrow Spine", arrLen: "Arrow Length", point: "Point Weight", nock: "Nock Details", vanes: "Vanes Details", crawls: "Barebow Crawls", history: "HISTORY", detail: "SESSION DETAIL", arrowsS: "ARROWS", prep: "PREP", stamina: "Stamina Trend", hits: "Hits Breakdown", heatmap: "SESSION HEAT MAP", modes: ["3D PRACTICE", "FIELD PRACTICE", "TARGET INDOOR", "TARGET OUTDOOR"], nextArcher: "Next Archer", nextEnd: "Next End", },
+        he: { tagline: "מעקב קליעה בקשת", gear: "ציוד / הגדרות", avg: "ממוצע", total: "סה״כ", clear: "נקה", setup: "הציוד שלי", save: "שמור", next: "סבב הבא", update: "עדכן סבב", finish: "סיים אימון", close: "סגור ניקוד", exit: "לצאת מהאימון?", delSess: "למחוק אימון זה?", wipe: "למחוק את כל ההיסטוריה?", riser: "רייזר", riserMake: "יצרן רייזר", riserLen: "אורך רייזר", limbs: "כנפיים", limbMake: "יצרן כנפיים", limbLen: "אורך כנפיים", limbWeight: "כח כנפיים", arrows: "פרטי חצים", arrMake: "יצרן חץ", arrSpine: "ספיין חץ", arrLen: "אורך חץ", point: "משקל פוינט", nock: "פרטי נוק", vanes: "פרטי כנפונים", crawls: "Crawls", history: "היסטוריה", detail: "פירוט אימון", arrowsS: "חצים", prep: "הכנה", stamina: "מגמת עייפות", hits: "פירוט פגיעות", heatmap: "מפת פגיעות", modes: ["3D", "פילד", "טארגט אולם", "טארגט חוץ"], nextArcher: "קשת הבא", nextEnd: "מקצה הבא", }
     };
     let state = { current: [], history: [], arrows: 2, ends: 24, mode: '', editingIndex: -1, lang: 'en', scoringType: 'pad', markers: [], participants: [], activeArcherIdx: 0 };
     let timer = { interval: null, timeLeft: 0, totalTime: 0, active: false, phase: 'READY', startTime: null };
@@ -262,7 +262,9 @@
         const slots = ['A', 'B', 'C', 'D'];
         container.innerHTML = state.participants.map((p, i) => `<div class="archer-tab ${i === state.activeArcherIdx ? 'active' : ''} ${isTargetTable ? 'archer-tab-target' : ''}" onclick="switchArcher(${i})">${isTargetTable ? slots[i] + ' · ' + p.name : p.name}</div>`).join('');
     }
+    function allEndsDone() { return state.participants.every((p, i) => (i === state.activeArcherIdx ? state.history : p.history).length >= state.ends); }
     function handleMainAction() {
+        if (state.editingIndex === -1 && state.current.length === 0 && allEndsDone()) { stopTimer(); saveSession(); return; }
         if(state.current.length === state.arrows) {
             const newEnd = { rawScores: [...state.current], displayScores: [...state.current].map(s => s === 0 ? 'M' : s), total: state.current.reduce((a, b) => a + getVal(b), 0), markers: [...state.markers] };
             if (state.editingIndex !== -1) { 
@@ -286,7 +288,12 @@
                 backupActiveSession();
             } else {
                 if(state.history.length >= state.ends) {
-                    saveSession(); 
+                    state.current = []; state.markers = [];
+                    stopTimer();
+                    renderTabs();
+                    if(state.scoringType === 'face') updateFaceMarkers();
+                    renderUI();
+                    backupActiveSession();
                 } else {
                     state.activeArcherIdx = 0;
                     const p = state.participants[0];
@@ -404,7 +411,7 @@
         };
         container.addEventListener('touchstart', (e) => { updatePos(e); e.preventDefault(); }, {passive: false});
         container.addEventListener('touchmove', (e) => { updatePos(e); e.preventDefault(); }, {passive: false});
-        container.addEventListener('touchend', () => { mag.style.display = 'none'; if(state.current.length < state.arrows) { state.current.push(facePendingScore); state.markers.push({...lastMarkerPos}); updateFaceMarkers(); renderUI(); backupActiveSession(); } });
+        container.addEventListener('touchend', () => { mag.style.display = 'none'; if(state.current.length < state.arrows && (state.editingIndex !== -1 || state.history.length < state.ends)) { state.current.push(facePendingScore); state.markers.push({...lastMarkerPos}); updateFaceMarkers(); renderUI(); backupActiveSession(); } });
     }
     function updateFaceMarkers() {
         const mG = document.getElementById('main-markers'), mgG = document.getElementById('mag-markers');
@@ -442,7 +449,7 @@
                 const color = getArrowColor(s === 'X' ? 10 : s);
                 Object.assign(b.style, { backgroundColor: color, color: (color === '#FFF' || color === '#FFD700' || color === '#FFF176') ? '#000' : '#fff' });
             }
-            b.innerText = s === 0 ? 'M' : s; b.onclick = () => { if(state.current.length < state.arrows) { state.current.push(s); renderUI(); backupActiveSession(); } };
+            b.innerText = s === 0 ? 'M' : s; b.onclick = () => { if(state.current.length < state.arrows && (state.editingIndex !== -1 || state.history.length < state.ends)) { state.current.push(s); renderUI(); backupActiveSession(); } };
             grid.appendChild(b);
         });
     }
@@ -528,7 +535,7 @@
         const list = document.getElementById('score-list');
         list.classList.add('score-list-table');
         const ends = buildEndsArray();
-        const curEnd = state.editingIndex !== -1 ? state.editingIndex : state.history.length;
+        const curEnd = state.editingIndex !== -1 ? state.editingIndex : (state.history.length >= state.ends ? -1 : state.history.length);
         if (state.mode === 'TARGET OUTDOOR') {
             list.innerHTML = `<div class="sc-half-header"><div class="sc-half-title">1st HALF (Ends 1–6)</div><div>10+X</div><div>X</div></div>`
                 + `<table class="sc-table"><colgroup><col style="width:42px"><col><col><col><col style="width:32px"><col style="width:36px"><col style="width:42px"><col style="width:28px"><col style="width:28px"></colgroup><tbody id="trg-body-1"></tbody></table>`
@@ -595,8 +602,8 @@
             list.scrollTop = list.scrollHeight;
         }
 
-        const btn = document.getElementById('next-btn'); btn.disabled = state.current.length < state.arrows;
-        if (state.editingIndex !== -1) btn.innerText = t.update; else if (state.history.length === state.ends - 1 && state.activeArcherIdx === state.participants.length - 1) btn.innerText = t.finish; else btn.innerText = (state.activeArcherIdx === state.participants.length - 1) ? t.nextEnd : t.nextArcher;
+        const btn = document.getElementById('next-btn'); const closeReady = state.editingIndex === -1 && state.current.length === 0 && allEndsDone(); btn.disabled = !closeReady && state.current.length < state.arrows;
+        if (state.editingIndex !== -1) btn.innerText = t.update; else if (closeReady) btn.innerText = t.close; else if (state.history.length === state.ends - 1 && state.activeArcherIdx === state.participants.length - 1) btn.innerText = t.finish; else btn.innerText = (state.activeArcherIdx === state.participants.length - 1) ? t.nextEnd : t.nextArcher;
         btn.style.background = state.editingIndex !== -1 ? "#fff" : "var(--accent)";
     }
     function manualSave() {
