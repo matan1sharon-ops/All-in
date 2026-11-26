@@ -103,6 +103,12 @@
         .hits-chart { display: grid; gap: 4px; text-align: center; margin-top: 5px; height: 110px; align-items: end; }
         .hit-label { font-size: 8px; font-weight: 900; margin-top: 4px; }
         .hit-count { font-size: 9px; margin-bottom: 4px; color: var(--text); font-weight: bold; }
+        .ins-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; text-align: center; }
+        .ins-val { font-size: 17px; font-weight: 900; margin-top: 3px; }
+        .hist-sc { width: 100%; border-collapse: collapse; background: var(--card); border: 1px solid #222; font-size: 14px; }
+        .hist-sc th { font-size: 9px; color: var(--gray); text-transform: uppercase; padding: 8px 4px; border-bottom: 1px solid #333; }
+        .hist-sc td { padding: 8px 4px; text-align: center; border-bottom: 1px solid #1e1e1e; font-weight: 800; }
+        .hist-sc .sc-arrows { text-align: left; font-weight: 700; }
     </style>
 </head>
 <body>
@@ -195,8 +201,8 @@
 </div>
 <script>
     const i18n = {
-        en: { tagline: "ARCHERY TRACKER", gear: "Gear / Setup", avg: "AVG", total: "TOTAL", clear: "CLEAR", setup: "MY SETUP", save: "SAVE", next: "NEXT END", update: "UPDATE END", finish: "FINISH SESSION", close: "CLOSE SCORING", exit: "Exit?", delSess: "Delete this session?", wipe: "Wipe all history?", riser: "Riser Details", riserMake: "Riser Make", riserLen: "Riser Length", limbs: "Limb Details", limbMake: "Limb Make", limbLen: "Limb Length", limbWeight: "Limb Weight", arrows: "Arrow Details", arrMake: "Arrow Make", arrSpine: "Arrow Spine", arrLen: "Arrow Length", point: "Point Weight", nock: "Nock Details", vanes: "Vanes Details", crawls: "Barebow Crawls", history: "HISTORY", detail: "SESSION DETAIL", arrowsS: "ARROWS", prep: "PREP", stamina: "Stamina Trend", hits: "Hits Breakdown", heatmap: "SESSION HEAT MAP", modes: ["3D PRACTICE", "FIELD PRACTICE", "TARGET INDOOR", "TARGET OUTDOOR"], nextArcher: "Next Archer", nextEnd: "Next End", },
-        he: { tagline: "מעקב קליעה בקשת", gear: "ציוד / הגדרות", avg: "ממוצע", total: "סה״כ", clear: "נקה", setup: "הציוד שלי", save: "שמור", next: "סבב הבא", update: "עדכן סבב", finish: "סיים אימון", close: "סגור ניקוד", exit: "לצאת מהאימון?", delSess: "למחוק אימון זה?", wipe: "למחוק את כל ההיסטוריה?", riser: "רייזר", riserMake: "יצרן רייזר", riserLen: "אורך רייזר", limbs: "כנפיים", limbMake: "יצרן כנפיים", limbLen: "אורך כנפיים", limbWeight: "כח כנפיים", arrows: "פרטי חצים", arrMake: "יצרן חץ", arrSpine: "ספיין חץ", arrLen: "אורך חץ", point: "משקל פוינט", nock: "פרטי נוק", vanes: "פרטי כנפונים", crawls: "Crawls", history: "היסטוריה", detail: "פירוט אימון", arrowsS: "חצים", prep: "הכנה", stamina: "מגמת עייפות", hits: "פירוט פגיעות", heatmap: "מפת פגיעות", modes: ["3D", "פילד", "טארגט אולם", "טארגט חוץ"], nextArcher: "קשת הבא", nextEnd: "מקצה הבא", }
+        en: { tagline: "ARCHERY TRACKER", gear: "Gear / Setup", avg: "AVG", total: "TOTAL", clear: "CLEAR", setup: "MY SETUP", save: "SAVE", next: "NEXT END", update: "UPDATE END", finish: "FINISH SESSION", close: "CLOSE SCORING", exit: "Exit?", delSess: "Delete this session?", wipe: "Wipe all history?", riser: "Riser Details", riserMake: "Riser Make", riserLen: "Riser Length", limbs: "Limb Details", limbMake: "Limb Make", limbLen: "Limb Length", limbWeight: "Limb Weight", arrows: "Arrow Details", arrMake: "Arrow Make", arrSpine: "Arrow Spine", arrLen: "Arrow Length", point: "Point Weight", nock: "Nock Details", vanes: "Vanes Details", crawls: "Barebow Crawls", history: "HISTORY", detail: "SESSION DETAIL", arrowsS: "ARROWS", prep: "PREP", stamina: "Stamina Trend", hits: "Hits Breakdown", heatmap: "SESSION HEAT MAP", compare: "Vs Previous Sessions (avg per arrow)", vsLast: "VS LAST", pb: "BEST", newPb: "NEW BEST!", last5: "LAST 5 AVG", noPrev: "No previous sessions yet", insights: "Session Insights", best: "BEST END", worst: "WORST END", consistency: "CONSISTENCY", halves: "1st Half vs 2nd Half (avg per arrow)", half1: "1ST HALF", half2: "2ND HALF", diff: "CHANGE", pct: "Hit Percentages", gold: "GOLD 9+", redUp: "RED+ 7+", misses: "MISSES", arrowPos: "Avg by Arrow Position", arrowN: "ARROW", group: "GROUP CENTER", groupSize: "GROUP SIZE", rings: "rings", centered: "Centered", high: "high", low: "low", left: "left", right: "right", endW: "End", showCard: "SHOW SCORECARD", hideCard: "HIDE SCORECARD", endCol: "END", arrowsCol: "ARROWS", run: "RUN", modes: ["3D PRACTICE", "FIELD PRACTICE", "TARGET INDOOR", "TARGET OUTDOOR"], nextArcher: "Next Archer", nextEnd: "Next End", },
+        he: { tagline: "מעקב קליעה בקשת", gear: "ציוד / הגדרות", avg: "ממוצע", total: "סה״כ", clear: "נקה", setup: "הציוד שלי", save: "שמור", next: "סבב הבא", update: "עדכן סבב", finish: "סיים אימון", close: "סגור ניקוד", exit: "לצאת מהאימון?", delSess: "למחוק אימון זה?", wipe: "למחוק את כל ההיסטוריה?", riser: "רייזר", riserMake: "יצרן רייזר", riserLen: "אורך רייזר", limbs: "כנפיים", limbMake: "יצרן כנפיים", limbLen: "אורך כנפיים", limbWeight: "כח כנפיים", arrows: "פרטי חצים", arrMake: "יצרן חץ", arrSpine: "ספיין חץ", arrLen: "אורך חץ", point: "משקל פוינט", nock: "פרטי נוק", vanes: "פרטי כנפונים", crawls: "Crawls", history: "היסטוריה", detail: "פירוט אימון", arrowsS: "חצים", prep: "הכנה", stamina: "מגמת עייפות", hits: "פירוט פגיעות", heatmap: "מפת פגיעות", compare: "השוואה לאימונים קודמים (ממוצע לחץ)", vsLast: "מול הקודם", pb: "שיא", newPb: "שיא חדש!", last5: "ממוצע 5 אחרונים", noPrev: "אין עדיין אימונים קודמים", insights: "סיכום אימון", best: "סבב הכי טוב", worst: "סבב הכי חלש", consistency: "יציבות", halves: "חצי ראשון מול שני (ממוצע לחץ)", half1: "חצי 1", half2: "חצי 2", diff: "שינוי", pct: "אחוזי פגיעה", gold: "זהב 9+", redUp: "אדום+ 7+", misses: "החטאות", arrowPos: "ממוצע לפי מיקום חץ", arrowN: "חץ", group: "מרכז קבוצה", groupSize: "גודל קבוצה", rings: "טבעות", centered: "ממורכז", high: "גבוה", low: "נמוך", left: "שמאל", right: "ימין", endW: "סבב", showCard: "הצג כרטיס ניקוד", hideCard: "הסתר כרטיס ניקוד", endCol: "סבב", arrowsCol: "חצים", run: "מצטבר", modes: ["3D", "פילד", "טארגט אולם", "טארגט חוץ"], nextArcher: "קשת הבא", nextEnd: "מקצה הבא", }
     };
     let state = { current: [], history: [], arrows: 2, ends: 24, mode: '', editingIndex: -1, lang: 'en', scoringType: 'pad', markers: [], participants: [], activeArcherIdx: 0 };
     let timer = { interval: null, timeLeft: 0, totalTime: 0, active: false, phase: 'READY', startTime: null };
@@ -657,16 +663,64 @@
                 list.appendChild(tabContainer);
             }
             list.insertAdjacentHTML('beforeend', `<div class="stats-card"><div><div class="stat-label">${t.total}</div><div class="stat-val" style="color:var(--accent);">${a.score}</div></div><div><div class="stat-label">${t.avg}</div><div class="stat-val">${a.avg}</div></div><div><div class="stat-label">${t.arrowsS}</div><div class="stat-val">${a.ends.length * session.arrowsPerEnd}</div></div></div>`);
-            if (session.scoringType === 'face') { const hasX = state.mode.includes('OUTDOOR'); list.insertAdjacentHTML('beforeend', `<div class="chart-box"><div class="chart-title">${t.heatmap}</div><div class="history-face-container"><svg viewBox="0 0 100 100">${getTargetSvg('hist', hasX)}</svg></div></div>`); document.getElementById('hist-markers').innerHTML = a.ends.flatMap(e => e.markers || []).map(m => `<circle cx="${m.x}" cy="${m.y}" r="1" fill="white" stroke="black" stroke-width="0.3" opacity="0.7" />`).join(''); }
+            const ends = a.ends, apE = session.arrowsPerEnd, totals = ends.map(e => e.total), allA = ends.flatMap(e => e.rawScores), nA = allA.length || 1;
+            const pill = (l, v, c) => `<div><div class="stat-label">${l}</div><div class="ins-val"${c ? ` style="color:${c}"` : ''}>${v}</div></div>`;
+            const sign = d => (d >= 0 ? '+' : '') + d.toFixed(1), col = d => d >= 0 ? 'var(--green)' : 'var(--red)';
+            // 7. Compare to previous sessions
+            const curAvg = parseFloat(a.avg) || 0, sIdx = data.findIndex(s => s.id === sessionId);
+            const prevAvgs = data.slice(sIdx + 1).map(s => { const m = s.archers ? s.archers.find(x => x.archer === a.archer) : (s.archer === a.archer ? s : null); return m ? parseFloat(m.avg) : NaN; }).filter(v => !isNaN(v));
+            let cmpHtml;
+            if (!prevAvgs.length) cmpHtml = `<div style="color:var(--gray); font-size:12px; text-align:center;">${t.noPrev}</div>`;
+            else {
+                const dLast = curAvg - prevAvgs[0], pb = Math.max(...prevAvgs), l5 = prevAvgs.slice(0, 5).reduce((x, y) => x + y, 0) / Math.min(5, prevAvgs.length);
+                cmpHtml = `<div class="ins-grid">${pill(t.vsLast, sign(dLast), col(dLast))}${pill(t.pb, curAvg > pb ? t.newPb : pb.toFixed(1), curAvg > pb ? 'var(--accent)' : '')}${pill(t.last5, `${l5.toFixed(1)} <span style="font-size:11px; color:${col(curAvg - l5)}">(${sign(curAvg - l5)})</span>`)}</div>`;
+            }
+            list.insertAdjacentHTML('beforeend', `<div class="chart-box"><div class="chart-title">${t.compare}</div>${cmpHtml}</div>`);
+            if (ends.length) {
+                // 2 + 3. Best / worst end, consistency
+                let bI = 0, wI = 0; totals.forEach((v, i) => { if (v > totals[bI]) bI = i; if (v < totals[wI]) wI = i; });
+                const mean = totals.reduce((x, y) => x + y, 0) / totals.length, sd = Math.sqrt(totals.reduce((x, v) => x + (v - mean) ** 2, 0) / totals.length);
+                list.insertAdjacentHTML('beforeend', `<div class="chart-box"><div class="chart-title">${t.insights}</div><div class="ins-grid">${pill(t.best, `${totals[bI]} <span style="font-size:11px; color:var(--gray)">${t.endW} ${bI + 1}</span>`, 'var(--green)')}${pill(t.worst, `${totals[wI]} <span style="font-size:11px; color:var(--gray)">${t.endW} ${wI + 1}</span>`, 'var(--red)')}${pill(t.consistency, '±' + sd.toFixed(1))}</div></div>`);
+                // 1. First half vs second half
+                const h = Math.ceil(ends.length / 2), hAvg = arr => { const xs = arr.flatMap(e => e.rawScores); return xs.length ? xs.reduce((x, v) => x + getVal(v), 0) / xs.length : 0; };
+                const h1 = hAvg(ends.slice(0, h)), h2 = hAvg(ends.slice(h));
+                list.insertAdjacentHTML('beforeend', `<div class="chart-box"><div class="chart-title">${t.halves}</div><div class="ins-grid">${pill(t.half1, h1.toFixed(1))}${pill(t.half2, ends.length > 1 ? h2.toFixed(1) : '-')}${pill(t.diff, ends.length > 1 ? sign(h2 - h1) : '-', ends.length > 1 ? col(h2 - h1) : '')}</div></div>`);
+                // 5. Percentages
+                const cnt = f => allA.filter(f).length, pc = n => Math.round(n / nA * 100) + '%';
+                const pDefs = state.mode.includes('TARGET') ? [[t.gold, v => getVal(v) >= 9], [t.redUp, v => getVal(v) >= 7]] : state.mode.includes('3D') ? [['11', v => v === 11], ['10+', v => getVal(v) >= 10]] : [['5–6', v => getVal(v) >= 5]];
+                const mCount = cnt(v => getVal(v) === 0);
+                list.insertAdjacentHTML('beforeend', `<div class="chart-box"><div class="chart-title">${t.pct}</div><div class="ins-grid">${pDefs.map(([l, f]) => pill(l, pc(cnt(f)), 'var(--accent)')).join('')}${pill(t.misses, `${mCount} <span style="font-size:11px; color:var(--gray)">(${pc(mCount)})</span>`, mCount ? 'var(--red)' : '')}</div></div>`);
+                // 4. Average by arrow position
+                const posAvg = Array.from({ length: apE }, (_, i) => { const xs = ends.map(e => e.rawScores[i]).filter(v => v !== undefined); return xs.length ? xs.reduce((x, v) => x + getVal(v), 0) / xs.length : 0; });
+                const pMax = Math.max(...posAvg), pMin = Math.min(...posAvg);
+                list.insertAdjacentHTML('beforeend', `<div class="chart-box"><div class="chart-title">${t.arrowPos}</div><div class="ins-grid" style="grid-template-columns: repeat(${Math.min(apE, 3)}, 1fr);">${posAvg.map((v, i) => pill(`${t.arrowN} ${i + 1}`, v.toFixed(1), pMax !== pMin ? (v === pMax ? 'var(--green)' : v === pMin ? 'var(--red)' : '') : '')).join('')}</div></div>`);
+            }
+            if (session.scoringType === 'face') { const hasX = state.mode.includes('OUTDOOR'); list.insertAdjacentHTML('beforeend', `<div class="chart-box"><div class="chart-title">${t.heatmap}</div><div class="history-face-container"><svg viewBox="0 0 100 100">${getTargetSvg('hist', hasX)}</svg></div></div>`); document.getElementById('hist-markers').innerHTML = a.ends.flatMap(e => e.markers || []).map(m => `<circle cx="${m.x}" cy="${m.y}" r="1" fill="white" stroke="black" stroke-width="0.3" opacity="0.7" />`).join('');
+                const onFace = a.ends.flatMap(e => e.markers || []).filter(m => Math.hypot(m.x - 50, m.y - 50) <= 50);
+                if (onFace.length) {
+                    const gx = onFace.reduce((x, m) => x + m.x, 0) / onFace.length, gy = onFace.reduce((x, m) => x + m.y, 0) / onFace.length;
+                    const spread = onFace.reduce((x, m) => x + Math.hypot(m.x - gx, m.y - gy), 0) / onFace.length, dx = gx - 50, dy = gy - 50;
+                    document.getElementById('hist-markers').innerHTML += `<circle cx="${gx}" cy="${gy}" r="${spread}" fill="none" stroke="#4CD964" stroke-width="0.4" stroke-dasharray="1.5 1" /><line x1="${gx - 2}" y1="${gy}" x2="${gx + 2}" y2="${gy}" stroke="#4CD964" stroke-width="0.6" /><line x1="${gx}" y1="${gy - 2}" x2="${gx}" y2="${gy + 2}" stroke="#4CD964" stroke-width="0.6" />`;
+                    const parts = []; if (Math.abs(dy) >= 1) parts.push(`${(Math.abs(dy) / 5).toFixed(1)} ${dy < 0 ? t.high : t.low}`); if (Math.abs(dx) >= 1) parts.push(`${(Math.abs(dx) / 5).toFixed(1)} ${dx < 0 ? t.left : t.right}`);
+                    list.lastElementChild.insertAdjacentHTML('beforeend', `<div class="ins-grid" style="grid-template-columns: 1fr 1fr; margin-top:10px;">${pill(t.group, parts.length ? `<span style="font-size:13px">${parts.join(' · ')} ${t.rings}</span>` : t.centered, 'var(--green)')}${pill(t.groupSize, `±${(spread / 5).toFixed(1)} <span style="font-size:11px; color:var(--gray)">${t.rings}</span>`)}</div>`);
+                }
+            }
             const maxE = state.mode.includes('TARGET') ? (session.arrowsPerEnd * 10) : (session.arrowsPerEnd * 11), pts = a.ends.map((e, i) => `${(i / (a.ends.length - 1)) * 100},${75 - (e.total / maxE) * 65}`).join(' ');
             list.insertAdjacentHTML('beforeend', `<div class="chart-box"><div class="chart-title">${t.stamina}</div><div style="display:flex; height:110px;"><div style="display:flex; flex-direction:column; justify-content:space-between; height:75px; padding-right:8px; border-right:1px solid #333;"><span style="font-size:8px; color:var(--gray);">${maxE}</span><span style="font-size:8px; color:var(--gray);">0</span></div><div style="flex:1; position:relative; margin-left:5px;"><svg viewBox="0 0 100 75" preserveAspectRatio="none" style="width:100%; height:75px; overflow:visible;"><polyline fill="none" stroke="var(--accent)" stroke-width="0.8" points="${pts}" /></svg></div></div></div>`);
             const hits = {}; a.ends.flatMap(e => e.rawScores).forEach(s => hits[s] = (hits[s] || 0) + 1);
             let poss = state.mode.includes('3D') ? [11, 10, 8, 5, 0] : state.mode.includes('TARGET') ? ['X', 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0] : [6,5,4,3,2,1,0], maxH = Math.max(...Object.values(hits), 1);
             let hBars = poss.map(sk => { const c = hits[sk] || 0, bc = getArrowColor(sk === 'X' ? 10 : sk); return `<div><div class="hit-count">${c}</div><div class="hit-bar"><div class="hit-fill" style="height:${(c/maxH)*100}%; background:${bc}"></div></div><div class="hit-label" style="color:${bc}">${sk === 0 ? 'M' : sk}</div></div>`; }).join('');
             list.insertAdjacentHTML('beforeend', `<div class="chart-box"><div class="chart-title">${t.hits}</div><div class="hits-chart" style="grid-template-columns: repeat(${poss.length}, 1fr);">${hBars}</div></div>`);
-            a.ends.forEach((e, i) => list.insertAdjacentHTML('beforeend', `<div class="end-card"><div><div class="stat-label">END ${i+1}</div><b>${e.displayScores.join(' · ')}</b></div><div style="color:var(--accent); font-weight:900;">${e.total}</div></div>`));
+            let run = 0; const scRows = a.ends.map((e, i) => { run += e.total; return `<tr><td>${i + 1}</td><td class="sc-arrows">${e.displayScores.join(' · ')}</td><td style="color:var(--accent)">${e.total}</td><td style="color:var(--green)">${run}</td></tr>`; }).join('');
+            list.insertAdjacentHTML('beforeend', `<button class="next-btn" style="background:#1a1a1a; color:var(--accent); border:1px solid #333; font-size:14px; padding:14px; flex-shrink:0;" onclick="toggleHistCard(this)">${t.showCard}</button><div class="hist-card-wrap" style="display:none; flex-shrink:0;"><table class="hist-sc"><tr><th>${t.endCol}</th><th style="text-align:left">${t.arrowsCol}</th><th>${t.total}</th><th>${t.run}</th></tr>${scRows}</table></div>`);
         };
         renderArcherDetail(0);
+    }
+    function toggleHistCard(btn) {
+        const wrap = btn.nextElementSibling, open = wrap.style.display === 'none';
+        wrap.style.display = open ? 'block' : 'none';
+        btn.innerText = open ? i18n[state.lang].hideCard : i18n[state.lang].showCard;
+        if (open) wrap.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
     function showGearScreen() {
         const g = JSON.parse(localStorage.getItem('archer_gear') || "{}");
